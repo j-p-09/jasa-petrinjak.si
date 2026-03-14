@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaša Petrinja | VIP Platforma</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        
+        const firebaseConfig = {
+            databaseURL: "https://jasa-petrinak-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        // Tvoja baza je povezana! Tukaj se bo kasneje dodajala logika za branje/pisanje.
+    </script>
+
+    <style>
+        /* OSNOVNE NASTAVITVE IN BARVE */
+        :root {
+            --bg-color: #0f172a; /* Temno modra/črna za kontrast */
+            --turq-main: #1abc9c; /* Turkizno zelena */
+            --turq-light: #48c9b0;
+            --turq-glow: rgba(26, 188, 156, 0.5);
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* NAVIGACIJA */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(26, 188, 156, 0.2);
+        }
+
+        .logo-btn {
+            color: var(--turq-main);
+            font-weight: 800;
+            font-size: 1.5rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--turq-glow);
+        }
+
+        /* GUMBI */
+        .btn {
+            background: transparent;
+            color: var(--turq-main);
+            border: 2px solid var(--turq-main);
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: var(--turq-main);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px var(--turq-glow);
+        }
+
+        .btn-vip { background: var(--turq-main); color: var(--bg-color); }
+        .btn-vip:hover { background: transparent; color: var(--turq-main); }
+
+        /* UPORABNIŠKI MENI V GLAVI */
+        .user-nav {
+            display: none; /* Skrito po defaultu */
+            align-items: center;
+            gap: 20px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .icon-btn:hover { color: var(--turq-main); }
+
+        .red-dot {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background-color: var(--danger);
+            border-radius: 50%;
+        }
+
+        /* GLAVNA VSEBINA - SECTIONS */
+        main {
+            flex: 1;
+            padding-top: 100px; /* Zaradi fixed headerja */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .view-section {
+            display: none; /* Skrijemo vse sekcije na začetku */
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .view-section.active { display: flex; flex-direction: column; align-items: center; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* DOMAČA STRAN IN ANIMACIJE */
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 5px solid rgba(26, 188, 156, 0.2);
+            border-top-color: var(--turq-main);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 30px;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .home-content { text-align: center; }
+        .home-content h1 {
+            color: var(--turq-main);
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px var(--turq-glow);
+            display: none; /* Skrito dokler se ne naloži */
+        }
+        .home-content p { color: var(--text-muted); font-size: 1.2rem; display: none; }
+
+        /* OBRAZCI (Login) */
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 15px;
+            border: 1px solid rgba(26, 188, 156, 0.3);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .login-box h2 { color: var(--turq-main); margin-bottom: 20px; text-align: center; }
+        .input-group { margin-bottom: 20px; }
+        .input-group input[type="text"], .input-group input[type="password"] {
+            width: 100%; padding: 12px;
+            background: rgba(0,0,0,0.2); border: 1px solid var(--text-muted);
+            color: white; border-radius: 8px; outline: none;
+        }
+        .input-group input:focus { border-color: var(--turq-main); }
+        .remember-me { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; }
+        
+        /* ADMIN IN UPORABNIK DASHBOARD */
+        .dashboard-header { width: 100%; margin-bottom: 30px; text-align: left; border-bottom: 2px solid var(--turq-main); padding-bottom: 10px;}
+        .admin-nav { display: flex; gap: 15px; margin-bottom: 30px; width: 100%;}
+        .admin-nav button { flex: 1; }
+
+        /* ANKETE */
+        .survey-container { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .survey-card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px solid var(--turq-main); }
+        
+        .photos-grid { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; justify-content: center;}
+        .photo-option { width: 100px; height: 100px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: 0.3s; border: 2px solid transparent;}
+        .photo-option:hover { border-color: var(--turq-main); transform: scale(1.05); }
+        
+        /* Rezultat ankete CSS */
+        .survey-results-known .photos-grid { align-items: center; }
+        .survey-results-known .photo-winner { width: 180px; height: 180px; border: 3px solid var(--turq-main); box-shadow: 0 0 20px var(--turq-glow); }
+        .survey-results-known .photo-loser { width: 80px; height: 80px; filter: grayscale(100%); opacity: 0.6; }
+
+        /* NOGA */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(26, 188, 156, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-btn" onclick="navigateTo('home')">LOGO.PNG</div>
+        
+        <button id="nav-vip-btn" class="btn btn-vip" onclick="navigateTo('login')">VIP Prijava</button>
+        
+        <div id="nav-user-menu" class="user-nav">
+            <button class="icon-btn" title="Obvestila">
+                🔔 <span class="red-dot"></span>
+            </button>
+            <button class="icon-btn" title="Uredi profil" onclick="alert('Tu se odpre urejanje profila (Ime in priimek zaklenjena).')">⚙️ Profil</button>
+            <button class="btn" onclick="logout()">Odjava</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="view-home" class="view-section active">
+            <div class="home-content">
+                <div id="home-loader" class="loader"></div>
+                <h1 id="home-logo-text">LOGO ZNAMKA</h1>
+                <p id="home-subtitle">SPLETNA STRAN JE ŠE V IZDELAVI</p>
+            </div>
+        </section>
+
+        <section id="view-login" class="view-section">
+            <div class="login-box">
+                <h2>VIP Prijava</h2>
+                <div class="input-group">
+                    <input type="text" id="username" placeholder="Uporabniško ime">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Geslo">
+                </div>
+                <label class="remember-me">
+                    <input type="checkbox"> Zapomni si me na tej napravi
+                </label>
+                <button class="btn btn-vip" style="width: 100%;" onclick="handleLogin()">Prijavi se</button>
+            </div>
+        </section>
+
+        <section id="view-user" class="view-section">
+            <div class="dashboard-header">
+                <h2>Aktivne ankete za vas</h2>
+            </div>
+            <div class="survey-container">
+                <div class="survey-card">
+                    <h3>Katera fotografija je najboljša?</h3>
+                    <p style="color: var(--text-muted); font-size: 0.8rem;">Klikni na slico za oddajo glasu.</p>
+                    <div class="photos-grid">
+                        <div class="photo-option" style="background: #333;">Slika 1</div>
+                        <div class="photo-option" style="background: #444;">Slika 2</div>
+                        <div class="photo-option" style="background: #555;">Slika 3</div>
+                        <div class="photo-option" style="background: #666;">Slika 4</div>
+                    </div>
+                </div>
+
+                <div class="survey-card survey-results-known">
+                    <h3>Zimska kolekcija - ZNAN REZULTAT</h3>
+                    <div class="photos-grid">
+                        <div class="photo-option photo-loser" style="background: #333;"></div>
+                        <div class="photo-option photo-winner" style="background: var(--turq-main); display:flex; align-items:center; justify-content:center; color:#000; font-weight:bold;">ZMAGOVALEC</div>
+                        <div class="photo-option photo-loser" style="background: #555;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-admin" class="view-section">
+            <div class="dashboard-header">
+                <h2 style="color: var(--danger);">Admin Konzola</h2>
+            </div>
+            <div class="admin-nav">
+                <button class="btn" onclick="switchAdminTab('obvestila')">Obvestila</button>
+                <button class="btn" onclick="switchAdminTab('ankete')">Ankete</button>
+                <button class="btn" onclick="switchAdminTab('uporabniki')">Uporabniki</button>
+            </div>
+
+            <div id="admin-content" style="width: 100%; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px;">
+                </div>
+        </section>
+    </main>
+
+    <footer>
+        &copy; Jaša Petrinja – vse pravice pridržane – Marec 2026
+    </footer>
+
+    <script>
+        // Logika za navigacijo (Single Page App)
+        function navigateTo(viewId) {
+            // Skrij vse sekcije
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            // Prikaži želeno
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            // Posebna logika za DOMAČO stran (animacija)
+            if (viewId === 'home') {
+                document.getElementById('home-loader').style.display = 'block';
+                document.getElementById('home-logo-text').style.display = 'none';
+                document.getElementById('home-subtitle').style.display = 'none';
+                
+                setTimeout(() => {
+                    document.getElementById('home-loader').style.display = 'none';
+                    document.getElementById('home-logo-text').style.display = 'block';
+                    document.getElementById('home-subtitle').style.display = 'block';
+                }, 1500); // Krog se vrti 1.5 sekunde
+            }
+        }
+
+        // Zaženi animacijo ob prvem nalaganju
+        window.onload = () => navigateTo('home');
+
+        // Logika za Prijavo
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            if ((user === 'ADMIN' && pass === 'ADMIN') || (user === 'jasa_petrinjak' && pass === 'Geslo')) {
+                // Admin prijava
+                updateNavForUser();
+                navigateTo('admin');
+                switchAdminTab('obvestila'); // Odpri prvi zavihek
+            } else if (user !== '' && pass !== '') {
+                // Navaden uporabnik prijava (simulacija)
+                updateNavForUser();
+                navigateTo('user');
+            } else {
+                alert('Prosim vnesite uporabniško ime in geslo.');
+            }
+        }
+
+        // Odjava
+        function logout() {
+            document.getElementById('nav-vip-btn').style.display = 'block';
+            document.getElementById('nav-user-menu').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            navigateTo('home');
+        }
+
+        // Spremeni glavo, ko je uporabnik prijavljen
+        function updateNavForUser() {
+            document.getElementById('nav-vip-btn').style.display = 'none';
+            document.getElementById('nav-user-menu').style.display = 'flex';
+        }
+
+        // Preklapljanje Admin zavihkov
+        function switchAdminTab(tab) {
+            const content = document.getElementById('admin-content');
+            if (tab === 'obvestila') {
+                content.innerHTML = `
+                    <h3>Pošlji obvestilo</h3><br>
+                    <input type="text" placeholder="Zadeva" style="width:100%; padding:10px; margin-bottom:10px; background: #222; color:white; border:none;">
+                    <textarea placeholder="Vsebina obvestila..." style="width:100%; height:100px; padding:10px; margin-bottom:10px; background: #222; color:white; border:none;"></textarea>
+                    <select style="width:100%; padding:10px; margin-bottom:10px; background: #222; color:white; border:none;">
+                        <option>Izberi uporabnika (Vsi)</option>
+                        <option>Uporabnik 1</option>
+                        <option>Uporabnik 2</option>
+                    </select>
+                    <button class="btn btn-vip">Pošlji obvestilo</button>
+                `;
+            } else if (tab === 'ankete') {
+                content.innerHTML = `
+                    <h3>Upravljanje Anket</h3><br>
+                    <button class="btn">+ Dodaj novo anketo (Max 4 slike .jpg)</button>
+                    <hr style="border-color: var(--turq-main); margin: 20px 0; opacity: 0.3;">
+                    <p>Seznam vseh anket... (Možnost aktivacije, zaprtja, razglasitve rezultatov)</p>
+                `;
+            } else if (tab === 'uporabniki') {
+                content.innerHTML = `
+                    <h3>Baza Uporabnikov</h3><br>
+                    <button class="btn">+ Dodaj uporabnika</button><br><br>
+                    <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid var(--turq-main);">
+                            <th>Ime in Priimek</th>
+                            <th>Uporabniško ime</th>
+                            <th>Akcije</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #444;">
+                            <td style="padding: 10px 0;">Janez Novak</td>
+                            <td>janez_n</td>
+                            <td>
+                                <button class="btn" style="padding: 5px 10px; font-size: 0.8rem;">Uredi</button>
+                                <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; border-color: var(--danger); color: var(--danger);">Začasno odvzemi dostop</button>
+                            </td>
+                        </tr>
+                    </table>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
