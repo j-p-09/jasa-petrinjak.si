@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaša Petrinjak - VIP</title>
+    <title>Jaša Petrinjak</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         /* SVETLA TEMA */
         :root {
-            --bg-color: #f2fbf5; /* Zelo svetla zelena za ozadje */
-            --primary-green: #1abc9c; /* Turkizno zelena */
+            --bg-color: #f2fbf5;
+            --primary-green: #1abc9c;
             --dark-text: #1a202c;
             --light-bg: #ffffff;
             --border-color: #e2e8f0;
@@ -26,7 +30,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;
         }
         .logo { height: 50px; cursor: pointer; }
-        
         .header-controls { display: flex; align-items: center; gap: 20px; }
         
         /* GUMBI */
@@ -48,13 +51,13 @@
             background-color: var(--danger); border-radius: 50%; display: none;
         }
         .notifications-dropdown {
-            display: none; position: absolute; top: 40px; right: 0; width: 300px;
+            display: none; position: absolute; top: 40px; right: 0; width: 320px;
             background: var(--light-bg); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-radius: 8px; padding: 10px; z-index: 200; border: 1px solid var(--border-color);
-            max-height: 300px; overflow-y: auto;
+            border-radius: 8px; padding: 0; z-index: 200; border: 1px solid var(--border-color);
+            overflow: hidden;
         }
-        .notif-item { padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-        .notif-item:last-child { border-bottom: none; }
+        .notif-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .notif-item:hover { filter: brightness(0.95); }
 
         /* VSEBINA (SECTIONS) */
         main { flex: 1; padding: 40px; display: flex; justify-content: center; }
@@ -62,35 +65,41 @@
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* HOME STRAN */
-        .home-content { text-align: center; margin-top: 10vh; }
+        /* HOME STRAN IN ODŠTEVALNIK */
+        .home-content { text-align: center; margin-top: 5vh; }
         .loader {
             border: 6px solid #e0e0e0; border-top: 6px solid var(--primary-green);
             border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #countdown-container { margin-top: 30px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: inline-block; }
+        .countdown-timer { font-size: 2rem; font-weight: bold; color: var(--primary-green); letter-spacing: 2px; }
 
         /* KARTICE IN OBRAZCI */
         .card { background: var(--light-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        .input-group input, .input-group textarea, .input-group select {
-            width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; outline: none;
-        }
-        .input-group input:focus, .input-group select:focus { border-color: var(--primary-green); }
+        .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--primary-green); }
 
         /* ANKETE */
         .survey-grid { display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
         .survey-image-container { position: relative; cursor: pointer; transition: 0.3s; border: 3px solid transparent; border-radius: 8px; overflow: hidden; width: 150px; height: 150px; }
         .survey-image-container img { width: 100%; height: 100%; object-fit: cover; }
         .survey-image-container:hover { transform: scale(1.05); border-color: var(--primary-green); }
-        .votes-badge { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; display: none; }
+        .votes-badge { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; display: none; }
         
-        /* Znan rezultat */
         .survey-closed .survey-image-container { pointer-events: none; }
         .survey-closed .votes-badge { display: block; }
         .img-winner { border: 4px solid var(--primary-green); transform: scale(1.1); z-index: 10; width: 200px; height: 200px; }
         .img-loser { filter: grayscale(100%); opacity: 0.6; width: 100px; height: 100px; }
+
+        /* MODAL ZA OBVESTILA */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: var(--light-bg); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; position: relative; }
+        .close { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; color: var(--gray); }
+        .close:hover { color: var(--danger); }
 
         footer { text-align: center; padding: 20px; font-size: 12px; color: var(--gray); }
     </style>
@@ -108,8 +117,7 @@
                 
                 <div class="bell-container" onclick="toggleNotifications()">
                     🔔 <div class="red-dot" id="notif-dot"></div>
-                    <div class="notifications-dropdown" id="notif-dropdown">
-                        </div>
+                    <div class="notifications-dropdown" id="notif-dropdown"></div>
                 </div>
                 
                 <button class="btn btn-outline" onclick="navigate('profile')">Profil</button>
@@ -119,12 +127,17 @@
     </header>
 
     <main>
-        <section id="sec-home" class="section">
+        <section id="sec-home" class="section active">
             <div class="home-content">
                 <div class="loader" id="home-loader"></div>
                 <div id="home-ready" style="display: none;">
                     <img src="logo.png" alt="Logo Velik" style="max-height: 100px; margin-bottom: 20px;" onerror="this.src='https://via.placeholder.com/300x100?text=LOGO.PNG'">
                     <h2 style="color: var(--primary-green);">SPLETNA STRAN JE ŠE V IZDELAVI</h2>
+                    
+                    <div id="countdown-container">
+                        <p style="color: var(--gray); margin-bottom: 5px; font-weight: bold;">DO URADNE IZDAJE JE ŠE:</p>
+                        <div class="countdown-timer" id="timer">Nalagam...</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -150,6 +163,12 @@
             <div id="user-surveys-container"></div>
         </section>
 
+        <section id="sec-notifications" class="section">
+            <h2>Vsa obvestila</h2>
+            <p style="color: var(--gray); margin-bottom: 20px;">Zgodovina vseh vaših obvestil in sporočil.</p>
+            <div id="all-notifications-list" class="card" style="padding: 0; overflow: hidden;"></div>
+        </section>
+
         <section id="sec-admin" class="section">
             <h2 style="color: var(--danger); margin-bottom: 20px;">Admin Konzola</h2>
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -162,8 +181,7 @@
                 <h3>Pošlji obvestilo</h3>
                 <div class="input-group" style="margin-top: 15px;">
                     <label>Prejemnik</label>
-                    <select id="notif-target">
-                        </select>
+                    <select id="notif-target"></select>
                 </div>
                 <div class="input-group">
                     <label>Zadeva</label>
@@ -182,7 +200,11 @@
                     <label>Naslov ankete</label>
                     <input type="text" id="new-survey-title">
                 </div>
-                <p style="font-size: 12px; color: var(--gray); margin-bottom: 10px;">Izberi do 4 slike z računalnika (Max velikost celotne ankete zaradi localStorage omejitev naj bo manjša od par MB)</p>
+                <div class="input-group">
+                    <label>Čas trajanja (v minutah)</label>
+                    <input type="number" id="new-survey-duration" placeholder="Pusti prazno, če se ne zaključi sama">
+                </div>
+                <p style="font-size: 12px; color: var(--gray); margin-bottom: 10px;">Izberi do 4 slike z računalnika</p>
                 <div class="input-group"><input type="file" id="file1" accept="image/*"></div>
                 <div class="input-group"><input type="file" id="file2" accept="image/*"></div>
                 <div class="input-group"><input type="file" id="file3" accept="image/*"></div>
@@ -203,7 +225,6 @@
                         <button class="btn" onclick="addUser()">Dodaj</button>
                     </div>
                 </div>
-
                 <h3>Upravljanje obstoječih uporabnikov</h3>
                 <div id="admin-users-list" style="margin-top: 15px;"></div>
             </div>
@@ -230,33 +251,94 @@
 
     </main>
 
+    <div id="message-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modal-title" style="color:var(--primary-green); font-weight:bold; margin-bottom: 5px;">Zadeva</h3>
+            <p id="modal-meta" style="font-size:12px; color:var(--gray); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"></p>
+            <p id="modal-text" style="margin: 20px 0; line-height: 1.5;"></p>
+            
+            <div id="modal-reply-section" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                <label style="font-weight: bold; display:block; margin-bottom: 10px;">Odgovori pošiljatelju:</label>
+                <textarea id="modal-reply-text" rows="3" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:10px; outline:none;"></textarea>
+                <button class="btn" onclick="sendReply()">Pošlji odgovor</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         &copy; Jaša Petrinja – vse pravice pridržane – Marec 2026
     </footer>
 
     <script>
-        // --- 1. PODATKOVNA BAZA (Lokalni pomnilnik) ---
-        let db = JSON.parse(localStorage.getItem('jasaPlatformDB'));
-        
-        if (!db) {
-            db = {
-                users: [
-                    { id: 1, name: "Jaša Petrinjak", username: "jasa_petrinjak", password: "Geslo", role: "admin", blocked: false },
-                    { id: 2, name: "Admin", username: "ADMIN", password: "ADMIN", role: "admin", blocked: false },
-                    { id: 3, name: "Testni Uporabnik", username: "uporabnik", password: "123", role: "user", blocked: false }
-                ],
-                surveys: [],
-                notifications: [],
-                currentUser: null
-            };
-            saveDB();
-        }
+        // --- 1. FIREBASE POVEZAVA IN PODATKOVNA BAZA ---
+        const firebaseConfig = {
+            databaseURL: "https://jasa-petrinak-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let db = { users: [], surveys: [], notifications: [] };
+        let currentUser = JSON.parse(localStorage.getItem('jasaPlatformUser'));
+        let currentOpenNotifId = null;
+
+        // Poslušanje sprememb iz Firebase v realnem času
+        database.ref('/').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                db = data;
+                if (!db.users) db.users = [];
+                if (!db.surveys) db.surveys = [];
+                if (!db.notifications) db.notifications = [];
+            } else {
+                // Če je baza prazna, ustvari privzete podatke
+                db = {
+                    users: [
+                        { id: 1, name: "Jaša Petrinjak", username: "jasa_petrinjak", password: "Geslo", role: "admin", blocked: false },
+                        { id: 2, name: "Admin", username: "ADMIN", password: "ADMIN", role: "admin", blocked: false }
+                    ],
+                    surveys: [], notifications: []
+                };
+                saveDB();
+            }
+
+            // Posodobi trenutnega uporabnika
+            if (currentUser) {
+                const updatedUser = db.users.find(u => u.id === currentUser.id);
+                if (updatedUser) {
+                    currentUser = updatedUser;
+                    localStorage.setItem('jasaPlatformUser', JSON.stringify(currentUser));
+                    refreshUI(); // Osveži prikaze
+                } else {
+                    logout(); // Uporabnik je bil izbrisan
+                }
+            }
+        });
 
         function saveDB() {
-            localStorage.setItem('jasaPlatformDB', JSON.stringify(db));
+            database.ref('/').set(db);
         }
 
-        // --- 2. NAVIGACIJA ---
+        // --- ODŠTEVALNIK ČASA ---
+        const countDownDate = new Date("Jun 24, 2026 00:00:00").getTime();
+        setInterval(function() {
+            const now = new Date().getTime();
+            const distance = countDownDate - now;
+
+            if (distance < 0) {
+                document.getElementById("timer").innerHTML = "Spletna stran je ODPRTA!";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("timer").innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }, 1000);
+
+        // --- 2. NAVIGACIJA IN UI ---
         function navigate(sectionId) {
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
             document.getElementById('sec-' + sectionId).classList.add('active');
@@ -270,104 +352,192 @@
                     document.getElementById('home-ready').style.display = 'block';
                 }, 1000);
             }
+            if (sectionId === 'notifications') renderAllNotifications();
         }
 
-        // --- 3. PRIJAVA IN ODJAVA ---
+        function refreshUI() {
+            if (currentUser) {
+                document.getElementById('btn-nav-vip').style.display = 'none';
+                document.getElementById('user-controls').style.display = 'flex';
+                document.getElementById('welcome-text').innerText = currentUser.name;
+                
+                renderNotificationsDropdown();
+                
+                if (currentUser.role === 'admin') {
+                    renderAdminSurveys();
+                    renderAdminUsers();
+                    updateNotifTargets();
+                } else {
+                    renderUserSurveys();
+                }
+                
+                document.getElementById('profile-name').value = currentUser.name;
+                document.getElementById('profile-username').value = currentUser.username;
+            }
+        }
+
         function login() {
             const u = document.getElementById('login-username').value;
             const p = document.getElementById('login-password').value;
-
             const user = db.users.find(x => x.username === u && x.password === p);
             
             if (user) {
-                if (user.blocked) {
-                    alert("Vaš dostop je bil začasno odvzet s strani administratorja.");
-                    return;
-                }
-                db.currentUser = user;
-                saveDB();
-                setupUserUI();
+                if (user.blocked) return alert("Vaš dostop je bil začasno odvzet s strani administratorja.");
+                currentUser = user;
+                localStorage.setItem('jasaPlatformUser', JSON.stringify(currentUser));
+                refreshUI();
+                currentUser.role === 'admin' ? navigate('admin') : navigate('user');
             } else {
                 alert("Napačno uporabniško ime ali geslo.");
             }
         }
 
         function logout() {
-            db.currentUser = null;
-            saveDB();
+            currentUser = null;
+            localStorage.removeItem('jasaPlatformUser');
             document.getElementById('login-username').value = '';
             document.getElementById('login-password').value = '';
-            setupUserUI();
+            document.getElementById('btn-nav-vip').style.display = 'block';
+            document.getElementById('user-controls').style.display = 'none';
             navigate('home');
         }
 
-        function setupUserUI() {
-            const vipBtn = document.getElementById('btn-nav-vip');
-            const userControls = document.getElementById('user-controls');
-            
-            if (db.currentUser) {
-                vipBtn.style.display = 'none';
-                userControls.style.display = 'flex';
-                document.getElementById('welcome-text').innerText = db.currentUser.name;
-                
-                renderNotifications();
-                
-                if (db.currentUser.role === 'admin') {
-                    renderAdminSurveys();
-                    renderAdminUsers();
-                    updateNotifTargets(); // Pripravi dropdown prejemnikov
-                    navigate('admin');
-                } else {
-                    renderUserSurveys();
-                    navigate('user');
-                }
-                
-                document.getElementById('profile-name').value = db.currentUser.name;
-                document.getElementById('profile-username').value = db.currentUser.username;
-            } else {
-                vipBtn.style.display = 'block';
-                userControls.style.display = 'none';
-            }
+        // --- 3. OBVESTILA IN MODAL ---
+        function getMyNotifs() {
+            if (!currentUser) return [];
+            return db.notifications.filter(n => n.target === 'all' || n.target === currentUser.id);
         }
 
-        // --- 4. OBVESTILA ---
-        function renderNotifications() {
-            if (!db.currentUser) return;
-            const myNotifs = db.notifications.filter(n => n.target === 'all' || n.target === db.currentUser.id);
-            const unread = myNotifs.filter(n => !n.readBy.includes(db.currentUser.id));
-            
+        function renderNotificationsDropdown() {
+            const myNotifs = getMyNotifs().slice().reverse();
+            const unread = myNotifs.filter(n => !n.readBy.includes(currentUser.id));
             document.getElementById('notif-dot').style.display = unread.length > 0 ? 'block' : 'none';
 
             const container = document.getElementById('notif-dropdown');
             if (myNotifs.length === 0) {
-                container.innerHTML = '<div class="notif-item">Ni novih obvestil.</div>';
+                container.innerHTML = '<div style="padding:15px; text-align:center;">Ni novih obvestil.</div>';
                 return;
             }
 
-            container.innerHTML = myNotifs.slice().reverse().map(n => `
-                <div class="notif-item" style="${!n.readBy.includes(db.currentUser.id) ? 'background:#e6ffed; font-weight:bold;' : ''}">
-                    <div style="color:var(--primary-green); margin-bottom:5px;">${n.title}</div>
-                    ${n.text}
-                </div>
-            `).join('');
+            let html = '';
+            myNotifs.slice(0, 3).forEach((n, index) => {
+                const isRead = n.readBy.includes(currentUser.id);
+                // Zebra vzorec: vsako drugo obvestilo ima sivo ozadje. Če je neprebrano ima zelenkasto.
+                let bg = isRead ? (index % 2 === 1 ? '#f5f5f5' : '#ffffff') : '#e6ffed';
+                
+                html += `
+                    <div class="notif-item" style="background:${bg};" onclick="openMessageModal(${n.id})">
+                        <div style="color:var(--primary-green); font-weight:bold; margin-bottom:5px;">${n.title}</div>
+                        <div style="font-size: 12px; color: var(--gray);">${n.dateStr || ''}</div>
+                    </div>
+                `;
+            });
+
+            if (myNotifs.length > 3) {
+                html += `
+                    <div style="padding: 10px; text-align: center; background: #fafafa; border-top: 1px solid var(--border-color);">
+                        <button class="btn btn-outline" style="width: 100%; font-size:12px; padding: 8px;" onclick="navigate('notifications')">POKAŽI VSA OBVESTILA</button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
         }
 
         function toggleNotifications() {
             const dropdown = document.getElementById('notif-dropdown');
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-            
-            if (dropdown.style.display === 'block') {
-                db.notifications.forEach(n => {
-                    if ((n.target === 'all' || n.target === db.currentUser.id) && !n.readBy.includes(db.currentUser.id)) {
-                        n.readBy.push(db.currentUser.id);
-                    }
-                });
-                saveDB();
-                renderNotifications();
-            }
         }
 
-        // --- 5. ANKETE (UPORABNIK) ---
+        function renderAllNotifications() {
+            const myNotifs = getMyNotifs().slice().reverse();
+            const container = document.getElementById('all-notifications-list');
+            
+            if (myNotifs.length === 0) {
+                container.innerHTML = '<div style="padding:20px;">Nimate obvestil.</div>';
+                return;
+            }
+
+            container.innerHTML = myNotifs.map((n, index) => {
+                const isRead = n.readBy.includes(currentUser.id);
+                let bg = isRead ? (index % 2 === 1 ? '#f9f9f9' : '#ffffff') : '#e6ffed';
+                return `
+                    <div class="notif-item" style="background:${bg}; padding: 20px;" onclick="openMessageModal(${n.id})">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                            <strong style="color:var(--primary-green); font-size:16px;">${n.title}</strong>
+                            <span style="font-size:12px; color:var(--gray);">${n.dateStr || ''}</span>
+                        </div>
+                        <div style="color: #4a5568;">${n.text.substring(0, 60)}${n.text.length > 60 ? '...' : ''}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openMessageModal(notifId) {
+            const n = db.notifications.find(x => x.id === notifId);
+            if (!n) return;
+            
+            // Označi kot prebrano
+            if (!n.readBy.includes(currentUser.id)) {
+                n.readBy.push(currentUser.id);
+                saveDB(); // To bo sprožilo osvežitev iz Firebase
+            }
+
+            currentOpenNotifId = notifId;
+            document.getElementById('notif-dropdown').style.display = 'none';
+
+            document.getElementById('modal-title').innerText = n.title;
+            const senderName = n.senderName || "Sistem";
+            document.getElementById('modal-meta').innerText = `${n.dateStr || ''} • Pošiljatelj: ${senderName}`;
+            document.getElementById('modal-text').innerText = n.text;
+            document.getElementById('modal-reply-text').value = '';
+
+            document.getElementById('message-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('message-modal').style.display = 'none';
+            currentOpenNotifId = null;
+        }
+
+        function sendReply() {
+            const text = document.getElementById('modal-reply-text').value;
+            if(!text.trim()) return alert("Vnesite besedilo odgovora.");
+            
+            const originalNotif = db.notifications.find(x => x.id === currentOpenNotifId);
+            // Če je poslal admin (oz. določen id), vrni njemu. Če sistemsko ali vsem, pošlji prvima dvema adminoma (ID 1 in 2).
+            const targetId = originalNotif.senderId ? originalNotif.senderId : 1; 
+            
+            const dateObj = new Date();
+            const dateStr = `${dateObj.getDate()}.${dateObj.getMonth()+1}.${dateObj.getFullYear()} ob ${dateObj.getHours()}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+
+            db.notifications.push({
+                id: Date.now(),
+                title: `Odgovor: ${originalNotif.title}`,
+                text: text,
+                target: targetId,
+                senderId: currentUser.id,
+                senderName: currentUser.name,
+                dateStr: dateStr,
+                readBy: []
+            });
+
+            saveDB();
+            alert("Odgovor uspešno poslan!");
+            closeModal();
+        }
+
+        // --- 4. ANKETE IN PERCENTAŽE ---
+        function checkSurveyStatus(s) {
+            if (!s.active) return false;
+            if (s.expiresAt && Date.now() > s.expiresAt) {
+                s.active = false; // Samodejno zapri, če je potekel čas
+                saveDB();
+                return false;
+            }
+            return true;
+        }
+
         function renderUserSurveys() {
             const container = document.getElementById('user-surveys-container');
             if (db.surveys.length === 0) {
@@ -376,9 +546,11 @@
             }
 
             container.innerHTML = db.surveys.slice().reverse().map(s => {
-                const hasVoted = s.voters.includes(db.currentUser.id);
-                const isClosed = !s.active;
+                const isActive = checkSurveyStatus(s);
+                const isClosed = !isActive;
+                const hasVoted = s.voters.includes(currentUser.id);
                 
+                let totalVotes = s.images.reduce((sum, img) => sum + img.votes, 0);
                 let maxVotes = -1;
                 if (isClosed) {
                     s.images.forEach(img => { if(img.votes > maxVotes) maxVotes = img.votes; });
@@ -389,19 +561,24 @@
                 
                 if (isClosed) html += `<p style="color:var(--primary-green); font-weight:bold; margin-top:5px;">ZNAN JE REZULTAT ANKETE</p>`;
                 else if (hasVoted) html += `<p style="color:var(--gray); font-size:12px;">Vaš glas je že oddan.</p>`;
+                else if (s.expiresAt) {
+                    const minsLeft = Math.ceil((s.expiresAt - Date.now()) / 60000);
+                    html += `<p style="color:var(--danger); font-size:12px;">Anketa se zapre čez ${minsLeft} min.</p>`;
+                }
 
                 html += `<div class="survey-grid">`;
                 
                 s.images.forEach((img, index) => {
                     let classes = "survey-image-container";
-                    if (isClosed) {
-                        classes += (img.votes === maxVotes && maxVotes > 0) ? " img-winner" : " img-loser";
-                    }
+                    if (isClosed) classes += (img.votes === maxVotes && maxVotes > 0) ? " img-winner" : " img-loser";
                     
+                    // Izračun odstotkov
+                    let pct = totalVotes === 0 ? 0 : Math.round((img.votes / totalVotes) * 100);
+
                     html += `
                         <div class="${classes}" onclick="vote(${s.id}, ${index})">
-                            <img src="${img.url}" onerror="this.src='https://via.placeholder.com/150?text=Slika'">
-                            <div class="votes-badge">Glasovi: ${img.votes}</div>
+                            <img src="${img.url}">
+                            <div class="votes-badge">${pct}%</div>
                         </div>
                     `;
                 });
@@ -413,19 +590,15 @@
 
         function vote(surveyId, imgIndex) {
             const survey = db.surveys.find(s => s.id === surveyId);
-            if (!survey.active) return;
-            if (survey.voters.includes(db.currentUser.id)) {
-                alert("V tej anketi ste že glasovali.");
-                return;
-            }
+            if (!checkSurveyStatus(survey)) return;
+            if (survey.voters.includes(currentUser.id)) return alert("V tej anketi ste že glasovali.");
 
             survey.images[imgIndex].votes += 1;
-            survey.voters.push(db.currentUser.id);
+            survey.voters.push(currentUser.id);
             saveDB();
-            renderUserSurveys();
         }
 
-        // --- 6. ADMIN FUNKCIJE ---
+        // --- 5. ADMIN FUNKCIJE ---
         function showAdminTab(tabId) {
             document.querySelectorAll('.admin-tab').forEach(el => el.style.display = 'none');
             document.getElementById(tabId).style.display = 'block';
@@ -434,7 +607,6 @@
         function updateNotifTargets() {
             const select = document.getElementById('notif-target');
             if (!select) return;
-            
             let html = `<option value="all">Vsi uporabniki</option>`;
             db.users.filter(u => u.role !== 'admin').forEach(u => {
                 html += `<option value="${u.id}">${u.name} (${u.username})</option>`;
@@ -446,13 +618,16 @@
             const t = document.getElementById('new-notif-title').value;
             const x = document.getElementById('new-notif-text').value;
             const targetVal = document.getElementById('notif-target').value;
-            
             if(!t || !x) return alert("Izpolni vsa polja.");
 
-            const targetId = targetVal === 'all' ? 'all' : parseInt(targetVal);
+            const dateObj = new Date();
+            const dateStr = `${dateObj.getDate()}.${dateObj.getMonth()+1}.${dateObj.getFullYear()} ob ${dateObj.getHours()}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
 
             db.notifications.push({
-                id: Date.now(), title: t, text: x, target: targetId, readBy: []
+                id: Date.now(), title: t, text: x, 
+                target: targetVal === 'all' ? 'all' : parseInt(targetVal), 
+                senderId: currentUser.id, senderName: currentUser.name,
+                dateStr: dateStr, readBy: []
             });
             saveDB();
             alert("Obvestilo uspešno poslano!");
@@ -460,7 +635,6 @@
             document.getElementById('new-notif-text').value = '';
         }
 
-        // Funkcija za pretvorbo datotek v Base64
         function readFileAsDataURL(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -472,76 +646,76 @@
 
         async function createSurvey() {
             const title = document.getElementById('new-survey-title').value;
+            const dur = document.getElementById('new-survey-duration').value;
             if (!title) return alert("Vnesi naslov ankete.");
 
             const inputs = ['file1', 'file2', 'file3', 'file4'].map(id => document.getElementById(id));
             let promises = [];
-
-            inputs.forEach(input => {
-                if (input.files && input.files[0]) {
-                    promises.push(readFileAsDataURL(input.files[0]));
-                }
-            });
+            inputs.forEach(input => { if (input.files && input.files[0]) promises.push(readFileAsDataURL(input.files[0])); });
 
             const base64Images = await Promise.all(promises);
+            if (base64Images.length < 2) return alert("Naloži vsaj 2 sliki.");
 
-            if (base64Images.length < 2) {
-                return alert("Za anketo moraš naložiti vsaj 2 sliki.");
-            }
+            const expiresAt = dur ? Date.now() + (parseInt(dur) * 60000) : null;
+            const images = base64Images.map(url => ({ url: url, votes: 0 }));
 
-            const images = base64Images.map(base64Str => ({ url: base64Str, votes: 0 }));
-
-            db.surveys.push({
-                id: Date.now(), title: title, active: true, images: images, voters: []
-            });
+            db.surveys.push({ id: Date.now(), title: title, active: true, expiresAt: expiresAt, images: images, voters: [] });
             
             try {
                 saveDB();
                 alert("Anketa ustvarjena!");
-                
-                // Očisti polja
                 document.getElementById('new-survey-title').value = '';
+                document.getElementById('new-survey-duration').value = '';
                 inputs.forEach(input => input.value = '');
-                
-                renderAdminSurveys();
             } catch (e) {
-                alert("Napaka pri shranjevanju. Slike so morda prevelike za lokalni pomnilnik brskalnika (localStorage). Poskusi z manjšimi slikami.");
+                alert("Napaka pri nalaganju. Slike so morda prevelike za shranjevanje.");
             }
         }
 
         function renderAdminSurveys() {
             const container = document.getElementById('admin-surveys-list');
-            container.innerHTML = db.surveys.slice().reverse().map(s => `
+            container.innerHTML = db.surveys.slice().reverse().map(s => {
+                const isActive = checkSurveyStatus(s);
+                let totalVotes = s.images.reduce((sum, img) => sum + img.votes, 0);
+                
+                // Generiraj tekst za prikaz odstotkov
+                let resultsHtml = `<div style="margin-top: 10px; font-size:12px; color:var(--gray);">Trenutni rezultati: `;
+                s.images.forEach((img, i) => {
+                    let pct = totalVotes === 0 ? 0 : Math.round((img.votes / totalVotes) * 100);
+                    resultsHtml += `[Slika ${i+1}: ${pct}%] `;
+                });
+                resultsHtml += `</div>`;
+
+                return `
                 <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <strong>${s.title}</strong>
-                        <span style="color: ${s.active ? 'var(--primary-green)' : 'var(--danger)'}">${s.active ? 'AKTIVNA' : 'ZAPRTA'}</span>
+                        <span style="color: ${isActive ? 'var(--primary-green)' : 'var(--danger)'}">${isActive ? 'AKTIVNA' : 'ZAPRTA'}</span>
                     </div>
                     <p style="font-size:12px; color:var(--gray); margin: 5px 0;">Število glasovanj: ${s.voters.length}</p>
-                    <button class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;" onclick="toggleSurveyStatus(${s.id})">
-                        ${s.active ? 'Zapri anketo (Razglasi)' : 'Aktiviraj anketo'}
-                    </button>
-                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteSurvey(${s.id})">Izbriši</button>
+                    ${resultsHtml}
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;" onclick="toggleSurveyStatus(${s.id})">
+                            ${isActive ? 'Zapri anketo' : 'Aktiviraj anketo'}
+                        </button>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteSurvey(${s.id})">Izbriši</button>
+                    </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function toggleSurveyStatus(id) {
             const s = db.surveys.find(x => x.id === id);
             s.active = !s.active;
+            s.expiresAt = null; // Z ročnim preklopom odstranimo morebitno staro omejitev
             saveDB();
-            renderAdminSurveys();
         }
 
         function deleteSurvey(id) {
-            if(confirm("Ali res želiš izbrisati to anketo?")) {
-                db.surveys = db.surveys.filter(x => x.id !== id);
-                saveDB();
-                renderAdminSurveys();
-            }
+            if(confirm("Ali res želiš izbrisati anketo?")) { db.surveys = db.surveys.filter(x => x.id !== id); saveDB(); }
         }
 
-        // --- UPRAVLJANJE UPORABNIKOV ---
         function renderAdminUsers() {
             const container = document.getElementById('admin-users-list');
             container.innerHTML = db.users.filter(u => u.role !== 'admin').map(u => `
@@ -565,87 +739,51 @@
                         <button class="btn ${u.blocked ? 'btn' : 'btn-danger'}" style="padding: 5px 15px; font-size: 12px;" onclick="toggleUserBlock(${u.id})">
                             ${u.blocked ? 'Vrni dostop' : 'Začasno blokiraj'}
                         </button>
-                        <button class="btn btn-danger" style="padding: 5px 15px; font-size: 12px;" onclick="deleteUser(${u.id})">Izbriši uporabnika</button>
+                        <button class="btn btn-danger" style="padding: 5px 15px; font-size: 12px;" onclick="deleteUser(${u.id})">Izbriši</button>
                     </div>
                 </div>
             `).join('');
-            
-            updateNotifTargets(); // Osveži seznam v obvestilih
         }
 
         function addUser() {
             const name = document.getElementById('new-user-name').value;
             const user = document.getElementById('new-user-username').value;
             const pass = document.getElementById('new-user-password').value;
-
-            if(!name || !user || !pass) return alert("Izpolni vsa polja za novega uporabnika.");
+            if(!name || !user || !pass) return alert("Izpolni vsa polja.");
             if(db.users.find(u => u.username === user)) return alert("Uporabniško ime že obstaja!");
-
-            db.users.push({
-                id: Date.now(), name: name, username: user, password: pass, role: "user", blocked: false
-            });
-            
+            db.users.push({ id: Date.now(), name: name, username: user, password: pass, role: "user", blocked: false });
             saveDB();
-            
-            document.getElementById('new-user-name').value = '';
-            document.getElementById('new-user-username').value = '';
-            document.getElementById('new-user-password').value = '';
-            
-            renderAdminUsers();
-            alert("Uporabnik uspešno dodan.");
+            document.getElementById('new-user-name').value = ''; document.getElementById('new-user-username').value = ''; document.getElementById('new-user-password').value = '';
         }
 
         function saveUserEdit(id) {
             const u = db.users.find(x => x.id === id);
-            if (!u) return;
-
             u.name = document.getElementById(`edit-name-${id}`).value;
             u.username = document.getElementById(`edit-username-${id}`).value;
             u.password = document.getElementById(`edit-password-${id}`).value;
-
             saveDB();
-            alert("Podatki uporabnika posodobljeni!");
-            renderAdminUsers();
         }
 
-        function toggleUserBlock(id) {
-            const u = db.users.find(x => x.id === id);
-            u.blocked = !u.blocked;
-            saveDB();
-            renderAdminUsers();
-        }
+        function toggleUserBlock(id) { const u = db.users.find(x => x.id === id); u.blocked = !u.blocked; saveDB(); }
+        function deleteUser(id) { if(confirm("Res želiš izbrisati uporabnika?")) { db.users = db.users.filter(x => x.id !== id); saveDB(); } }
 
-        function deleteUser(id) {
-            if(confirm("Ali res želiš trajno izbrisati tega uporabnika?")) {
-                db.users = db.users.filter(x => x.id !== id);
-                saveDB();
-                renderAdminUsers();
-            }
-        }
-
-        // --- 7. PROFIL ---
         function updateProfile() {
             const pass = document.getElementById('profile-password').value;
             if (pass.length < 3) return alert("Geslo mora imeti vsaj 3 znake.");
-            
-            const user = db.users.find(u => u.id === db.currentUser.id);
+            const user = db.users.find(u => u.id === currentUser.id);
             user.password = pass;
-            db.currentUser.password = pass;
             saveDB();
-            
-            alert("Geslo uspešno spremenjeno!");
             document.getElementById('profile-password').value = '';
-            db.currentUser.role === 'admin' ? navigate('admin') : navigate('user');
+            alert("Geslo uspešno spremenjeno!");
         }
 
-        // Zagon ob nalaganju
-        window.onload = () => {
-            if (db.currentUser) {
-                setupUserUI();
-            } else {
-                navigate('home');
-            }
-        };
+        // Zapiranje modala s klikom izven vsebine
+        window.onclick = function(event) {
+            const modal = document.getElementById('message-modal');
+            if (event.target === modal) closeModal();
+        }
+
+        window.onload = () => { refreshUI(); };
     </script>
 </body>
 </html>
