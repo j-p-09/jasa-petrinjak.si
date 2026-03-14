@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaša Petrinjak</title>
+    <title>Jaša Petrinjak - VIP</title>
     <style>
         /* SVETLA TEMA */
         :root {
@@ -39,6 +39,7 @@
         .btn-outline { background-color: transparent; color: var(--primary-green); border: 2px solid var(--primary-green); }
         .btn-outline:hover { background-color: var(--primary-green); color: white; }
         .btn-danger { background-color: transparent; color: var(--danger); border: 2px solid var(--danger); }
+        .btn-danger:hover { background-color: var(--danger); color: white; }
         
         /* ZVONČEK IN OBVESTILA */
         .bell-container { position: relative; cursor: pointer; font-size: 24px; }
@@ -76,7 +77,7 @@
         .input-group input, .input-group textarea, .input-group select {
             width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; outline: none;
         }
-        .input-group input:focus { border-color: var(--primary-green); }
+        .input-group input:focus, .input-group select:focus { border-color: var(--primary-green); }
 
         /* ANKETE */
         .survey-grid { display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
@@ -139,10 +140,6 @@
                     <label>Geslo</label>
                     <input type="password" id="login-password">
                 </div>
-                <div class="input-group" style="display: flex; gap: 10px; align-items: center;">
-                    <input type="checkbox" id="login-remember" style="width: auto;">
-                    <label for="login-remember" style="margin: 0;">Zapomni si me na tej napravi</label>
-                </div>
                 <button class="btn" style="width: 100%;" onclick="login()">Prijava</button>
             </div>
         </section>
@@ -164,6 +161,11 @@
             <div id="admin-notifs" class="card admin-tab">
                 <h3>Pošlji obvestilo</h3>
                 <div class="input-group" style="margin-top: 15px;">
+                    <label>Prejemnik</label>
+                    <select id="notif-target">
+                        </select>
+                </div>
+                <div class="input-group">
                     <label>Zadeva</label>
                     <input type="text" id="new-notif-title">
                 </div>
@@ -171,7 +173,7 @@
                     <label>Vsebina</label>
                     <textarea id="new-notif-text" rows="3"></textarea>
                 </div>
-                <button class="btn" onclick="sendNotification()">Pošlji vsem uporabnikom</button>
+                <button class="btn" onclick="sendNotification()">Pošlji obvestilo</button>
             </div>
 
             <div id="admin-surveys" class="card admin-tab" style="display: none;">
@@ -180,19 +182,29 @@
                     <label>Naslov ankete</label>
                     <input type="text" id="new-survey-title">
                 </div>
-                <p style="font-size: 12px; color: var(--gray);">Prilepi URL povezave do slik (max 4)</p>
-                <div class="input-group"><input type="text" id="img1" placeholder="URL Slike 1"></div>
-                <div class="input-group"><input type="text" id="img2" placeholder="URL Slike 2"></div>
-                <div class="input-group"><input type="text" id="img3" placeholder="URL Slike 3"></div>
-                <div class="input-group"><input type="text" id="img4" placeholder="URL Slike 4"></div>
+                <p style="font-size: 12px; color: var(--gray); margin-bottom: 10px;">Izberi do 4 slike z računalnika (Max velikost celotne ankete zaradi localStorage omejitev naj bo manjša od par MB)</p>
+                <div class="input-group"><input type="file" id="file1" accept="image/*"></div>
+                <div class="input-group"><input type="file" id="file2" accept="image/*"></div>
+                <div class="input-group"><input type="file" id="file3" accept="image/*"></div>
+                <div class="input-group"><input type="file" id="file4" accept="image/*"></div>
                 <button class="btn" onclick="createSurvey()">Ustvari in aktiviraj anketo</button>
                 
                 <h3 style="margin-top: 30px; margin-bottom: 15px;">Vse ankete</h3>
                 <div id="admin-surveys-list"></div>
             </div>
 
-            <div id="admin-users" class="card admin-tab" style="display: none;">
-                <h3>Upravljanje uporabnikov</h3>
+            <div id="admin-users" class="admin-tab" style="display: none;">
+                <div class="card" style="margin-bottom: 20px;">
+                    <h3>Ustvari novega uporabnika</h3>
+                    <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                        <input type="text" id="new-user-name" placeholder="Ime in priimek" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <input type="text" id="new-user-username" placeholder="Uporabniško ime" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <input type="text" id="new-user-password" placeholder="Geslo" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <button class="btn" onclick="addUser()">Dodaj</button>
+                    </div>
+                </div>
+
+                <h3>Upravljanje obstoječih uporabnikov</h3>
                 <div id="admin-users-list" style="margin-top: 15px;"></div>
             </div>
         </section>
@@ -201,7 +213,7 @@
             <div class="card" style="max-width: 500px; margin: 0 auto;">
                 <h2>Nastavitve profila</h2>
                 <div class="input-group" style="margin-top: 15px;">
-                    <label>Ime in priimek (Zaklenjeno)</label>
+                    <label>Ime in priimek</label>
                     <input type="text" id="profile-name" disabled style="background-color: #f7fafc;">
                 </div>
                 <div class="input-group">
@@ -224,7 +236,6 @@
 
     <script>
         // --- 1. PODATKOVNA BAZA (Lokalni pomnilnik) ---
-        // Preverimo, če že obstajajo podatki, sicer ustvarimo privzete
         let db = JSON.parse(localStorage.getItem('jasaPlatformDB'));
         
         if (!db) {
@@ -249,7 +260,7 @@
         function navigate(sectionId) {
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
             document.getElementById('sec-' + sectionId).classList.add('active');
-            document.getElementById('notif-dropdown').style.display = 'none'; // Zapri obvestila pri menjavi
+            document.getElementById('notif-dropdown').style.display = 'none';
 
             if (sectionId === 'home') {
                 document.getElementById('home-loader').style.display = 'block';
@@ -304,13 +315,13 @@
                 if (db.currentUser.role === 'admin') {
                     renderAdminSurveys();
                     renderAdminUsers();
+                    updateNotifTargets(); // Pripravi dropdown prejemnikov
                     navigate('admin');
                 } else {
                     renderUserSurveys();
                     navigate('user');
                 }
                 
-                // Pripravi profil
                 document.getElementById('profile-name').value = db.currentUser.name;
                 document.getElementById('profile-username').value = db.currentUser.username;
             } else {
@@ -325,7 +336,6 @@
             const myNotifs = db.notifications.filter(n => n.target === 'all' || n.target === db.currentUser.id);
             const unread = myNotifs.filter(n => !n.readBy.includes(db.currentUser.id));
             
-            // Pika sveti samo, če so NEPREBRANA
             document.getElementById('notif-dot').style.display = unread.length > 0 ? 'block' : 'none';
 
             const container = document.getElementById('notif-dropdown');
@@ -346,7 +356,6 @@
             const dropdown = document.getElementById('notif-dropdown');
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
             
-            // Ko odpre, označi vsa kot prebrana za tega uporabnika
             if (dropdown.style.display === 'block') {
                 db.notifications.forEach(n => {
                     if ((n.target === 'all' || n.target === db.currentUser.id) && !n.readBy.includes(db.currentUser.id)) {
@@ -354,7 +363,7 @@
                     }
                 });
                 saveDB();
-                renderNotifications(); // Posodobi UI (skrije piko)
+                renderNotifications();
             }
         }
 
@@ -370,7 +379,6 @@
                 const hasVoted = s.voters.includes(db.currentUser.id);
                 const isClosed = !s.active;
                 
-                // Določi zmagovalca če je zaprto
                 let maxVotes = -1;
                 if (isClosed) {
                     s.images.forEach(img => { if(img.votes > maxVotes) maxVotes = img.votes; });
@@ -423,47 +431,82 @@
             document.getElementById(tabId).style.display = 'block';
         }
 
+        function updateNotifTargets() {
+            const select = document.getElementById('notif-target');
+            if (!select) return;
+            
+            let html = `<option value="all">Vsi uporabniki</option>`;
+            db.users.filter(u => u.role !== 'admin').forEach(u => {
+                html += `<option value="${u.id}">${u.name} (${u.username})</option>`;
+            });
+            select.innerHTML = html;
+        }
+
         function sendNotification() {
             const t = document.getElementById('new-notif-title').value;
             const x = document.getElementById('new-notif-text').value;
+            const targetVal = document.getElementById('notif-target').value;
+            
             if(!t || !x) return alert("Izpolni vsa polja.");
 
+            const targetId = targetVal === 'all' ? 'all' : parseInt(targetVal);
+
             db.notifications.push({
-                id: Date.now(), title: t, text: x, target: 'all', readBy: []
+                id: Date.now(), title: t, text: x, target: targetId, readBy: []
             });
             saveDB();
-            alert("Obvestilo poslano!");
+            alert("Obvestilo uspešno poslano!");
             document.getElementById('new-notif-title').value = '';
             document.getElementById('new-notif-text').value = '';
         }
 
-        function createSurvey() {
+        // Funkcija za pretvorbo datotek v Base64
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(e);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function createSurvey() {
             const title = document.getElementById('new-survey-title').value;
-            const urls = [
-                document.getElementById('img1').value,
-                document.getElementById('img2').value,
-                document.getElementById('img3').value,
-                document.getElementById('img4').value
-            ].filter(url => url.trim() !== "");
+            if (!title) return alert("Vnesi naslov ankete.");
 
-            if (!title || urls.length < 2) return alert("Vnesi naslov in vsaj 2 URL povezavi do slik.");
+            const inputs = ['file1', 'file2', 'file3', 'file4'].map(id => document.getElementById(id));
+            let promises = [];
 
-            const images = urls.map(url => ({ url: url, votes: 0 }));
+            inputs.forEach(input => {
+                if (input.files && input.files[0]) {
+                    promises.push(readFileAsDataURL(input.files[0]));
+                }
+            });
+
+            const base64Images = await Promise.all(promises);
+
+            if (base64Images.length < 2) {
+                return alert("Za anketo moraš naložiti vsaj 2 sliki.");
+            }
+
+            const images = base64Images.map(base64Str => ({ url: base64Str, votes: 0 }));
 
             db.surveys.push({
                 id: Date.now(), title: title, active: true, images: images, voters: []
             });
-            saveDB();
-            alert("Anketa ustvarjena!");
             
-            // Očisti polja
-            document.getElementById('new-survey-title').value = '';
-            document.getElementById('img1').value = '';
-            document.getElementById('img2').value = '';
-            document.getElementById('img3').value = '';
-            document.getElementById('img4').value = '';
-            
-            renderAdminSurveys();
+            try {
+                saveDB();
+                alert("Anketa ustvarjena!");
+                
+                // Očisti polja
+                document.getElementById('new-survey-title').value = '';
+                inputs.forEach(input => input.value = '');
+                
+                renderAdminSurveys();
+            } catch (e) {
+                alert("Napaka pri shranjevanju. Slike so morda prevelike za lokalni pomnilnik brskalnika (localStorage). Poskusi z manjšimi slikami.");
+            }
         }
 
         function renderAdminSurveys() {
@@ -478,6 +521,7 @@
                     <button class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;" onclick="toggleSurveyStatus(${s.id})">
                         ${s.active ? 'Zapri anketo (Razglasi)' : 'Aktiviraj anketo'}
                     </button>
+                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="deleteSurvey(${s.id})">Izbriši</button>
                 </div>
             `).join('');
         }
@@ -489,18 +533,79 @@
             renderAdminSurveys();
         }
 
+        function deleteSurvey(id) {
+            if(confirm("Ali res želiš izbrisati to anketo?")) {
+                db.surveys = db.surveys.filter(x => x.id !== id);
+                saveDB();
+                renderAdminSurveys();
+            }
+        }
+
+        // --- UPRAVLJANJE UPORABNIKOV ---
         function renderAdminUsers() {
             const container = document.getElementById('admin-users-list');
             container.innerHTML = db.users.filter(u => u.role !== 'admin').map(u => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; border-bottom: 1px solid var(--border-color);">
-                    <div>
-                        <strong>${u.name}</strong> (${u.username})
+                <div class="card" style="padding: 15px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <div class="input-group" style="flex: 1; margin-bottom:0;">
+                            <label style="font-size: 12px;">Ime in priimek</label>
+                            <input type="text" id="edit-name-${u.id}" value="${u.name}">
+                        </div>
+                        <div class="input-group" style="flex: 1; margin-bottom:0;">
+                            <label style="font-size: 12px;">Uporabniško ime</label>
+                            <input type="text" id="edit-username-${u.id}" value="${u.username}">
+                        </div>
+                        <div class="input-group" style="flex: 1; margin-bottom:0;">
+                            <label style="font-size: 12px;">Geslo</label>
+                            <input type="text" id="edit-password-${u.id}" value="${u.password}">
+                        </div>
                     </div>
-                    <button class="btn ${u.blocked ? 'btn' : 'btn-danger'}" style="padding: 5px 10px; font-size: 12px;" onclick="toggleUserBlock(${u.id})">
-                        ${u.blocked ? 'Vrni dostop' : 'Začasno odvzemi dostop'}
-                    </button>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn" style="padding: 5px 15px; font-size: 12px;" onclick="saveUserEdit(${u.id})">Shrani spremembe</button>
+                        <button class="btn ${u.blocked ? 'btn' : 'btn-danger'}" style="padding: 5px 15px; font-size: 12px;" onclick="toggleUserBlock(${u.id})">
+                            ${u.blocked ? 'Vrni dostop' : 'Začasno blokiraj'}
+                        </button>
+                        <button class="btn btn-danger" style="padding: 5px 15px; font-size: 12px;" onclick="deleteUser(${u.id})">Izbriši uporabnika</button>
+                    </div>
                 </div>
             `).join('');
+            
+            updateNotifTargets(); // Osveži seznam v obvestilih
+        }
+
+        function addUser() {
+            const name = document.getElementById('new-user-name').value;
+            const user = document.getElementById('new-user-username').value;
+            const pass = document.getElementById('new-user-password').value;
+
+            if(!name || !user || !pass) return alert("Izpolni vsa polja za novega uporabnika.");
+            if(db.users.find(u => u.username === user)) return alert("Uporabniško ime že obstaja!");
+
+            db.users.push({
+                id: Date.now(), name: name, username: user, password: pass, role: "user", blocked: false
+            });
+            
+            saveDB();
+            
+            document.getElementById('new-user-name').value = '';
+            document.getElementById('new-user-username').value = '';
+            document.getElementById('new-user-password').value = '';
+            
+            renderAdminUsers();
+            alert("Uporabnik uspešno dodan.");
+        }
+
+        function saveUserEdit(id) {
+            const u = db.users.find(x => x.id === id);
+            if (!u) return;
+
+            u.name = document.getElementById(`edit-name-${id}`).value;
+            u.username = document.getElementById(`edit-username-${id}`).value;
+            u.password = document.getElementById(`edit-password-${id}`).value;
+
+            saveDB();
+            alert("Podatki uporabnika posodobljeni!");
+            renderAdminUsers();
         }
 
         function toggleUserBlock(id) {
@@ -508,6 +613,14 @@
             u.blocked = !u.blocked;
             saveDB();
             renderAdminUsers();
+        }
+
+        function deleteUser(id) {
+            if(confirm("Ali res želiš trajno izbrisati tega uporabnika?")) {
+                db.users = db.users.filter(x => x.id !== id);
+                saveDB();
+                renderAdminUsers();
+            }
         }
 
         // --- 7. PROFIL ---
