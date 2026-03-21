@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lestvica Prijateljstva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        /* Animacije in specifični stili za lestvico */
+        .scale-container {
+            position: relative;
+            height: 400px;
+            width: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin: 20px auto;
+        }
+        .scale-node {
+            position: absolute;
+            left: -8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #94a3b8;
+            border: 4px solid white;
+            z-index: 10;
+        }
+        .scale-label {
+            position: absolute;
+            left: 30px;
+            top: 0;
+            transform: translateY(-25%);
+            white-space: nowrap;
+            font-weight: bold;
+            color: #475569;
+        }
+        .indicator {
+            position: absolute;
+            left: -12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #3b82f6;
+            border: 4px solid white;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+            z-index: 20;
+            transition: bottom 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .indicator-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .hidden { display: none !important; }
+        
+        /* Za lepši izgled form in izbirnikov */
+        select, input, textarea {
+            transition: all 0.3s ease;
+        }
+        select:focus, input:focus, textarea:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased selection:bg-blue-200">
+
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-gray-900">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md text-center transform transition-all">
+            <div class="mb-6 text-blue-600">
+                <i class="fa-solid fa-user-shield text-5xl"></i>
+            </div>
+            <h1 class="text-3xl font-extrabold mb-2 text-gray-800">Lestvica Prijateljstva</h1>
+            <p class="text-gray-500 mb-8">Vnesite PIN za dostop do baze.</p>
+            <input type="password" id="pinInput" placeholder="Vnesi PIN (privzeto: 1812)" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-center text-2xl tracking-[0.5em] mb-4">
+            <button onclick="app.login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-lg shadow-blue-500/30">
+                VSTOP
+            </button>
+            <p id="loginError" class="text-red-500 mt-4 hidden font-medium"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Napačen PIN!</p>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden min-h-screen flex flex-col md:flex-row">
+        
+        <nav class="bg-white w-full md:w-64 flex-shrink-0 shadow-lg md:min-h-screen z-10 flex flex-col">
+            <div class="p-6 bg-blue-600 text-white shadow-md">
+                <h2 class="text-2xl font-bold"><i class="fa-solid fa-users mr-2"></i> Prijatelji</h2>
+            </div>
+            <div class="flex-grow flex flex-col p-4 gap-2">
+                <button onclick="app.navigate('poizvedovanje')" id="nav-poizvedovanje" class="nav-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-magnifying-glass w-6"></i> Poizvedovanje
+                </button>
+                <button onclick="app.navigate('skupine')" id="nav-skupine" class="nav-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-layer-group w-6"></i> Skupine
+                </button>
+                <button onclick="app.navigate('komentar')" id="nav-komentar" class="nav-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-comment-dots w-6"></i> Komentar
+                </button>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <button onclick="app.navigate('nastavitve')" id="nav-nastavitve" class="nav-btn w-full text-left px-4 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+                        <i class="fa-solid fa-gear w-6"></i> Nastavitve
+                    </button>
+                    <button onclick="app.logout()" class="w-full text-left px-4 py-3 rounded-lg font-medium text-red-500 hover:bg-red-50 transition-colors mt-2">
+                        <i class="fa-solid fa-right-from-bracket w-6"></i> Odjava
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="flex-grow p-6 md:p-10 max-h-screen overflow-y-auto bg-gray-50">
+            
+            <section id="sec-poizvedovanje" class="section-content hidden max-w-5xl mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800 border-b pb-4"><i class="fa-solid fa-magnifying-glass mr-2 text-blue-500"></i> Poizvedovanje</h2>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Išči osebo (Ime in priimek)</label>
+                    <div class="relative">
+                        <input type="text" id="searchInput" oninput="app.searchPerson()" placeholder="Vpiši ime..." class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-lg">
+                        <i class="fa-solid fa-search absolute left-4 top-4 text-gray-400"></i>
+                    </div>
+                    <div id="searchResults" class="mt-2 flex gap-2 flex-wrap"></div>
+                </div>
+
+                <div id="personDetails" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 flex flex-col gap-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm flex items-center justify-between border-l-4 border-blue-500">
+                            <div>
+                                <h3 id="detailName" class="text-2xl font-bold text-gray-800">Ime Priimek</h3>
+                                <p class="text-gray-500 mt-1"><i class="fa-solid fa-users text-xs mr-1"></i> Skupina: <span id="detailGroup" class="font-semibold text-gray-700"></span></p>
+                            </div>
+                            <div class="text-right">
+                                <span id="detailStatusBadge" class="inline-block px-4 py-1 rounded-full text-sm font-bold bg-blue-100 text-blue-800 mb-1">Status</span>
+                                <p class="text-sm text-gray-500"><span id="detailCount">0</span> komentarjev</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-lg"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Zgodovina ocen</h4>
+                                <div>
+                                    <button onclick="app.generatePDF()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow-sm text-sm transition-colors mr-2">
+                                        <i class="fa-solid fa-file-pdf mr-1"></i> Poročilo (PDF)
+                                    </button>
+                                    <button onclick="app.navigate('komentar'); document.getElementById('komentarPerson').value = app.currentPersonId;" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow-sm text-sm transition-colors">
+                                        <i class="fa-solid fa-plus mr-1"></i> Nov Komentar
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="historyList" class="space-y-4 max-h-80 overflow-y-auto pr-2">
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center">
+                        <h4 class="font-bold text-lg mb-6 text-center w-full">Trenutna Pozicija</h4>
+                        <div class="scale-container">
+                            <div class="scale-node" style="bottom: 100%;"><span class="scale-label">Najboljši prijatelj</span></div>
+                            <div class="scale-node" style="bottom: 80%;"><span class="scale-label">Dober prijatelj</span></div>
+                            <div class="scale-node" style="bottom: 60%;"><span class="scale-label">Prijatelj</span></div>
+                            <div class="scale-node" style="bottom: 40%;"><span class="scale-label">Govoren</span></div>
+                            <div class="scale-node" style="bottom: 20%;"><span class="scale-label">Znanec</span></div>
+                            <div class="scale-node" style="bottom: 0%;"><span class="scale-label">Poden</span></div>
+                            <div id="scaleIndicator" class="indicator indicator-pulse" style="bottom: 0%;"></div>
+                        </div>
+                        <p id="scalePointsText" class="mt-8 font-mono font-bold text-xl text-blue-600">0/100 točk</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-skupine" class="section-content hidden max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800 border-b pb-4"><i class="fa-solid fa-layer-group mr-2 text-indigo-500"></i> Upravljanje Skupin</h2>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-8 flex gap-4 items-end">
+                    <div class="flex-grow">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Ime nove skupine</label>
+                        <input type="text" id="newGroupInput" placeholder="Npr. Sošolci, Služba..." class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <button onclick="app.addGroup()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold transition-colors mb-[2px]">
+                        Dodaj Skupino
+                    </button>
+                </div>
+
+                <div id="groupsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    </div>
+            </section>
+
+            <section id="sec-komentar" class="section-content hidden max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800 border-b pb-4"><i class="fa-solid fa-comment-dots mr-2 text-green-500"></i> Oddaja Komentarja</h2>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                    
+                    <div class="mb-8">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Izberi osebo ali vnesi novo</label>
+                        <input type="text" id="komentarPerson" placeholder="Ime in priimek..." class="w-full px-4 py-3 border-2 border-green-100 rounded-lg focus:border-green-500 focus:outline-none text-lg font-semibold bg-gray-50">
+                        <p class="text-xs text-gray-500 mt-1">Če oseba ne obstaja, bo samodejno ustvarjena.</p>
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Skupina (opcijsko za nove osebe)</label>
+                        <select id="komentarGroup" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50">
+                            </select>
+                    </div>
+
+                    <form id="assessmentForm" onsubmit="event.preventDefault(); app.submitAssessment();">
+                        
+                        <div class="mb-10 bg-blue-50/50 p-6 rounded-xl border border-blue-100">
+                            <h3 class="text-xl font-bold mb-4 text-blue-800 border-b border-blue-200 pb-2">A) OSEBNOST</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold mb-1">Karakter</label>
+                                <select id="catA1" class="w-full p-2 border rounded bg-white">
+                                    <option value="10">Odličen (Zelo stabilen, pozitiven) [10t]</option>
+                                    <option value="7">Dober (Občasno muhast, a prevladuje pozitiva) [7t]</option>
+                                    <option value="4">Povprečen (Spremenljiv, nevtralen) [4t]</option>
+                                    <option value="1">Slab (Negativen, nestabilen) [1t]</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold mb-1">Odnos do mene</label>
+                                <select id="catA2" class="w-full p-2 border rounded bg-white">
+                                    <option value="10">Spoštljiv, ljubeč, vedno na voljo [10t]</option>
+                                    <option value="7">Korekten, prijazen [7t]</option>
+                                    <option value="4">Hladen, občasno vzvišen [4t]</option>
+                                    <option value="1">Nesramen, izkoriščevalski [1t]</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-semibold mb-1">Značaj (Vrednote)</label>
+                                <select id="catA3" class="w-full p-2 border rounded bg-white">
+                                    <option value="10">Popolnoma se ujameva [10t]</option>
+                                    <option value="7">Večinoma usklajena [7t]</option>
+                                    <option value="4">Precej različna pogleda na svet [4t]</option>
+                                    <option value="1">Povsem nasprotne vrednote [1t]</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-10 bg-green-50/50 p-6 rounded-xl border border-green-100">
+                            <h3 class="text-xl font-bold mb-4 text-green-800 border-b border-green-200 pb-2">B) POGOVOR</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold mb-1">Pogostost komunikacije</label>
+                                <select id="catB1" class="w-full p-2 border rounded bg-white">
+                                    <option value="15">Vsakodnevno / Zelo pogosto [15t]</option>
+                                    <option value="10">Nekajkrat tedensko [10t]</option>
+                                    <option value="5">Občasno (1x mesečno) [5t]</option>
+                                    <option value="1">Skoraj nikoli [1t]</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold mb-1">Globina pogovorov</label>
+                                <select id="catB2" class="w-full p-2 border rounded bg-white">
+                                    <option value="15">Izjemno globoki (čustva, strahovi, cilji) [15t]</option>
+                                    <option value="10">Srednje globoki (delo, mnenja, hobiji) [10t]</option>
+                                    <option value="5">Površinski (vreme, trači, osnove) [5t]</option>
+                                    <option value="1">Samo nujno / izogibanje pogovoru [1t]</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-semibold mb-1">Iskrenost</label>
+                                <select id="catB3" class="w-full p-2 border rounded bg-white">
+                                    <option value="10">100% iskrenost brez mask [10t]</option>
+                                    <option value="7">Večinoma iskren, občasno zadržan [7t]</option>
+                                    <option value="3">Pogosto laže ali prikriva [3t]</option>
+                                    <option value="0">Popolnoma neiskren [0t]</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-10 bg-purple-50/50 p-6 rounded-xl border border-purple-100">
+                            <h3 class="text-xl font-bold mb-4 text-purple-800 border-b border-purple-200 pb-2">C) SPLOŠNO</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold mb-1">Moje zaupanje (Kako jaz zaupam osebi)</label>
+                                <select id="catC1" class="w-full p-2 border rounded bg-white">
+                                    <option value="15">Zaupam ji življenje in vse skrivnosti [15t]</option>
+                                    <option value="10">Zaupam večino stvari, a obstaja meja [10t]</option>
+                                    <option value="5">Zaupam le nepomembne informacije [5t]</option>
+                                    <option value="0">Absolutno nezaupanje [0t]</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold mb-1">Njihovo zaupanje (Kako mislim, da zaupa meni)</label>
+                                <select id="catC2" class="w-full p-2 border rounded bg-white">
+                                    <option value="15">Pove mi vse, name se zanese v krizi [15t]</option>
+                                    <option value="10">Zaupa mi precej, a ne vsega [10t]</option>
+                                    <option value="5">Površinsko zaupanje [5t]</option>
+                                    <option value="0">Ne zaupa mi [0t]</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-semibold mb-1">Osebna opomba (ne vpliva na točke)</label>
+                                <textarea id="komentarOpomba" rows="3" class="w-full p-2 border rounded bg-white" placeholder="Kratek zapis za spomin..."></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition duration-200 text-xl flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-calculator"></i> Preračunaj in Shrani
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="sec-nastavitve" class="section-content hidden max-w-lg mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-gray-800 border-b pb-4"><i class="fa-solid fa-gear mr-2 text-gray-500"></i> Nastavitve</h2>
+                
+                <div class="bg-white p-8 rounded-xl shadow-sm">
+                    <h3 class="text-xl font-bold mb-4">Sprememba PIN kode</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Nov PIN</label>
+                            <input type="password" id="newPinInput" class="w-full px-4 py-2 border rounded focus:border-blue-500 focus:outline-none text-center tracking-[0.3em] text-lg">
+                        </div>
+                        <button onclick="app.changePin()" class="w-full bg-gray-800 hover:bg-gray-900 text-white px-4 py-3 rounded font-bold transition-colors">
+                            Shrani nov PIN
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // Konfiguracija Firebase REST API (Brez potrebe po posebnem SDK-ju, kar omogoča delovanje zgolj s tvojim URL-jem)
+        const FIREBASE_URL = 'https://friends-a8f21-default-rtdb.europe-west1.firebasedatabase.app';
+
+        // Glavna App klasa
+        const app = {
+            data: {
+                people: {},
+                groups: {},
+                settings: { pin: "1812" }
+            },
+            currentPersonId: null,
+
+            // Pomožne funkcije za API klice (REST)
+            async apiGet(path) {
+                const res = await fetch(`${FIREBASE_URL}${path}.json`);
+                return await res.json();
+            },
+            async apiPut(path, payload) {
+                await fetch(`${FIREBASE_URL}${path}.json`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+            },
+            async apiPatch(path, payload) {
+                await fetch(`${FIREBASE_URL}${path}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(payload)
+                });
+            },
+
+            // Zagon aplikacije
+            async init() {
+                // Pridobitev PIN kode iz baze
+                const settings = await this.apiGet('/settings');
+                if (settings && settings.pin) {
+                    this.data.settings.pin = settings.pin;
+                } else {
+                    // Če baza še nima PINa, zapiši privzetega (1812)
+                    await this.apiPut('/settings', { pin: "1812" });
+                }
+            },
+
+            // Prijava
+            login() {
+                const input = document.getElementById('pinInput').value;
+                if (input === this.data.settings.pin) {
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                    this.loadData();
+                    this.navigate('poizvedovanje');
+                } else {
+                    document.getElementById('loginError').classList.remove('hidden');
+                }
+            },
+
+            logout() {
+                document.getElementById('pinInput').value = '';
+                document.getElementById('loginError').classList.add('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+            },
+
+            // Navigacija
+            navigate(sectionId) {
+                document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById('sec-' + sectionId).classList.remove('hidden');
+                
+                document.querySelectorAll('.nav-btn').forEach(el => {
+                    el.classList.remove('bg-blue-50', 'text-blue-600', 'border-l-4', 'border-blue-600');
+                });
+                const activeBtn = document.getElementById('nav-' + sectionId);
+                if(activeBtn) {
+                    activeBtn.classList.add('bg-blue-50', 'text-blue-600', 'border-l-4', 'border-blue-600');
+                }
+
+                if(sectionId === 'komentar') this.populateGroupsDropdown();
+            },
+
+            // Naloži glavne podatke
+            async loadData() {
+                const people = await this.apiGet('/people') || {};
+                const groups = await this.apiGet('/groups') || {};
+                this.data.people = people;
+                this.data.groups = groups;
+                this.renderGroups();
+            },
+
+            // --- POIZVEDOVANJE ---
+            searchPerson() {
+                const query = document.getElementById('searchInput').value.toLowerCase().trim();
+                const resultsContainer = document.getElementById('searchResults');
+                resultsContainer.innerHTML = '';
+                
+                if (query.length < 1) {
+                    document.getElementById('personDetails').classList.add('hidden');
+                    return;
+                }
+
+                Object.keys(this.data.people).forEach(id => {
+                    const p = this.data.people[id];
+                    if (p.name.toLowerCase().includes(query)) {
+                        const btn = document.createElement('button');
+                        btn.className = "bg-gray-100 hover:bg-blue-100 border border-gray-200 px-3 py-1 rounded-full text-sm font-medium m-1 transition-colors";
+                        btn.innerText = p.name;
+                        btn.onclick = () => {
+                            document.getElementById('searchInput').value = p.name;
+                            resultsContainer.innerHTML = '';
+                            this.showPersonDetails(id);
+                        };
+                        resultsContainer.appendChild(btn);
+                    }
+                });
+            },
+
+            showPersonDetails(id) {
+                this.currentPersonId = id;
+                const person = this.data.people[id];
+                document.getElementById('personDetails').classList.remove('hidden');
+                
+                document.getElementById('detailName').innerText = person.name;
+                document.getElementById('detailGroup').innerText = person.group || 'Ni v skupini';
+                
+                const assessments = person.assessments ? Object.values(person.assessments) : [];
+                document.getElementById('detailCount').innerText = assessments.length;
+
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '';
+
+                if (assessments.length > 0) {
+                    // Sortiraj po datumu padajoče
+                    assessments.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    
+                    const latest = assessments[0];
+                    this.updateScaleVisuals(latest.points, latest.status);
+                    
+                    document.getElementById('detailStatusBadge').innerText = latest.status;
+                    
+                    // Render zgodovine
+                    assessments.forEach(ass => {
+                        const dateObj = new Date(ass.date);
+                        const dateStr = `${dateObj.getDate()}.${dateObj.getMonth()+1}.${dateObj.getFullYear()}`;
+                        historyList.innerHTML += `
+                            <div class="border-b border-gray-100 pb-3 mb-3 last:border-0">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="font-semibold text-gray-800">${ass.status}</span>
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">${dateStr}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: ${ass.points}%"></div>
+                                </div>
+                                <p class="text-sm text-gray-600 italic">"${ass.opomba || 'Brez opombe'}"</p>
+                            </div>
+                        `;
+                    });
+                } else {
+                    document.getElementById('detailStatusBadge').innerText = "Ni ocenjeno";
+                    this.updateScaleVisuals(0, "Neznano");
+                    historyList.innerHTML = '<p class="text-gray-500 text-sm">Oseba še nima vpisanih ocen.</p>';
+                }
+            },
+
+            updateScaleVisuals(points, status) {
+                const indicator = document.getElementById('scaleIndicator');
+                const text = document.getElementById('scalePointsText');
+                
+                // Animacija in prikaz točk (0 do 100%)
+                // Ker je grafična lestvica obrnjena, nastavimo "bottom"
+                setTimeout(() => {
+                    indicator.style.bottom = `${points}%`;
+                }, 100);
+                
+                text.innerText = `${points}/100 točk (${status})`;
+
+                // Spremeni barvo indikatorja glede na točke
+                if(points >= 90) indicator.style.background = '#22c55e'; // green
+                else if(points >= 75) indicator.style.background = '#3b82f6'; // blue
+                else if(points >= 50) indicator.style.background = '#eab308'; // yellow
+                else if(points >= 30) indicator.style.background = '#f97316'; // orange
+                else indicator.style.background = '#ef4444'; // red
+            },
+
+            // --- LESTVICA IN LOGIKA IZRAČUNA ---
+            calculateStatus(points) {
+                if(points >= 90) return "Najboljši prijatelj";
+                if(points >= 75) return "Dober prijatelj";
+                if(points >= 50) return "Prijatelj";
+                if(points >= 30) return "Govoren";
+                if(points >= 15) return "Znanec";
+                return "Poden";
+            },
+
+            // --- KOMENTAR ---
+            populateGroupsDropdown() {
+                const select = document.getElementById('komentarGroup');
+                select.innerHTML = '<option value="">-- Brez skupine / Obdrži obstoječo --</option>';
+                Object.values(this.data.groups).forEach(g => {
+                    select.innerHTML += `<option value="${g.name}">${g.name}</option>`;
+                });
+            },
+
+            async submitAssessment() {
+                const personName = document.getElementById('komentarPerson').value.trim();
+                const groupName = document.getElementById('komentarGroup').value;
+                if (!personName) {
+                    alert("Prosim vpiši ime osebe!");
+                    return;
+                }
+
+                // Pobiranje točk
+                let points = 0;
+                points += parseInt(document.getElementById('catA1').value);
+                points += parseInt(document.getElementById('catA2').value);
+                points += parseInt(document.getElementById('catA3').value);
+                points += parseInt(document.getElementById('catB1').value);
+                points += parseInt(document.getElementById('catB2').value);
+                points += parseInt(document.getElementById('catB3').value);
+                points += parseInt(document.getElementById('catC1').value);
+                points += parseInt(document.getElementById('catC2').value);
+                
+                const status = this.calculateStatus(points);
+                const opomba = document.getElementById('komentarOpomba').value;
+
+                // Preveri če oseba obstaja, drugače ustvari ID
+                let pId = Object.keys(this.data.people).find(k => this.data.people[k].name === personName);
+                if (!pId) {
+                    pId = 'p_' + Date.now();
+                    this.data.people[pId] = { name: personName, assessments: {} };
+                }
+
+                // Posodobi skupino, če je izbrana
+                if (groupName) {
+                    this.data.people[pId].group = groupName;
+                }
+
+                // Pripravi assessment objekt
+                const assId = 'ass_' + Date.now();
+                const assessmentData = {
+                    date: new Date().toISOString(),
+                    points: points,
+                    status: status,
+                    opomba: opomba,
+                    raw: {
+                        A: parseInt(document.getElementById('catA1').value) + parseInt(document.getElementById('catA2').value) + parseInt(document.getElementById('catA3').value),
+                        B: parseInt(document.getElementById('catB1').value) + parseInt(document.getElementById('catB2').value) + parseInt(document.getElementById('catB3').value),
+                        C: parseInt(document.getElementById('catC1').value) + parseInt(document.getElementById('catC2').value)
+                    }
+                };
+
+                // Shrani v lokalni state
+                if(!this.data.people[pId].assessments) this.data.people[pId].assessments = {};
+                this.data.people[pId].assessments[assId] = assessmentData;
+
+                // Shrani v Firebase
+                await this.apiPut(`/people/${pId}`, this.data.people[pId]);
+
+                alert(`Ocena shranjena! Izračunan status: ${status} (${points}/100)`);
+                document.getElementById('assessmentForm').reset();
+                this.navigate('poizvedovanje');
+                document.getElementById('searchInput').value = personName;
+                this.searchPerson();
+            },
+
+            // --- SKUPINE ---
+            async addGroup() {
+                const name = document.getElementById('newGroupInput').value.trim();
+                if(!name) return;
+                
+                const gId = 'g_' + Date.now();
+                this.data.groups[gId] = { name: name };
+                await this.apiPut(`/groups/${gId}`, { name: name });
+                
+                document.getElementById('newGroupInput').value = '';
+                this.renderGroups();
+            },
+
+            async deleteGroup(gId) {
+                if(confirm("Ali res želiš izbrisati to skupino?")) {
+                    delete this.data.groups[gId];
+                    await fetch(`${FIREBASE_URL}/groups/${gId}.json`, { method: 'DELETE' });
+                    this.renderGroups();
+                }
+            },
+
+            renderGroups() {
+                const container = document.getElementById('groupsList');
+                container.innerHTML = '';
+                
+                Object.keys(this.data.groups).forEach(gId => {
+                    const g = this.data.groups[gId];
+                    // Preštej člane
+                    let members = Object.values(this.data.people).filter(p => p.group === g.name).map(p => p.name);
+                    
+                    container.innerHTML += `
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full">
+                            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                                <h4 class="font-bold text-lg text-indigo-700">${g.name}</h4>
+                                <button onclick="app.deleteGroup('${gId}')" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-sm text-gray-500 mb-2"><i class="fa-solid fa-users text-xs mr-1"></i> Člani (${members.length}):</p>
+                                <div class="flex flex-wrap gap-1">
+                                    ${members.length > 0 ? members.map(m => `<span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100">${m}</span>`).join('') : '<span class="text-xs text-gray-400 italic">Brez članov</span>'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            },
+
+            // --- NASTAVITVE ---
+            async changePin() {
+                const newPin = document.getElementById('newPinInput').value;
+                if(newPin.length < 4) {
+                    alert("PIN mora biti dolg vsaj 4 znake.");
+                    return;
+                }
+                this.data.settings.pin = newPin;
+                await this.apiPatch('/settings', { pin: newPin });
+                alert("PIN uspešno spremenjen!");
+                document.getElementById('newPinInput').value = '';
+            },
+
+            // --- PDF GENERATOR IN "AI" BESEDILO ---
+            generateAIText(person, latest) {
+                // Skripta zgenerira kvazi AI poročilo glede na raw ocene posameznih kategorij
+                const A = latest.raw.A; // max 30
+                const B = latest.raw.B; // max 40
+                const C = latest.raw.C; // max 30
+                
+                let text = `Analiza odnosa za osebo ${person.name}:\n\n`;
+                
+                // Analiza osebnosti
+                if (A >= 25) text += "Na podrocju osebnosti se neverjetno dobro ujemata. Oseba izkazuje izjemno stabilen karakter in vzajemno spostovanje, njene vrednote pa so mocno usklajene s tvojimi. ";
+                else if (A >= 15) text += "Osebnostno se relativno dobro razumeta, ceprav obstajajo dolocena odstopanja v karakterju ali vrednotah, ki zahtevajo prilagajanje. ";
+                else text += "Karakterno si nista blizu. Opazna so velika razhajanja v vrednotah ali odnosu, kar pogosto ustvarja distanco. ";
+
+                // Analiza pogovora
+                if (B >= 30) text += "Komunikacija je na zelo visokem nivoju. Pogovori so pogosti, zelo iskreni in segajo v globino, kar kaze na mocno mentalno povezanost. ";
+                else if (B >= 15) text += "Pogovori so povprecni. Vecinoma gre za korektno komunikacijo na povrsinski ravni z obcasnimi prebliski iskrenosti. ";
+                else text += "Komunikacije je malo in je izrazito povrsinska ali celo neiskrena. Teme so strogo omejene na nujne zadeve. ";
+
+                // Analiza zaupanja
+                if (C >= 25) text += "Zaupanje med vama je absolutno in obojestransko. Lahko se zaneseta drug na drugega tudi v najtezjih situacijah.\n";
+                else if (C >= 10) text += "Zaupanje je delno. Osebi sicer zaupas do dolocene mere, vendar ohranjas doloceno mero previdnosti pri zares pomembnih stvareh.\n";
+                else text += "Med vama prakticno ni vzajemnega zaupanja. Odnos temelji izkljucno na poznanstvu brez globlje varnostne mreze.\n";
+
+                text += `\nSklep: Glede na analizirane parametre sistem osebo uvresca v kategorijo '${latest.status}'. Dosezeno je ${latest.points} od 100 moznih tock.`;
+                
+                return text;
+            },
+
+            generatePDF() {
+                if(!this.currentPersonId) return;
+                const person = this.data.people[this.currentPersonId];
+                
+                // Pridobi zadnjo oceno
+                if(!person.assessments) {
+                    alert("Oseba še nima ocen!");
+                    return;
+                }
+                const assessments = Object.values(person.assessments).sort((a, b) => new Date(b.date) - new Date(a.date));
+                const latest = assessments[0];
+
+                // Generiranje besedila in odstranjevanje šumnikov (ZAHTEVA!)
+                const rawText = this.generateAIText(person, latest);
+                
+                // Menjava šumnikov v celotnem tekstu za PDF kompatibilnost (brez custom fontov)
+                const mapObj = { 'š':'s', 'č':'c', 'ž':'z', 'Š':'S', 'Č':'C', 'Ž':'Z' };
+                const safeText = rawText.replace(/[ščžŠČŽ]/g, match => mapObj[match]);
+                const safeName = person.name.replace(/[ščžŠČŽ]/g, match => mapObj[match]);
+
+                // Uporaba jsPDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Oblikovanje PDFja
+                doc.setFont("helvetica");
+                doc.setFontSize(22);
+                doc.setTextColor(59, 130, 246); // Modra
+                doc.text("POROCILO O PRIJATELJSTVU", 20, 20);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(50, 50, 50);
+                doc.text(`Oseba: ${safeName}`, 20, 35);
+                doc.text(`Skupina: ${person.group ? person.group.replace(/[ščžŠČŽ]/g, match => mapObj[match]) : 'Brez skupine'}`, 20, 42);
+                doc.text(`Tocke: ${latest.points}/100`, 20, 49);
+                doc.setFont(undefined, 'bold');
+                doc.text(`Status: ${latest.status.replace(/[ščžŠČŽ]/g, match => mapObj[match])}`, 20, 56);
+                
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(12);
+                doc.setTextColor(80, 80, 80);
+                
+                // Prelom vrstic v jsPDF
+                const splitText = doc.splitTextToSize(safeText, 170);
+                doc.text(splitText, 20, 75);
+
+                // Dodatek opombe če obstaja
+                if(latest.opomba) {
+                    const safeOpomba = latest.opomba.replace(/[ščžŠČŽ]/g, match => mapObj[match]);
+                    doc.setFont(undefined, 'italic');
+                    const splitOpomba = doc.splitTextToSize("Opomba: " + safeOpomba, 170);
+                    doc.text(splitOpomba, 20, 150);
+                }
+
+                // Podpis / Footer
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Generirano samodejno na podlagi vnesenih ocen - Lestvica Prijateljstva.`, 20, 280);
+
+                // Prenos
+                doc.save(`Porocilo_${safeName.replace(/\s+/g, '_')}.pdf`);
+            }
+        };
+
+        // Zagon ob nalaganju strani
+        window.onload = () => {
+            app.init();
+        };
+    </script>
+</body>
+</html>
