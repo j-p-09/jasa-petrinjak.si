@@ -144,12 +144,15 @@
                         <div class="bg-white p-6 rounded-xl shadow-sm">
                             <div class="flex justify-between items-center mb-4">
                                 <h4 class="font-bold text-lg"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Zgodovina ocen</h4>
-                                <div>
-                                    <button onclick="app.generatePDF()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow-sm text-sm transition-colors mr-2">
-                                        <i class="fa-solid fa-file-pdf mr-1"></i> Poročilo (PDF)
+                                <div class="flex gap-2">
+                                    <button onclick="app.previewReport()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow-sm text-sm transition-colors">
+                                        <i class="fa-solid fa-eye mr-1"></i> Predogled
+                                    </button>
+                                    <button onclick="app.generatePDF()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow-sm text-sm transition-colors">
+                                        <i class="fa-solid fa-file-pdf mr-1"></i> PDF
                                     </button>
                                     <button onclick="app.navigate('komentar'); document.getElementById('komentarPerson').value = app.currentPersonId;" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow-sm text-sm transition-colors">
-                                        <i class="fa-solid fa-plus mr-1"></i> Nov Komentar
+                                        <i class="fa-solid fa-plus mr-1"></i> Nov
                                     </button>
                                 </div>
                             </div>
@@ -231,17 +234,17 @@
                             <h3 class="text-xl font-bold mb-2 text-blue-800">A) OSEBNOST - Podkategorija 1/3</h3>
                             <label class="block text-lg font-bold text-gray-700 mb-4">Karakter osebe</label>
                             <select id="catA1" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
-                                <option value="10">10 točk - Odličen (Zelo stabilen, pozitiven)</option>
-                                <option value="9">9 točk - Zelo dober</option>
-                                <option value="8">8 točk - Pretežno dober</option>
-                                <option value="7">7 točk - Dober (Občasno muhast, a prevladuje pozitiva)</option>
-                                <option value="6">6 točk - Zmerno dober</option>
-                                <option value="5">5 točk - Spremenljiv (Na pol)</option>
-                                <option value="4">4 točke - Povprečen (Spremenljiv, nevtralen)</option>
-                                <option value="3">3 točke - Rahlo slabši</option>
-                                <option value="2">2 točki - Precej slab</option>
-                                <option value="1">1 točka - Slab (Negativen, nestabilen)</option>
-                                <option value="0">0 točk - Nevzdržen</option>
+                                <option value="10">Odličen (Zelo stabilen, pozitiven)</option>
+                                <option value="9">Zelo dober</option>
+                                <option value="8">Pretežno dober</option>
+                                <option value="7">Dober (Občasno muhast, a prevladuje pozitiva)</option>
+                                <option value="6">Zmerno dober</option>
+                                <option value="5">Spremenljiv (Na pol)</option>
+                                <option value="4">Povprečen (Spremenljiv, nevtralen)</option>
+                                <option value="3">Rahlo slabši</option>
+                                <option value="2">Precej slab</option>
+                                <option value="1">Slab (Negativen, nestabilen)</option>
+                                <option value="0">Nevzdržen</option>
                             </select>
                         </div>
 
@@ -249,17 +252,17 @@
                             <h3 class="text-xl font-bold mb-2 text-blue-800">A) OSEBNOST - Podkategorija 2/3</h3>
                             <label class="block text-lg font-bold text-gray-700 mb-4">Njihov odnos do mene</label>
                             <select id="catA2" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
-                                <option value="10">10 točk - Spoštljiv, ljubeč, vedno na voljo</option>
-                                <option value="9">9 točk - Izjemno korekten</option>
-                                <option value="8">8 točk - Zelo prijazen</option>
-                                <option value="7">7 točk - Korekten in prijazen večinoma</option>
-                                <option value="6">6 točk - Včasih zadržan, a dober</option>
-                                <option value="5">5 točk - Povprečen, nevtralen</option>
-                                <option value="4">4 točke - Hladen, občasno vzvišen</option>
-                                <option value="3">3 točke - Neprijeten na čase</option>
-                                <option value="2">2 točki - Zaničevalen</option>
-                                <option value="1">1 točka - Nesramen, izkoriščevalski</option>
-                                <option value="0">0 točk - Katastrofalen odnos</option>
+                                <option value="10">Spoštljiv, ljubeč, vedno na voljo</option>
+                                <option value="9">Izjemno korekten</option>
+                                <option value="8">Zelo prijazen</option>
+                                <option value="7">Korekten in prijazen večinoma</option>
+                                <option value="6">Včasih zadržan, a dober</option>
+                                <option value="5">Povprečen, nevtralen</option>
+                                <option value="4">Hladen, občasno vzvišen</option>
+                                <option value="3">Neprijeten na čase</option>
+                                <option value="2">Zaničevalen</option>
+                                <option value="1">Nesramen, izkoriščevalski</option>
+                                <option value="0">Katastrofalen odnos</option>
                             </select>
                         </div>
 
@@ -267,17 +270,17 @@
                             <h3 class="text-xl font-bold mb-2 text-blue-800">A) OSEBNOST - Podkategorija 3/3</h3>
                             <label class="block text-lg font-bold text-gray-700 mb-4">Značaj in usklajenost vrednot</label>
                             <select id="catA3" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
-                                <option value="10">10 točk - Popolnoma se ujameva</option>
-                                <option value="9">9 točk - Skoraj popolno ujemanje</option>
-                                <option value="8">8 točk - Zelo dobro se razumeva</option>
-                                <option value="7">7 točk - Večinoma usklajena</option>
-                                <option value="6">6 točk - Imava nekaj razlik</option>
-                                <option value="5">5 točk - Pol/Pol ujemanje</option>
-                                <option value="4">4 točke - Precej različna pogleda na svet</option>
-                                <option value="3">3 točke - Velika razhajanja</option>
-                                <option value="2">2 točki - Neusklajena</option>
-                                <option value="1">1 točka - Povsem nasprotne vrednote</option>
-                                <option value="0">0 točk - Konstanten konflikt interesov</option>
+                                <option value="10">Popolnoma se ujameva</option>
+                                <option value="9">Skoraj popolno ujemanje</option>
+                                <option value="8">Zelo dobro se razumeva</option>
+                                <option value="7">Večinoma usklajena</option>
+                                <option value="6">Imava nekaj razlik</option>
+                                <option value="5">Pol/Pol ujemanje</option>
+                                <option value="4">Precej različna pogleda na svet</option>
+                                <option value="3">Velika razhajanja</option>
+                                <option value="2">Neusklajena</option>
+                                <option value="1">Povsem nasprotne vrednote</option>
+                                <option value="0">Konstanten konflikt interesov</option>
                             </select>
                         </div>
 
@@ -285,22 +288,22 @@
                             <h3 class="text-xl font-bold mb-2 text-green-800">B) POGOVOR - Podkategorija 1/3</h3>
                             <label class="block text-lg font-bold text-gray-700 mb-4">Pogostost komunikacije</label>
                             <select id="catB1" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
-                                <option value="15">15 točk - Vsakodnevno / Zelo pogosto</option>
-                                <option value="14">14 točk - Skoraj vsak dan</option>
-                                <option value="13">13 točk - 4-5x na teden</option>
-                                <option value="12">12 točk - 3x na teden</option>
-                                <option value="11">11 točk - Večkrat tedensko</option>
-                                <option value="10">10 točk - 1-2x tedensko</option>
-                                <option value="9">9 točk - Pogosto</option>
-                                <option value="8">8 točk - Na nekaj dni</option>
-                                <option value="7">7 točk - Enkrat na dva tedna</option>
-                                <option value="6">6 točk - Zmerno</option>
-                                <option value="5">5 točk - Občasno (1x mesečno)</option>
-                                <option value="4">4 točke - Redko</option>
-                                <option value="3">3 točke - Zelo redko (vsake par mesecev)</option>
-                                <option value="2">2 točki - Skoraj nikoli</option>
-                                <option value="1">1 točka - Izjemno redko (samo za praznike)</option>
-                                <option value="0">0 točk - Ni komunikacije</option>
+                                <option value="15">Vsakodnevno / Zelo pogosto</option>
+                                <option value="14">Skoraj vsak dan</option>
+                                <option value="13">4-5x na teden</option>
+                                <option value="12">3x na teden</option>
+                                <option value="11">Večkrat tedensko</option>
+                                <option value="10">1-2x tedensko</option>
+                                <option value="9">Pogosto</option>
+                                <option value="8">Na nekaj dni</option>
+                                <option value="7">Enkrat na dva tedna</option>
+                                <option value="6">Zmerno</option>
+                                <option value="5">Občasno (1x mesečno)</option>
+                                <option value="4">Redko</option>
+                                <option value="3">Zelo redko (vsake par mesecev)</option>
+                                <option value="2">Skoraj nikoli</option>
+                                <option value="1">Izjemno redko (samo za praznike)</option>
+                                <option value="0">Ni komunikacije</option>
                             </select>
                         </div>
 
@@ -308,22 +311,22 @@
                             <h3 class="text-xl font-bold mb-2 text-green-800">B) POGOVOR - Podkategorija 2/3</h3>
                             <label class="block text-lg font-bold text-gray-700 mb-4">Globina pogovorov</label>
                             <select id="catB2" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
-                                <option value="15">15 točk - Izjemno globoki (čustva, strahovi)</option>
-                                <option value="14">14 točk - Zelo globoki</option>
-                                <option value="13">13 točk - Povezani pogovori</option>
-                                <option value="12">12 točk - Globoki</option>
-                                <option value="11">11 točk - Nadpovprečni</option>
-                                <option value="10">10 točk - Srednje globoki (delo, mnenja, hobiji)</option>
-                                <option value="9">9 točk - Občasno gre v globino</option>
-                                <option value="8">8 točk - Boljše kot vreme</option>
-                                <option value="7">7 točk - Vsakdanje zadeve</option>
-                                <option value="6">6 točk - Enostavni pogovori</option>
-                                <option value="5">5 točk - Površinski (vreme, trači, osnove)</option>
-                                <option value="4">4 točke - Plitki pogovori</option>
-                                <option value="3">3 točke - Vljudnostne fraze</option>
-                                <option value="2">2 točki - Zadržano</option>
-                                <option value="1">1 točka - Samo nujno / izogibanje</option>
-                                <option value="0">0 točk - Tišina / Neprijetno</option>
+                                <option value="15">Izjemno globoki (čustva, strahovi)</option>
+                                <option value="14">Zelo globoki</option>
+                                <option value="13">Povezani pogovori</option>
+                                <option value="12">Globoki</option>
+                                <option value="11">Nadpovprečni</option>
+                                <option value="10">Srednje globoki (delo, mnenja, hobiji)</option>
+                                <option value="9">Občasno gre v globino</option>
+                                <option value="8">Boljše kot vreme</option>
+                                <option value="7">Vsakdanje zadeve</option>
+                                <option value="6">Enostavni pogovori</option>
+                                <option value="5">Površinski (vreme, trači, osnove)</option>
+                                <option value="4">Plitki pogovori</option>
+                                <option value="3">Vljudnostne fraze</option>
+                                <option value="2">Zadržano</option>
+                                <option value="1">Samo nujno / izogibanje</option>
+                                <option value="0">Tišina / Neprijetno</option>
                             </select>
                         </div>
 
@@ -331,17 +334,17 @@
                             <h3 class="text-xl font-bold mb-2 text-green-800">B) POGOVOR - Podkategorija 3/3</h3>
                             <label class="block text-lg font-bold text-gray-700 mb-4">Iskrenost</label>
                             <select id="catB3" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
-                                <option value="10">10 točk - 100% iskrenost brez mask</option>
-                                <option value="9">9 točk - Izjemno iskren</option>
-                                <option value="8">8 točk - Zelo iskren</option>
-                                <option value="7">7 točk - Večinoma iskren, občasno zadržan</option>
-                                <option value="6">6 točk - Zadrži kaj zase</option>
-                                <option value="5">5 točk - Polovično iskren</option>
-                                <option value="4">4 točke - Pogosto pazi kaj reče</option>
-                                <option value="3">3 točke - Pogosto laže ali prikriva</option>
-                                <option value="2">2 točki - Pretežno neiskren</option>
-                                <option value="1">1 točka - Lažnivec</option>
-                                <option value="0">0 točk - Popolnoma neiskren</option>
+                                <option value="10">100% iskrenost brez mask</option>
+                                <option value="9">Izjemno iskren</option>
+                                <option value="8">Zelo iskren</option>
+                                <option value="7">Večinoma iskren, občasno zadržan</option>
+                                <option value="6">Zadrži kaj zase</option>
+                                <option value="5">Polovično iskren</option>
+                                <option value="4">Pogosto pazi kaj reče</option>
+                                <option value="3">Pogosto laže ali prikriva</option>
+                                <option value="2">Pretežno neiskren</option>
+                                <option value="1">Lažnivec</option>
+                                <option value="0">Popolnoma neiskren</option>
                             </select>
                         </div>
 
@@ -349,22 +352,22 @@
                             <h3 class="text-xl font-bold mb-2 text-purple-800">C) SPLOŠNO - Podkategorija 1/2</h3>
                             <label class="block text-lg font-bold text-gray-700 mb-4">Moje zaupanje (Kako jaz zaupam)</label>
                             <select id="catC1" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
-                                <option value="15">15 točk - Zaupam življenje in vse skrivnosti</option>
-                                <option value="14">14 točk - Neizmerno zaupanje</option>
-                                <option value="13">13 točk - Zelo močno zaupanje</option>
-                                <option value="12">12 točk - Močno zaupanje</option>
-                                <option value="11">11 točk - Visoko zaupanje</option>
-                                <option value="10">10 točk - Zaupam večino stvari (obstaja meja)</option>
-                                <option value="9">9 točk - Zaupam precej</option>
-                                <option value="8">8 točk - Srednje dobro zaupanje</option>
-                                <option value="7">7 točk - Zaupam splošne stvari</option>
-                                <option value="6">6 točk - Previdno zaupanje</option>
-                                <option value="5">5 točk - Zaupam le nepomembne informacije</option>
-                                <option value="4">4 točke - Bolj malo zaupam</option>
-                                <option value="3">3 točke - Ne zaupam rad</option>
-                                <option value="2">2 točki - Močen dvom</option>
-                                <option value="1">1 točka - Skoraj nič ne zaupam</option>
-                                <option value="0">0 točk - Absolutno nezaupanje</option>
+                                <option value="15">Zaupam življenje in vse skrivnosti</option>
+                                <option value="14">Neizmerno zaupanje</option>
+                                <option value="13">Zelo močno zaupanje</option>
+                                <option value="12">Močno zaupanje</option>
+                                <option value="11">Visoko zaupanje</option>
+                                <option value="10">Zaupam večino stvari (obstaja meja)</option>
+                                <option value="9">Zaupam precej</option>
+                                <option value="8">Srednje dobro zaupanje</option>
+                                <option value="7">Zaupam splošne stvari</option>
+                                <option value="6">Previdno zaupanje</option>
+                                <option value="5">Zaupam le nepomembne informacije</option>
+                                <option value="4">Bolj malo zaupam</option>
+                                <option value="3">Ne zaupam rad</option>
+                                <option value="2">Močen dvom</option>
+                                <option value="1">Skoraj nič ne zaupam</option>
+                                <option value="0">Absolutno nezaupanje</option>
                             </select>
                         </div>
 
@@ -372,22 +375,22 @@
                             <h3 class="text-xl font-bold mb-2 text-purple-800">C) SPLOŠNO - Podkategorija 2/2</h3>
                             <label class="block text-lg font-bold text-gray-700 mb-4">Njihovo zaupanje (Kako mislim, da zaupa meni)</label>
                             <select id="catC2" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
-                                <option value="15">15 točk - Pove vse, name se zanese v krizi</option>
-                                <option value="14">14 točk - Popolnoma se zanese</option>
-                                <option value="13">13 točk - Zelo močno se zanese</option>
-                                <option value="12">12 točk - Močno mi zaupa</option>
-                                <option value="11">11 točk - Visoko zaupanje</option>
-                                <option value="10">10 točk - Zaupa mi precej, a ne vsega</option>
-                                <option value="9">9 točk - Zaupa mi veliko</option>
-                                <option value="8">8 točk - Srednje zaupanje vame</option>
-                                <option value="7">7 točk - Zaupa osnovne stvari</option>
-                                <option value="6">6 točk - Rahlo zadržano</option>
-                                <option value="5">5 točk - Površinsko zaupanje</option>
-                                <option value="4">4 točke - Malo mi zaupa</option>
-                                <option value="3">3 točke - Ne deli osebnega</option>
-                                <option value="2">2 točki - Zelo zadržan</option>
-                                <option value="1">1 točka - Dvomljiv do mene</option>
-                                <option value="0">0 točk - Ne zaupa mi</option>
+                                <option value="15">Pove vse, name se zanese v krizi</option>
+                                <option value="14">Popolnoma se zanese</option>
+                                <option value="13">Zelo močno se zanese</option>
+                                <option value="12">Močno mi zaupa</option>
+                                <option value="11">Visoko zaupanje</option>
+                                <option value="10">Zaupa mi precej, a ne vsega</option>
+                                <option value="9">Zaupa mi veliko</option>
+                                <option value="8">Srednje zaupanje vame</option>
+                                <option value="7">Zaupa osnovne stvari</option>
+                                <option value="6">Rahlo zadržano</option>
+                                <option value="5">Površinsko zaupanje</option>
+                                <option value="4">Malo mi zaupa</option>
+                                <option value="3">Ne deli osebnega</option>
+                                <option value="2">Zelo zadržan</option>
+                                <option value="1">Dvomljiv do mene</option>
+                                <option value="0">Ne zaupa mi</option>
                             </select>
                         </div>
 
@@ -795,6 +798,68 @@
                 return text;
             },
 
+            previewReport() {
+                if(!this.currentPersonId) return;
+                const person = this.data.people[this.currentPersonId];
+                if(!person.assessments) { alert("Oseba še nima ocen!"); return; }
+                const assessments = Object.values(person.assessments).sort((a, b) => new Date(b.date) - new Date(a.date));
+                const latest = assessments[0];
+                const rawText = this.generateAIText(person, latest);
+
+                let colorClass = "bg-red-500";
+                if(latest.points >= 90) colorClass = "bg-green-500";
+                else if(latest.points >= 75) colorClass = "bg-blue-500";
+                else if(latest.points >= 50) colorClass = "bg-yellow-500";
+                else if(latest.points >= 30) colorClass = "bg-orange-500";
+
+                const newWin = window.open('', '_blank');
+                newWin.document.write(`
+                    <html>
+                    <head>
+                        <title>Predogled Poročila - ${person.name}</title>
+                        <script src="https://cdn.tailwindcss.com"><\/script>
+                        <style>
+                            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #f9fafb; padding: 40px; }
+                            .page { max-width: 800px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 8px; }
+                            .scale-line { position: relative; width: 6px; background: #e2e8f0; height: 300px; border-radius: 3px; margin: 40px 20px; }
+                            .node { position: absolute; left: -4px; width: 14px; height: 14px; border-radius: 50%; background: #94a3b8; border: 2px solid white; }
+                            .node span { position: absolute; left: 25px; top: -4px; white-space: nowrap; font-size: 14px; color: #475569; font-weight: bold; }
+                            .indicator { position: absolute; left: -7px; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; z-index: 10; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="page">
+                            <h1 class="text-3xl font-bold text-blue-500 mb-2">POROČILO O PRIJATELJSTVU</h1>
+                            <div class="mb-8 border-b pb-4">
+                                <p class="text-xl font-bold text-gray-800">Oseba: ${person.name}</p>
+                                <p class="text-gray-600">Skupina: ${person.group || 'Brez skupine'}</p>
+                                <p class="text-xl font-bold mt-2">Točke: <span class="text-blue-600">${latest.points}/100</span></p>
+                                <p class="text-lg font-bold">Status: ${latest.status}</p>
+                            </div>
+                            <div class="mb-8 text-gray-700 leading-relaxed text-lg">
+                                ${rawText.replace(/\n/g, '<br>')}
+                            </div>
+                            ${latest.opomba ? `<div class="mb-8 p-4 bg-gray-50 rounded italic text-gray-600">Opomba: ${latest.opomba}</div>` : ''}
+
+                            <h3 class="font-bold text-xl mb-4 text-gray-800">Vizualizacija statusa</h3>
+                            <div class="scale-line">
+                                <div class="node" style="bottom: 90%;"><span>Najboljši (90+)</span></div>
+                                <div class="node" style="bottom: 75%;"><span>Dober (75-89)</span></div>
+                                <div class="node" style="bottom: 50%;"><span>Prijatelj (50-74)</span></div>
+                                <div class="node" style="bottom: 30%;"><span>Govoren (30-49)</span></div>
+                                <div class="node" style="bottom: 15%;"><span>Znanec (15-29)</span></div>
+                                <div class="node" style="bottom: 0%;"><span>Poden (0-14)</span></div>
+                                <div class="indicator ${colorClass}" style="bottom: ${latest.points}%;"></div>
+                            </div>
+                            
+                            <div class="mt-12 text-sm text-gray-400 pt-4 border-t">Generirano samodejno - Lestvica Prijateljstva.</div>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                newWin.document.close();
+            },
+
             generatePDF() {
                 if(!this.currentPersonId) return;
                 const person = this.data.people[this.currentPersonId];
@@ -830,12 +895,63 @@
                 const splitText = doc.splitTextToSize(safeText, 170);
                 doc.text(splitText, 20, 75);
 
+                let currentY = 75 + (splitText.length * 6);
+
                 if(latest.opomba) {
                     const safeOpomba = latest.opomba.replace(/[ščžŠČŽ]/g, match => mapObj[match]);
                     doc.setFont(undefined, 'italic');
                     const splitOpomba = doc.splitTextToSize("Opomba: " + safeOpomba, 170);
-                    doc.text(splitOpomba, 20, 150);
+                    currentY += 10;
+                    doc.text(splitOpomba, 20, currentY);
+                    currentY += (splitOpomba.length * 6);
                 }
+
+                // Crtanje lestvice v PDF
+                currentY += 15;
+                const scaleHeight = 80;
+                const scaleX = 30;
+
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(50, 50, 50);
+                doc.text("Vizualizacija statusa", 20, currentY - 10);
+
+                doc.setLineWidth(2);
+                doc.setDrawColor(226, 232, 240); // gray
+                doc.line(scaleX, currentY, scaleX, currentY + scaleHeight);
+
+                const nodes = [
+                    {p: 90, l: "Najboljsi (90+)"},
+                    {p: 75, l: "Dober (75-89)"},
+                    {p: 50, l: "Prijatelj (50-74)"},
+                    {p: 30, l: "Govoren (30-49)"},
+                    {p: 15, l: "Znanec (15-29)"},
+                    {p: 0, l: "Poden (0-14)"}
+                ];
+
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(10);
+                nodes.forEach(n => {
+                    const yPos = currentY + scaleHeight - (n.p / 100 * scaleHeight);
+                    doc.setDrawColor(148, 163, 184);
+                    doc.setFillColor(148, 163, 184);
+                    doc.circle(scaleX, yPos, 2, 'FD');
+                    doc.setTextColor(71, 85, 105);
+                    doc.text(n.l, scaleX + 6, yPos + 1);
+                });
+
+                // Indikator tock
+                const indY = currentY + scaleHeight - (latest.points / 100 * scaleHeight);
+                let color = [239, 68, 68]; // red
+                if (latest.points >= 90) color = [34, 197, 94]; // green
+                else if (latest.points >= 75) color = [59, 130, 246]; // blue
+                else if (latest.points >= 50) color = [234, 179, 8]; // yellow
+                else if (latest.points >= 30) color = [249, 115, 22]; // orange
+
+                doc.setDrawColor(255, 255, 255);
+                doc.setLineWidth(1);
+                doc.setFillColor(...color);
+                doc.circle(scaleX, indY, 4, 'FD');
 
                 doc.setFontSize(10);
                 doc.setTextColor(150, 150, 150);
