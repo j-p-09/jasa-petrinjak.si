@@ -9,14 +9,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
-        /* Animacije in specifični stili za lestvico */
         .scale-container {
             position: relative;
-            height: 400px;
+            height: 450px;
             width: 8px;
             background: #e2e8f0;
             border-radius: 4px;
-            margin: 20px auto;
+            margin: 20px auto 40px auto;
         }
         .scale-node {
             position: absolute;
@@ -30,12 +29,15 @@
         }
         .scale-label {
             position: absolute;
-            left: 30px;
-            top: 0;
-            transform: translateY(-25%);
+            left: 35px;
+            top: 50%;
+            transform: translateY(-50%);
             white-space: nowrap;
             font-weight: bold;
             color: #475569;
+            background: rgba(255,255,255,0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
         .indicator {
             position: absolute;
@@ -59,7 +61,6 @@
         }
         .hidden { display: none !important; }
         
-        /* Za lepši izgled form in izbirnikov */
         select, input, textarea {
             transition: all 0.3s ease;
         }
@@ -78,7 +79,7 @@
             </div>
             <h1 class="text-3xl font-extrabold mb-2 text-gray-800">Lestvica Prijateljstva</h1>
             <p class="text-gray-500 mb-8">Vnesite PIN za dostop do baze.</p>
-            <input type="password" id="pinInput" placeholder="Vnesi PIN (privzeto: 1812)" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-center text-2xl tracking-[0.5em] mb-4">
+            <input type="password" id="pinInput" placeholder="Vnesi PIN" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-center text-2xl tracking-[0.5em] mb-4">
             <button onclick="app.login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-lg shadow-blue-500/30">
                 VSTOP
             </button>
@@ -152,23 +153,28 @@
                                     </button>
                                 </div>
                             </div>
-                            <div id="historyList" class="space-y-4 max-h-80 overflow-y-auto pr-2">
-                                </div>
+                            <div id="historyList" class="space-y-4 max-h-80 overflow-y-auto pr-2"></div>
                         </div>
                     </div>
 
                     <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center">
                         <h4 class="font-bold text-lg mb-6 text-center w-full">Trenutna Pozicija</h4>
+                        
                         <div class="scale-container">
-                            <div class="scale-node" style="bottom: 100%;"><span class="scale-label">Najboljši prijatelj</span></div>
-                            <div class="scale-node" style="bottom: 80%;"><span class="scale-label">Dober prijatelj</span></div>
-                            <div class="scale-node" style="bottom: 60%;"><span class="scale-label">Prijatelj</span></div>
-                            <div class="scale-node" style="bottom: 40%;"><span class="scale-label">Govoren</span></div>
-                            <div class="scale-node" style="bottom: 20%;"><span class="scale-label">Znanec</span></div>
-                            <div class="scale-node" style="bottom: 0%;"><span class="scale-label">Poden</span></div>
+                            <div class="scale-node" style="bottom: 90%;"><span class="scale-label">Najboljši (90+)</span></div>
+                            <div class="scale-node" style="bottom: 75%;"><span class="scale-label">Dober (75-89)</span></div>
+                            <div class="scale-node" style="bottom: 50%;"><span class="scale-label">Prijatelj (50-74)</span></div>
+                            <div class="scale-node" style="bottom: 30%;"><span class="scale-label">Govoren (30-49)</span></div>
+                            <div class="scale-node" style="bottom: 15%;"><span class="scale-label">Znanec (15-29)</span></div>
+                            <div class="scale-node" style="bottom: 0%;"><span class="scale-label">Poden (0-14)</span></div>
+                            
                             <div id="scaleIndicator" class="indicator indicator-pulse" style="bottom: 0%;"></div>
                         </div>
-                        <p id="scalePointsText" class="mt-8 font-mono font-bold text-xl text-blue-600">0/100 točk</p>
+
+                        <div class="text-center w-full mt-4">
+                            <p id="scalePointsText" class="font-mono font-bold text-2xl text-blue-600">0/100 točk</p>
+                            <p id="scaleDistanceText" class="text-sm text-gray-500 font-medium mt-2 bg-gray-100 px-3 py-1 rounded-full inline-block">Manjka še ...</p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -186,123 +192,230 @@
                     </button>
                 </div>
 
-                <div id="groupsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    </div>
+                <div id="groupsList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </section>
 
-            <section id="sec-komentar" class="section-content hidden max-w-3xl mx-auto">
-                <h2 class="text-3xl font-bold mb-8 text-gray-800 border-b pb-4"><i class="fa-solid fa-comment-dots mr-2 text-green-500"></i> Oddaja Komentarja</h2>
+            <section id="sec-komentar" class="section-content hidden max-w-2xl mx-auto">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b pb-4"><i class="fa-solid fa-comment-dots mr-2 text-green-500"></i> Oddaja Komentarja</h2>
                 
                 <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
                     
                     <div class="mb-8">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Izberi osebo ali vnesi novo</label>
-                        <input type="text" id="komentarPerson" placeholder="Ime in priimek..." class="w-full px-4 py-3 border-2 border-green-100 rounded-lg focus:border-green-500 focus:outline-none text-lg font-semibold bg-gray-50">
-                        <p class="text-xs text-gray-500 mt-1">Če oseba ne obstaja, bo samodejno ustvarjena.</p>
-                    </div>
-
-                    <div class="mb-8">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Skupina (opcijsko za nove osebe)</label>
-                        <select id="komentarGroup" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50">
-                            </select>
+                        <div class="flex justify-between items-center mb-2">
+                            <span id="wizardStepText" class="text-sm font-bold text-gray-500 uppercase tracking-wide">Korak 1 od 10</span>
+                            <span class="text-xs text-gray-400">Izpolni po vrsti</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="wizardProgress" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 10%;"></div>
+                        </div>
                     </div>
 
                     <form id="assessmentForm" onsubmit="event.preventDefault(); app.submitAssessment();">
                         
-                        <div class="mb-10 bg-blue-50/50 p-6 rounded-xl border border-blue-100">
-                            <h3 class="text-xl font-bold mb-4 text-blue-800 border-b border-blue-200 pb-2">A) OSEBNOST</h3>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold mb-1">Karakter</label>
-                                <select id="catA1" class="w-full p-2 border rounded bg-white">
-                                    <option value="10">Odličen (Zelo stabilen, pozitiven) [10t]</option>
-                                    <option value="7">Dober (Občasno muhast, a prevladuje pozitiva) [7t]</option>
-                                    <option value="4">Povprečen (Spremenljiv, nevtralen) [4t]</option>
-                                    <option value="1">Slab (Negativen, nestabilen) [1t]</option>
-                                </select>
+                        <div id="step-0" class="wizard-step">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800"><i class="fa-solid fa-user mr-2"></i> Koga ocenjujemo?</h3>
+                            <div class="mb-6">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Izberi osebo ali vnesi novo</label>
+                                <input list="peopleDatalist" type="text" id="komentarPerson" placeholder="Ime in priimek..." class="w-full px-4 py-4 border-2 border-green-200 rounded-xl focus:border-green-500 focus:outline-none text-xl font-semibold bg-gray-50">
+                                <datalist id="peopleDatalist"></datalist>
+                                <p class="text-sm text-gray-500 mt-2"><i class="fa-solid fa-circle-info text-blue-400"></i> Sistem te bo opozoril (in predlagal), če oseba že obstaja v bazi.</p>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-semibold mb-1">Odnos do mene</label>
-                                <select id="catA2" class="w-full p-2 border rounded bg-white">
-                                    <option value="10">Spoštljiv, ljubeč, vedno na voljo [10t]</option>
-                                    <option value="7">Korekten, prijazen [7t]</option>
-                                    <option value="4">Hladen, občasno vzvišen [4t]</option>
-                                    <option value="1">Nesramen, izkoriščevalski [1t]</option>
-                                </select>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-semibold mb-1">Značaj (Vrednote)</label>
-                                <select id="catA3" class="w-full p-2 border rounded bg-white">
-                                    <option value="10">Popolnoma se ujameva [10t]</option>
-                                    <option value="7">Večinoma usklajena [7t]</option>
-                                    <option value="4">Precej različna pogleda na svet [4t]</option>
-                                    <option value="1">Povsem nasprotne vrednote [1t]</option>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Skupina (opcijsko)</label>
+                                <select id="komentarGroup" class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-lg">
                                 </select>
                             </div>
                         </div>
 
-                        <div class="mb-10 bg-green-50/50 p-6 rounded-xl border border-green-100">
-                            <h3 class="text-xl font-bold mb-4 text-green-800 border-b border-green-200 pb-2">B) POGOVOR</h3>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold mb-1">Pogostost komunikacije</label>
-                                <select id="catB1" class="w-full p-2 border rounded bg-white">
-                                    <option value="15">Vsakodnevno / Zelo pogosto [15t]</option>
-                                    <option value="10">Nekajkrat tedensko [10t]</option>
-                                    <option value="5">Občasno (1x mesečno) [5t]</option>
-                                    <option value="1">Skoraj nikoli [1t]</option>
-                                </select>
+                        <div id="step-1" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-2 text-blue-800">A) OSEBNOST - Podkategorija 1/3</h3>
+                            <label class="block text-lg font-bold text-gray-700 mb-4">Karakter osebe</label>
+                            <select id="catA1" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
+                                <option value="10">10 točk - Odličen (Zelo stabilen, pozitiven)</option>
+                                <option value="9">9 točk - Zelo dober</option>
+                                <option value="8">8 točk - Pretežno dober</option>
+                                <option value="7">7 točk - Dober (Občasno muhast, a prevladuje pozitiva)</option>
+                                <option value="6">6 točk - Zmerno dober</option>
+                                <option value="5">5 točk - Spremenljiv (Na pol)</option>
+                                <option value="4">4 točke - Povprečen (Spremenljiv, nevtralen)</option>
+                                <option value="3">3 točke - Rahlo slabši</option>
+                                <option value="2">2 točki - Precej slab</option>
+                                <option value="1">1 točka - Slab (Negativen, nestabilen)</option>
+                                <option value="0">0 točk - Nevzdržen</option>
+                            </select>
+                        </div>
+
+                        <div id="step-2" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-2 text-blue-800">A) OSEBNOST - Podkategorija 2/3</h3>
+                            <label class="block text-lg font-bold text-gray-700 mb-4">Njihov odnos do mene</label>
+                            <select id="catA2" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
+                                <option value="10">10 točk - Spoštljiv, ljubeč, vedno na voljo</option>
+                                <option value="9">9 točk - Izjemno korekten</option>
+                                <option value="8">8 točk - Zelo prijazen</option>
+                                <option value="7">7 točk - Korekten in prijazen večinoma</option>
+                                <option value="6">6 točk - Včasih zadržan, a dober</option>
+                                <option value="5">5 točk - Povprečen, nevtralen</option>
+                                <option value="4">4 točke - Hladen, občasno vzvišen</option>
+                                <option value="3">3 točke - Neprijeten na čase</option>
+                                <option value="2">2 točki - Zaničevalen</option>
+                                <option value="1">1 točka - Nesramen, izkoriščevalski</option>
+                                <option value="0">0 točk - Katastrofalen odnos</option>
+                            </select>
+                        </div>
+
+                        <div id="step-3" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-2 text-blue-800">A) OSEBNOST - Podkategorija 3/3</h3>
+                            <label class="block text-lg font-bold text-gray-700 mb-4">Značaj in usklajenost vrednot</label>
+                            <select id="catA3" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
+                                <option value="10">10 točk - Popolnoma se ujameva</option>
+                                <option value="9">9 točk - Skoraj popolno ujemanje</option>
+                                <option value="8">8 točk - Zelo dobro se razumeva</option>
+                                <option value="7">7 točk - Večinoma usklajena</option>
+                                <option value="6">6 točk - Imava nekaj razlik</option>
+                                <option value="5">5 točk - Pol/Pol ujemanje</option>
+                                <option value="4">4 točke - Precej različna pogleda na svet</option>
+                                <option value="3">3 točke - Velika razhajanja</option>
+                                <option value="2">2 točki - Neusklajena</option>
+                                <option value="1">1 točka - Povsem nasprotne vrednote</option>
+                                <option value="0">0 točk - Konstanten konflikt interesov</option>
+                            </select>
+                        </div>
+
+                        <div id="step-4" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-2 text-green-800">B) POGOVOR - Podkategorija 1/3</h3>
+                            <label class="block text-lg font-bold text-gray-700 mb-4">Pogostost komunikacije</label>
+                            <select id="catB1" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
+                                <option value="15">15 točk - Vsakodnevno / Zelo pogosto</option>
+                                <option value="14">14 točk - Skoraj vsak dan</option>
+                                <option value="13">13 točk - 4-5x na teden</option>
+                                <option value="12">12 točk - 3x na teden</option>
+                                <option value="11">11 točk - Večkrat tedensko</option>
+                                <option value="10">10 točk - 1-2x tedensko</option>
+                                <option value="9">9 točk - Pogosto</option>
+                                <option value="8">8 točk - Na nekaj dni</option>
+                                <option value="7">7 točk - Enkrat na dva tedna</option>
+                                <option value="6">6 točk - Zmerno</option>
+                                <option value="5">5 točk - Občasno (1x mesečno)</option>
+                                <option value="4">4 točke - Redko</option>
+                                <option value="3">3 točke - Zelo redko (vsake par mesecev)</option>
+                                <option value="2">2 točki - Skoraj nikoli</option>
+                                <option value="1">1 točka - Izjemno redko (samo za praznike)</option>
+                                <option value="0">0 točk - Ni komunikacije</option>
+                            </select>
+                        </div>
+
+                        <div id="step-5" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-2 text-green-800">B) POGOVOR - Podkategorija 2/3</h3>
+                            <label class="block text-lg font-bold text-gray-700 mb-4">Globina pogovorov</label>
+                            <select id="catB2" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
+                                <option value="15">15 točk - Izjemno globoki (čustva, strahovi)</option>
+                                <option value="14">14 točk - Zelo globoki</option>
+                                <option value="13">13 točk - Povezani pogovori</option>
+                                <option value="12">12 točk - Globoki</option>
+                                <option value="11">11 točk - Nadpovprečni</option>
+                                <option value="10">10 točk - Srednje globoki (delo, mnenja, hobiji)</option>
+                                <option value="9">9 točk - Občasno gre v globino</option>
+                                <option value="8">8 točk - Boljše kot vreme</option>
+                                <option value="7">7 točk - Vsakdanje zadeve</option>
+                                <option value="6">6 točk - Enostavni pogovori</option>
+                                <option value="5">5 točk - Površinski (vreme, trači, osnove)</option>
+                                <option value="4">4 točke - Plitki pogovori</option>
+                                <option value="3">3 točke - Vljudnostne fraze</option>
+                                <option value="2">2 točki - Zadržano</option>
+                                <option value="1">1 točka - Samo nujno / izogibanje</option>
+                                <option value="0">0 točk - Tišina / Neprijetno</option>
+                            </select>
+                        </div>
+
+                        <div id="step-6" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-2 text-green-800">B) POGOVOR - Podkategorija 3/3</h3>
+                            <label class="block text-lg font-bold text-gray-700 mb-4">Iskrenost</label>
+                            <select id="catB3" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
+                                <option value="10">10 točk - 100% iskrenost brez mask</option>
+                                <option value="9">9 točk - Izjemno iskren</option>
+                                <option value="8">8 točk - Zelo iskren</option>
+                                <option value="7">7 točk - Večinoma iskren, občasno zadržan</option>
+                                <option value="6">6 točk - Zadrži kaj zase</option>
+                                <option value="5">5 točk - Polovično iskren</option>
+                                <option value="4">4 točke - Pogosto pazi kaj reče</option>
+                                <option value="3">3 točke - Pogosto laže ali prikriva</option>
+                                <option value="2">2 točki - Pretežno neiskren</option>
+                                <option value="1">1 točka - Lažnivec</option>
+                                <option value="0">0 točk - Popolnoma neiskren</option>
+                            </select>
+                        </div>
+
+                        <div id="step-7" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-2 text-purple-800">C) SPLOŠNO - Podkategorija 1/2</h3>
+                            <label class="block text-lg font-bold text-gray-700 mb-4">Moje zaupanje (Kako jaz zaupam)</label>
+                            <select id="catC1" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
+                                <option value="15">15 točk - Zaupam življenje in vse skrivnosti</option>
+                                <option value="14">14 točk - Neizmerno zaupanje</option>
+                                <option value="13">13 točk - Zelo močno zaupanje</option>
+                                <option value="12">12 točk - Močno zaupanje</option>
+                                <option value="11">11 točk - Visoko zaupanje</option>
+                                <option value="10">10 točk - Zaupam večino stvari (obstaja meja)</option>
+                                <option value="9">9 točk - Zaupam precej</option>
+                                <option value="8">8 točk - Srednje dobro zaupanje</option>
+                                <option value="7">7 točk - Zaupam splošne stvari</option>
+                                <option value="6">6 točk - Previdno zaupanje</option>
+                                <option value="5">5 točk - Zaupam le nepomembne informacije</option>
+                                <option value="4">4 točke - Bolj malo zaupam</option>
+                                <option value="3">3 točke - Ne zaupam rad</option>
+                                <option value="2">2 točki - Močen dvom</option>
+                                <option value="1">1 točka - Skoraj nič ne zaupam</option>
+                                <option value="0">0 točk - Absolutno nezaupanje</option>
+                            </select>
+                        </div>
+
+                        <div id="step-8" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-2 text-purple-800">C) SPLOŠNO - Podkategorija 2/2</h3>
+                            <label class="block text-lg font-bold text-gray-700 mb-4">Njihovo zaupanje (Kako mislim, da zaupa meni)</label>
+                            <select id="catC2" class="w-full p-4 border-2 rounded-xl bg-white text-lg">
+                                <option value="15">15 točk - Pove vse, name se zanese v krizi</option>
+                                <option value="14">14 točk - Popolnoma se zanese</option>
+                                <option value="13">13 točk - Zelo močno se zanese</option>
+                                <option value="12">12 točk - Močno mi zaupa</option>
+                                <option value="11">11 točk - Visoko zaupanje</option>
+                                <option value="10">10 točk - Zaupa mi precej, a ne vsega</option>
+                                <option value="9">9 točk - Zaupa mi veliko</option>
+                                <option value="8">8 točk - Srednje zaupanje vame</option>
+                                <option value="7">7 točk - Zaupa osnovne stvari</option>
+                                <option value="6">6 točk - Rahlo zadržano</option>
+                                <option value="5">5 točk - Površinsko zaupanje</option>
+                                <option value="4">4 točke - Malo mi zaupa</option>
+                                <option value="3">3 točke - Ne deli osebnega</option>
+                                <option value="2">2 točki - Zelo zadržan</option>
+                                <option value="1">1 točka - Dvomljiv do mene</option>
+                                <option value="0">0 točk - Ne zaupa mi</option>
+                            </select>
+                        </div>
+
+                        <div id="step-9" class="wizard-step hidden">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800"><i class="fa-solid fa-flag-checkered mr-2 text-green-500"></i> Zaključek</h3>
+                            <div class="mb-6">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Osebna opomba (ne vpliva na točke, le za tvoj spomin)</label>
+                                <textarea id="komentarOpomba" rows="4" class="w-full p-4 border-2 border-gray-200 rounded-xl bg-white text-lg" placeholder="Npr. Danes sva imela dober pogovor ob kavi..."></textarea>
                             </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold mb-1">Globina pogovorov</label>
-                                <select id="catB2" class="w-full p-2 border rounded bg-white">
-                                    <option value="15">Izjemno globoki (čustva, strahovi, cilji) [15t]</option>
-                                    <option value="10">Srednje globoki (delo, mnenja, hobiji) [10t]</option>
-                                    <option value="5">Površinski (vreme, trači, osnove) [5t]</option>
-                                    <option value="1">Samo nujno / izogibanje pogovoru [1t]</option>
-                                </select>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-semibold mb-1">Iskrenost</label>
-                                <select id="catB3" class="w-full p-2 border rounded bg-white">
-                                    <option value="10">100% iskrenost brez mask [10t]</option>
-                                    <option value="7">Večinoma iskren, občasno zadržan [7t]</option>
-                                    <option value="3">Pogosto laže ali prikriva [3t]</option>
-                                    <option value="0">Popolnoma neiskren [0t]</option>
-                                </select>
+                            <div class="bg-blue-50 p-4 rounded-xl text-blue-800 text-sm mb-6 border border-blue-100">
+                                <i class="fa-solid fa-info-circle mr-1"></i> Preveri, če si vse izpolnil in klikni "Shrani Oceno".
                             </div>
                         </div>
 
-                        <div class="mb-10 bg-purple-50/50 p-6 rounded-xl border border-purple-100">
-                            <h3 class="text-xl font-bold mb-4 text-purple-800 border-b border-purple-200 pb-2">C) SPLOŠNO</h3>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold mb-1">Moje zaupanje (Kako jaz zaupam osebi)</label>
-                                <select id="catC1" class="w-full p-2 border rounded bg-white">
-                                    <option value="15">Zaupam ji življenje in vse skrivnosti [15t]</option>
-                                    <option value="10">Zaupam večino stvari, a obstaja meja [10t]</option>
-                                    <option value="5">Zaupam le nepomembne informacije [5t]</option>
-                                    <option value="0">Absolutno nezaupanje [0t]</option>
-                                </select>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold mb-1">Njihovo zaupanje (Kako mislim, da zaupa meni)</label>
-                                <select id="catC2" class="w-full p-2 border rounded bg-white">
-                                    <option value="15">Pove mi vse, name se zanese v krizi [15t]</option>
-                                    <option value="10">Zaupa mi precej, a ne vsega [10t]</option>
-                                    <option value="5">Površinsko zaupanje [5t]</option>
-                                    <option value="0">Ne zaupa mi [0t]</option>
-                                </select>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-semibold mb-1">Osebna opomba (ne vpliva na točke)</label>
-                                <textarea id="komentarOpomba" rows="3" class="w-full p-2 border rounded bg-white" placeholder="Kratek zapis za spomin..."></textarea>
+                        <div class="mt-8 flex justify-between gap-4 border-t pt-6">
+                            <button type="button" id="btnPrev" onclick="app.prevStep()" class="hidden px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition">
+                                <i class="fa-solid fa-arrow-left mr-2"></i> Nazaj
+                            </button>
+                            <div class="flex-grow text-right">
+                                <button type="button" id="btnNext" onclick="app.nextStep()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg">
+                                    Naprej <i class="fa-solid fa-arrow-right ml-2"></i>
+                                </button>
+                                <button type="submit" id="btnSubmit" class="hidden px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition shadow-lg w-full md:w-auto">
+                                    <i class="fa-solid fa-calculator mr-2"></i> Shrani Oceno
+                                </button>
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition duration-200 text-xl flex justify-center items-center gap-2">
-                            <i class="fa-solid fa-calculator"></i> Preračunaj in Shrani
-                        </button>
                     </form>
                 </div>
             </section>
@@ -328,49 +441,33 @@
     </div>
 
     <script>
-        // Konfiguracija Firebase REST API (Brez potrebe po posebnem SDK-ju, kar omogoča delovanje zgolj s tvojim URL-jem)
         const FIREBASE_URL = 'https://friends-a8f21-default-rtdb.europe-west1.firebasedatabase.app';
 
-        // Glavna App klasa
         const app = {
-            data: {
-                people: {},
-                groups: {},
-                settings: { pin: "1812" }
-            },
+            data: { people: {}, groups: {}, settings: { pin: "1812" } },
             currentPersonId: null,
+            
+            // WIZARD STATE
+            currentStep: 0,
+            totalSteps: 9,
 
-            // Pomožne funkcije za API klice (REST)
             async apiGet(path) {
                 const res = await fetch(`${FIREBASE_URL}${path}.json`);
                 return await res.json();
             },
             async apiPut(path, payload) {
-                await fetch(`${FIREBASE_URL}${path}.json`, {
-                    method: 'PUT',
-                    body: JSON.stringify(payload)
-                });
+                await fetch(`${FIREBASE_URL}${path}.json`, { method: 'PUT', body: JSON.stringify(payload) });
             },
             async apiPatch(path, payload) {
-                await fetch(`${FIREBASE_URL}${path}.json`, {
-                    method: 'PATCH',
-                    body: JSON.stringify(payload)
-                });
+                await fetch(`${FIREBASE_URL}${path}.json`, { method: 'PATCH', body: JSON.stringify(payload) });
             },
 
-            // Zagon aplikacije
             async init() {
-                // Pridobitev PIN kode iz baze
                 const settings = await this.apiGet('/settings');
-                if (settings && settings.pin) {
-                    this.data.settings.pin = settings.pin;
-                } else {
-                    // Če baza še nima PINa, zapiši privzetega (1812)
-                    await this.apiPut('/settings', { pin: "1812" });
-                }
+                if (settings && settings.pin) this.data.settings.pin = settings.pin;
+                else await this.apiPut('/settings', { pin: "1812" });
             },
 
-            // Prijava
             login() {
                 const input = document.getElementById('pinInput').value;
                 if (input === this.data.settings.pin) {
@@ -390,7 +487,6 @@
                 document.getElementById('loginScreen').classList.remove('hidden');
             },
 
-            // Navigacija
             navigate(sectionId) {
                 document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
                 document.getElementById('sec-' + sectionId).classList.remove('hidden');
@@ -399,23 +495,21 @@
                     el.classList.remove('bg-blue-50', 'text-blue-600', 'border-l-4', 'border-blue-600');
                 });
                 const activeBtn = document.getElementById('nav-' + sectionId);
-                if(activeBtn) {
-                    activeBtn.classList.add('bg-blue-50', 'text-blue-600', 'border-l-4', 'border-blue-600');
-                }
+                if(activeBtn) activeBtn.classList.add('bg-blue-50', 'text-blue-600', 'border-l-4', 'border-blue-600');
 
-                if(sectionId === 'komentar') this.populateGroupsDropdown();
+                if(sectionId === 'komentar') {
+                    this.populateGroupsDropdown();
+                    this.populatePeopleDatalist();
+                    this.resetWizard();
+                }
             },
 
-            // Naloži glavne podatke
             async loadData() {
-                const people = await this.apiGet('/people') || {};
-                const groups = await this.apiGet('/groups') || {};
-                this.data.people = people;
-                this.data.groups = groups;
+                this.data.people = await this.apiGet('/people') || {};
+                this.data.groups = await this.apiGet('/groups') || {};
                 this.renderGroups();
             },
 
-            // --- POIZVEDOVANJE ---
             searchPerson() {
                 const query = document.getElementById('searchInput').value.toLowerCase().trim();
                 const resultsContainer = document.getElementById('searchResults');
@@ -457,15 +551,12 @@
                 historyList.innerHTML = '';
 
                 if (assessments.length > 0) {
-                    // Sortiraj po datumu padajoče
                     assessments.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
                     const latest = assessments[0];
-                    this.updateScaleVisuals(latest.points, latest.status);
                     
+                    this.updateScaleVisuals(latest.points, latest.status);
                     document.getElementById('detailStatusBadge').innerText = latest.status;
                     
-                    // Render zgodovine
                     assessments.forEach(ass => {
                         const dateObj = new Date(ass.date);
                         const dateStr = `${dateObj.getDate()}.${dateObj.getMonth()+1}.${dateObj.getFullYear()}`;
@@ -492,24 +583,31 @@
             updateScaleVisuals(points, status) {
                 const indicator = document.getElementById('scaleIndicator');
                 const text = document.getElementById('scalePointsText');
+                const distText = document.getElementById('scaleDistanceText');
                 
-                // Animacija in prikaz točk (0 do 100%)
-                // Ker je grafična lestvica obrnjena, nastavimo "bottom"
-                setTimeout(() => {
-                    indicator.style.bottom = `${points}%`;
-                }, 100);
+                setTimeout(() => { indicator.style.bottom = `${points}%`; }, 100);
                 
                 text.innerText = `${points}/100 točk (${status})`;
 
-                // Spremeni barvo indikatorja glede na točke
                 if(points >= 90) indicator.style.background = '#22c55e'; // green
                 else if(points >= 75) indicator.style.background = '#3b82f6'; // blue
                 else if(points >= 50) indicator.style.background = '#eab308'; // yellow
                 else if(points >= 30) indicator.style.background = '#f97316'; // orange
                 else indicator.style.background = '#ef4444'; // red
+
+                // Izračun razdalje do naslednje točke
+                let msg = "";
+                if(points < 15) msg = `Še ${15 - points} točk do statusa "Znanec".`;
+                else if(points < 30) msg = `Še ${30 - points} točk do statusa "Govoren".`;
+                else if(points < 50) msg = `Še ${50 - points} točk do statusa "Prijatelj".`;
+                else if(points < 75) msg = `Še ${75 - points} točk do statusa "Dober prijatelj".`;
+                else if(points < 90) msg = `Še ${90 - points} točk do statusa "Najboljši prijatelj".`;
+                else msg = `Dosežen je najvišji možni status! 🎉`;
+                
+                distText.innerText = msg;
+                distText.className = points >= 90 ? "text-sm font-bold mt-2 bg-green-100 text-green-800 px-3 py-1 rounded-full inline-block" : "text-sm text-blue-700 font-medium mt-2 bg-blue-100 px-3 py-1 rounded-full inline-block";
             },
 
-            // --- LESTVICA IN LOGIKA IZRAČUNA ---
             calculateStatus(points) {
                 if(points >= 90) return "Najboljši prijatelj";
                 if(points >= 75) return "Dober prijatelj";
@@ -519,7 +617,44 @@
                 return "Poden";
             },
 
-            // --- KOMENTAR ---
+            // --- WIZARD LOGIKA ---
+            resetWizard() {
+                this.currentStep = 0;
+                document.getElementById('assessmentForm').reset();
+                this.showWizardStep(0);
+            },
+
+            showWizardStep(stepIndex) {
+                document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`step-${stepIndex}`).classList.remove('hidden');
+
+                document.getElementById('btnPrev').classList.toggle('hidden', stepIndex === 0);
+                document.getElementById('btnNext').classList.toggle('hidden', stepIndex === this.totalSteps);
+                document.getElementById('btnSubmit').classList.toggle('hidden', stepIndex !== this.totalSteps);
+
+                const progress = ((stepIndex + 1) / (this.totalSteps + 1)) * 100;
+                document.getElementById('wizardProgress').style.width = `${progress}%`;
+                document.getElementById('wizardStepText').innerText = `Korak ${stepIndex + 1} od ${this.totalSteps + 1}`;
+            },
+
+            nextStep() {
+                if (this.currentStep === 0) {
+                    const name = document.getElementById('komentarPerson').value.trim();
+                    if(!name) { alert("Za nadaljevanje moraš vpisati ime osebe!"); return; }
+                }
+                if (this.currentStep < this.totalSteps) {
+                    this.currentStep++;
+                    this.showWizardStep(this.currentStep);
+                }
+            },
+
+            prevStep() {
+                if (this.currentStep > 0) {
+                    this.currentStep--;
+                    this.showWizardStep(this.currentStep);
+                }
+            },
+
             populateGroupsDropdown() {
                 const select = document.getElementById('komentarGroup');
                 select.innerHTML = '<option value="">-- Brez skupine / Obdrži obstoječo --</option>';
@@ -528,15 +663,20 @@
                 });
             },
 
+            populatePeopleDatalist() {
+                const datalist = document.getElementById('peopleDatalist');
+                datalist.innerHTML = '';
+                Object.values(this.data.people).forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.name;
+                    datalist.appendChild(option);
+                });
+            },
+
             async submitAssessment() {
                 const personName = document.getElementById('komentarPerson').value.trim();
                 const groupName = document.getElementById('komentarGroup').value;
-                if (!personName) {
-                    alert("Prosim vpiši ime osebe!");
-                    return;
-                }
 
-                // Pobiranje točk
                 let points = 0;
                 points += parseInt(document.getElementById('catA1').value);
                 points += parseInt(document.getElementById('catA2').value);
@@ -550,19 +690,13 @@
                 const status = this.calculateStatus(points);
                 const opomba = document.getElementById('komentarOpomba').value;
 
-                // Preveri če oseba obstaja, drugače ustvari ID
                 let pId = Object.keys(this.data.people).find(k => this.data.people[k].name === personName);
                 if (!pId) {
                     pId = 'p_' + Date.now();
                     this.data.people[pId] = { name: personName, assessments: {} };
                 }
+                if (groupName) this.data.people[pId].group = groupName;
 
-                // Posodobi skupino, če je izbrana
-                if (groupName) {
-                    this.data.people[pId].group = groupName;
-                }
-
-                // Pripravi assessment objekt
                 const assId = 'ass_' + Date.now();
                 const assessmentData = {
                     date: new Date().toISOString(),
@@ -576,21 +710,17 @@
                     }
                 };
 
-                // Shrani v lokalni state
                 if(!this.data.people[pId].assessments) this.data.people[pId].assessments = {};
                 this.data.people[pId].assessments[assId] = assessmentData;
 
-                // Shrani v Firebase
                 await this.apiPut(`/people/${pId}`, this.data.people[pId]);
 
-                alert(`Ocena shranjena! Izračunan status: ${status} (${points}/100)`);
-                document.getElementById('assessmentForm').reset();
+                alert(`Ocena shranjena! Doseženo: ${points}/100 točk (${status})`);
                 this.navigate('poizvedovanje');
                 document.getElementById('searchInput').value = personName;
                 this.searchPerson();
             },
 
-            // --- SKUPINE ---
             async addGroup() {
                 const name = document.getElementById('newGroupInput').value.trim();
                 if(!name) return;
@@ -617,7 +747,6 @@
                 
                 Object.keys(this.data.groups).forEach(gId => {
                     const g = this.data.groups[gId];
-                    // Preštej člane
                     let members = Object.values(this.data.people).filter(p => p.group === g.name).map(p => p.name);
                     
                     container.innerHTML += `
@@ -637,76 +766,53 @@
                 });
             },
 
-            // --- NASTAVITVE ---
             async changePin() {
                 const newPin = document.getElementById('newPinInput').value;
-                if(newPin.length < 4) {
-                    alert("PIN mora biti dolg vsaj 4 znake.");
-                    return;
-                }
+                if(newPin.length < 4) { alert("PIN mora biti dolg vsaj 4 znake."); return; }
                 this.data.settings.pin = newPin;
                 await this.apiPatch('/settings', { pin: newPin });
                 alert("PIN uspešno spremenjen!");
                 document.getElementById('newPinInput').value = '';
             },
 
-            // --- PDF GENERATOR IN "AI" BESEDILO ---
             generateAIText(person, latest) {
-                // Skripta zgenerira kvazi AI poročilo glede na raw ocene posameznih kategorij
-                const A = latest.raw.A; // max 30
-                const B = latest.raw.B; // max 40
-                const C = latest.raw.C; // max 30
-                
+                const A = latest.raw.A, B = latest.raw.B, C = latest.raw.C;
                 let text = `Analiza odnosa za osebo ${person.name}:\n\n`;
                 
-                // Analiza osebnosti
                 if (A >= 25) text += "Na podrocju osebnosti se neverjetno dobro ujemata. Oseba izkazuje izjemno stabilen karakter in vzajemno spostovanje, njene vrednote pa so mocno usklajene s tvojimi. ";
                 else if (A >= 15) text += "Osebnostno se relativno dobro razumeta, ceprav obstajajo dolocena odstopanja v karakterju ali vrednotah, ki zahtevajo prilagajanje. ";
                 else text += "Karakterno si nista blizu. Opazna so velika razhajanja v vrednotah ali odnosu, kar pogosto ustvarja distanco. ";
 
-                // Analiza pogovora
                 if (B >= 30) text += "Komunikacija je na zelo visokem nivoju. Pogovori so pogosti, zelo iskreni in segajo v globino, kar kaze na mocno mentalno povezanost. ";
                 else if (B >= 15) text += "Pogovori so povprecni. Vecinoma gre za korektno komunikacijo na povrsinski ravni z obcasnimi prebliski iskrenosti. ";
                 else text += "Komunikacije je malo in je izrazito povrsinska ali celo neiskrena. Teme so strogo omejene na nujne zadeve. ";
 
-                // Analiza zaupanja
                 if (C >= 25) text += "Zaupanje med vama je absolutno in obojestransko. Lahko se zaneseta drug na drugega tudi v najtezjih situacijah.\n";
                 else if (C >= 10) text += "Zaupanje je delno. Osebi sicer zaupas do dolocene mere, vendar ohranjas doloceno mero previdnosti pri zares pomembnih stvareh.\n";
                 else text += "Med vama prakticno ni vzajemnega zaupanja. Odnos temelji izkljucno na poznanstvu brez globlje varnostne mreze.\n";
 
                 text += `\nSklep: Glede na analizirane parametre sistem osebo uvresca v kategorijo '${latest.status}'. Dosezeno je ${latest.points} od 100 moznih tock.`;
-                
                 return text;
             },
 
             generatePDF() {
                 if(!this.currentPersonId) return;
                 const person = this.data.people[this.currentPersonId];
-                
-                // Pridobi zadnjo oceno
-                if(!person.assessments) {
-                    alert("Oseba še nima ocen!");
-                    return;
-                }
+                if(!person.assessments) { alert("Oseba še nima ocen!"); return; }
                 const assessments = Object.values(person.assessments).sort((a, b) => new Date(b.date) - new Date(a.date));
                 const latest = assessments[0];
 
-                // Generiranje besedila in odstranjevanje šumnikov (ZAHTEVA!)
                 const rawText = this.generateAIText(person, latest);
-                
-                // Menjava šumnikov v celotnem tekstu za PDF kompatibilnost (brez custom fontov)
                 const mapObj = { 'š':'s', 'č':'c', 'ž':'z', 'Š':'S', 'Č':'C', 'Ž':'Z' };
                 const safeText = rawText.replace(/[ščžŠČŽ]/g, match => mapObj[match]);
                 const safeName = person.name.replace(/[ščžŠČŽ]/g, match => mapObj[match]);
 
-                // Uporaba jsPDF
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Oblikovanje PDFja
                 doc.setFont("helvetica");
                 doc.setFontSize(22);
-                doc.setTextColor(59, 130, 246); // Modra
+                doc.setTextColor(59, 130, 246);
                 doc.text("POROCILO O PRIJATELJSTVU", 20, 20);
                 
                 doc.setFontSize(14);
@@ -721,11 +827,9 @@
                 doc.setFontSize(12);
                 doc.setTextColor(80, 80, 80);
                 
-                // Prelom vrstic v jsPDF
                 const splitText = doc.splitTextToSize(safeText, 170);
                 doc.text(splitText, 20, 75);
 
-                // Dodatek opombe če obstaja
                 if(latest.opomba) {
                     const safeOpomba = latest.opomba.replace(/[ščžŠČŽ]/g, match => mapObj[match]);
                     doc.setFont(undefined, 'italic');
@@ -733,20 +837,15 @@
                     doc.text(splitOpomba, 20, 150);
                 }
 
-                // Podpis / Footer
                 doc.setFontSize(10);
                 doc.setTextColor(150, 150, 150);
-                doc.text(`Generirano samodejno na podlagi vnesenih ocen - Lestvica Prijateljstva.`, 20, 280);
+                doc.text(`Generirano samodejno - Lestvica Prijateljstva.`, 20, 280);
 
-                // Prenos
                 doc.save(`Porocilo_${safeName.replace(/\s+/g, '_')}.pdf`);
             }
         };
 
-        // Zagon ob nalaganju strani
-        window.onload = () => {
-            app.init();
-        };
+        window.onload = () => app.init();
     </script>
 </body>
 </html>
