@@ -68,6 +68,16 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
         }
+
+        /* Dodatki za prezentacijo */
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .slide-animate { animation: slideInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .medal-gold { color: #ffd700; filter: drop-shadow(0 0 15px rgba(255,215,0,0.6)); }
+        .medal-silver { color: #c0c0c0; filter: drop-shadow(0 0 15px rgba(192,192,192,0.6)); }
+        .medal-bronze { color: #cd7f32; filter: drop-shadow(0 0 15px rgba(205,127,50,0.6)); }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased selection:bg-blue-200">
@@ -114,7 +124,7 @@
             </div>
         </nav>
 
-        <main class="flex-grow p-6 md:p-10 max-h-screen overflow-y-auto bg-gray-50">
+        <main class="flex-grow p-6 md:p-10 max-h-screen overflow-y-auto bg-gray-50 relative">
             
             <section id="sec-poizvedovanje" class="section-content hidden max-w-5xl mx-auto">
                 <h2 class="text-3xl font-bold mb-8 text-gray-800 border-b pb-4"><i class="fa-solid fa-magnifying-glass mr-2 text-blue-500"></i> Poizvedovanje</h2>
@@ -241,7 +251,7 @@
                                 <button type="button" onclick="app.selectMethod('points')" id="btn-method-points" class="p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition flex flex-col items-center gap-3">
                                     <i class="fa-solid fa-clock text-4xl text-blue-500"></i>
                                     <span class="font-bold text-lg">Točkovni vpis</span>
-                                    <span class="text-xs text-gray-500 text-center">Hiter ročni vnos točk</span>
+                                    <span class="text-xs text-gray-500 text-center">Ročni vnos točk ali po kategorijah</span>
                                 </button>
                                 <button type="button" onclick="app.selectMethod('standard')" id="btn-method-standard" class="p-6 border-2 border-green-500 bg-green-50 rounded-xl hover:border-green-500 hover:bg-green-50 transition flex flex-col items-center gap-3">
                                     <i class="fa-solid fa-pen text-4xl text-green-500"></i>
@@ -273,11 +283,44 @@
 
                         <div id="step-points" class="wizard-step hidden">
                             <h3 class="text-xl font-bold mb-4 text-gray-800"><i class="fa-solid fa-clock mr-2 text-blue-500"></i> Točkovni vpis</h3>
-                            <div class="mb-6">
+                            
+                            <div class="flex justify-center gap-4 mb-6 bg-gray-100 p-2 rounded-lg w-fit mx-auto">
+                                <label class="cursor-pointer px-4 py-2 rounded-md transition-colors" id="labelTotalPoints">
+                                    <input type="radio" name="pointsMode" value="total" checked class="hidden" onchange="app.togglePointsMode()">
+                                    <span class="font-bold text-gray-700 select-none">Skupne točke</span>
+                                </label>
+                                <label class="cursor-pointer px-4 py-2 rounded-md transition-colors" id="labelCategoryPoints">
+                                    <input type="radio" name="pointsMode" value="categories" class="hidden" onchange="app.togglePointsMode()">
+                                    <span class="font-bold text-gray-700 select-none">Po kategorijah</span>
+                                </label>
+                            </div>
+
+                            <div id="pointsTotalMode" class="mb-6">
                                 <label class="block text-lg font-bold text-gray-700 mb-2 text-center">Ročni vnos točk (0 - 100)</label>
                                 <input type="number" id="manualPoints" min="0" max="100" value="50" oninput="app.updateManualStatus()" class="w-full max-w-xs mx-auto block p-4 border-4 border-blue-200 focus:border-blue-500 outline-none rounded-xl text-4xl font-bold text-center text-blue-600">
-                                <p id="manualStatusText" class="text-center mt-3 font-bold text-gray-700 text-lg bg-gray-100 py-2 rounded-lg max-w-xs mx-auto">Prijatelj</p>
                             </div>
+
+                            <div id="pointsCategoryMode" class="mb-6 hidden space-y-4 max-w-sm mx-auto">
+                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                                    <label class="font-bold text-gray-700 flex-1">Osebnost (A)<br><span class="text-xs text-gray-500 font-normal">Max 30 točk</span></label>
+                                    <input type="number" id="catA_manual" min="0" max="30" value="0" oninput="app.updateManualStatus()" class="w-20 p-2 text-xl font-bold text-center border-2 border-blue-200 focus:border-blue-500 rounded-lg outline-none">
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                                    <label class="font-bold text-gray-700 flex-1">Pogovor (B)<br><span class="text-xs text-gray-500 font-normal">Max 40 točk</span></label>
+                                    <input type="number" id="catB_manual" min="0" max="40" value="0" oninput="app.updateManualStatus()" class="w-20 p-2 text-xl font-bold text-center border-2 border-blue-200 focus:border-blue-500 rounded-lg outline-none">
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                                    <label class="font-bold text-gray-700 flex-1">Zaupanje (C)<br><span class="text-xs text-gray-500 font-normal">Max 30 točk</span></label>
+                                    <input type="number" id="catC_manual" min="0" max="30" value="0" oninput="app.updateManualStatus()" class="w-20 p-2 text-xl font-bold text-center border-2 border-blue-200 focus:border-blue-500 rounded-lg outline-none">
+                                </div>
+                            </div>
+
+                            <div class="mb-6 text-center">
+                                <p id="manualStatusText" class="inline-block px-6 py-2 rounded-full font-bold text-gray-800 text-xl bg-blue-100 border border-blue-200 shadow-sm">
+                                    50/100 - Prijatelj
+                                </p>
+                            </div>
+
                             <div class="mb-6 mt-8">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Opomba (opcijsko)</label>
                                 <textarea id="pointsOpomba" rows="3" class="w-full p-4 border-2 border-gray-200 rounded-xl bg-white text-lg"></textarea>
@@ -497,6 +540,29 @@
         </main>
     </div>
 
+    <div id="groupDetailModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-indigo-50">
+                <h2 id="modalGroupTitle" class="text-3xl font-bold text-indigo-800 flex items-center"><i class="fa-solid fa-layer-group mr-3 text-indigo-400"></i><span id="modalGroupName">Skupina</span></h2>
+                <button onclick="app.closeGroupView()" class="text-gray-400 hover:text-red-500 text-2xl transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow" id="modalGroupMembers">
+                </div>
+            <div class="p-6 border-t border-gray-100 bg-gray-50 text-center">
+                <button onclick="app.startPresentation()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 w-full md:w-auto">
+                    <i class="fa-solid fa-play mr-2"></i> ZAČNI PREDSTAVITEV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="presentationMode" class="fixed inset-0 bg-gradient-to-br from-gray-900 to-black z-[100] hidden flex-col items-center justify-center text-white text-center p-4 select-none" onclick="app.nextSlide()">
+        <button onclick="app.closePresentation(event)" class="absolute top-6 right-6 text-gray-500 hover:text-white text-3xl transition-colors z-50"><i class="fa-solid fa-xmark"></i></button>
+        <div id="slideContent" class="w-full max-w-4xl mx-auto flex flex-col items-center justify-center">
+            </div>
+        <div class="absolute bottom-8 text-gray-400 text-sm uppercase tracking-widest animate-pulse pointer-events-none">Klikni kjerkoli za naprej</div>
+    </div>
+
     <script>
         const FIREBASE_URL = 'https://friends-a8f21-default-rtdb.europe-west1.firebasedatabase.app';
 
@@ -509,6 +575,11 @@
             wizardPath: [],
             currentStepIndex: 0,
             aiCalculatedPoints: 0,
+
+            // PRESENTATION STATE
+            currentGroupMembers: [],
+            presentationMembers: [],
+            currentSlideIndex: 0,
 
             async apiGet(path) {
                 const res = await fetch(`${FIREBASE_URL}${path}.json`);
@@ -605,7 +676,8 @@
                 document.getElementById('detailName').innerText = person.name;
                 document.getElementById('detailGroup').innerText = person.group || 'Ni v skupini';
                 
-                const assessments = person.assessments ? Object.values(person.assessments) : [];
+                // Sprememba tukaj: obdržimo ključe, da lahko izbrišemo komentar!
+                const assessments = person.assessments ? Object.entries(person.assessments).map(([k, v]) => ({ assId: k, ...v })) : [];
                 document.getElementById('detailCount').innerText = assessments.length;
 
                 const historyList = document.getElementById('historyList');
@@ -622,10 +694,13 @@
                         const dateObj = new Date(ass.date);
                         const dateStr = `${dateObj.getDate()}.${dateObj.getMonth()+1}.${dateObj.getFullYear()}`;
                         historyList.innerHTML += `
-                            <div class="border-b border-gray-100 pb-3 mb-3 last:border-0">
+                            <div class="border-b border-gray-100 pb-3 mb-3 last:border-0 hover:bg-gray-50 p-2 rounded transition">
                                 <div class="flex justify-between items-center mb-1">
                                     <span class="font-semibold text-gray-800">${ass.status} <span class="text-blue-500 font-bold ml-1">(${ass.points}t)</span></span>
-                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">${dateStr}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-200">${dateStr}</span>
+                                        <button onclick="app.deleteAssessment('${id}', '${ass.assId}')" class="text-red-400 hover:text-red-600 px-2 py-1 rounded transition" title="Izbriši komentar"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
                                 </div>
                                 <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
                                     <div class="bg-blue-500 h-2 rounded-full" style="width: ${ass.points}%"></div>
@@ -638,6 +713,21 @@
                     document.getElementById('detailStatusBadge').innerText = "Ni ocenjeno";
                     this.updateScaleVisuals(0, "Neznano");
                     historyList.innerHTML = '<p class="text-gray-500 text-sm">Oseba še nima vpisanih ocen.</p>';
+                }
+            },
+
+            async deleteAssessment(personId, assId) {
+                if(confirm("Ali res želiš izbrisati ta komentar/oceno? To dejanje ni mogoče razveljaviti.")) {
+                    delete this.data.people[personId].assessments[assId];
+                    await fetch(`${FIREBASE_URL}/people/${personId}/assessments/${assId}.json`, { method: 'DELETE' });
+                    
+                    // Če smo izbrisali vse komentarje, pošljimo updejt na bazo za prazen objekt
+                    if(Object.keys(this.data.people[personId].assessments || {}).length === 0) {
+                        await this.apiPut(`/people/${personId}/assessments`, {});
+                    }
+                    
+                    this.showPersonDetails(personId); // Osveži pogled
+                    this.renderGroups(); // Osveži tudi skupine, da se posodobijo točke
                 }
             },
 
@@ -678,7 +768,6 @@
                 return "Poden";
             },
 
-            // --- NOVO: Preverjanje osebe v živo ---
             checkPersonStatus() {
                 const name = document.getElementById('komentarPerson').value.trim().toLowerCase();
                 const alertBox = document.getElementById('personStatusAlert');
@@ -707,7 +796,6 @@
                 }
             },
 
-            // --- WIZARD LOGIKA ---
             resetWizard() {
                 this.currentMethod = 'standard';
                 this.wizardPath = ['step-0', 'step-method', 'step-1', 'step-2', 'step-3', 'step-4', 'step-5', 'step-6', 'step-7', 'step-8', 'step-9'];
@@ -719,6 +807,10 @@
                 document.getElementById('aiResultBox').classList.add('hidden');
                 document.getElementById('komentarGroup').dataset.userChanged = "";
                 
+                // Ponastavi stil za točkovni vnos
+                document.querySelector('input[name="pointsMode"][value="total"]').checked = true;
+                this.togglePointsMode();
+
                 this.selectMethod('standard');
                 this.showWizardStep(0);
             },
@@ -726,7 +818,6 @@
             selectMethod(method) {
                 this.currentMethod = method;
                 
-                // Vizualna posodobitev gumbov
                 ['ai', 'points', 'standard'].forEach(m => {
                     const btn = document.getElementById('btn-method-' + m);
                     if (btn) {
@@ -738,7 +829,6 @@
                     }
                 });
 
-                // Posodobitev poti wizard korakov
                 if (method === 'standard') {
                     this.wizardPath = ['step-0', 'step-method', 'step-1', 'step-2', 'step-3', 'step-4', 'step-5', 'step-6', 'step-7', 'step-8', 'step-9'];
                 } else if (method === 'points') {
@@ -802,20 +892,67 @@
                 });
             },
 
-            // --- NOVO: Pomožne metode za nove vnose ---
+            togglePointsMode() {
+                const mode = document.querySelector('input[name="pointsMode"]:checked').value;
+                const lblTotal = document.getElementById('labelTotalPoints');
+                const lblCat = document.getElementById('labelCategoryPoints');
+
+                if(mode === 'total') {
+                    document.getElementById('pointsTotalMode').classList.remove('hidden');
+                    document.getElementById('pointsCategoryMode').classList.add('hidden');
+                    lblTotal.classList.add('bg-white', 'shadow', 'text-blue-600');
+                    lblCat.classList.remove('bg-white', 'shadow', 'text-blue-600');
+                } else {
+                    document.getElementById('pointsTotalMode').classList.add('hidden');
+                    document.getElementById('pointsCategoryMode').classList.remove('hidden');
+                    lblCat.classList.add('bg-white', 'shadow', 'text-blue-600');
+                    lblTotal.classList.remove('bg-white', 'shadow', 'text-blue-600');
+                }
+                this.updateManualStatus();
+            },
+
             updateManualStatus() {
-                let val = parseInt(document.getElementById('manualPoints').value) || 0;
+                const mode = document.querySelector('input[name="pointsMode"]:checked').value;
+                let val = 0;
+                
+                if (mode === 'total') {
+                    val = parseInt(document.getElementById('manualPoints').value) || 0;
+                } else {
+                    let aInput = document.getElementById('catA_manual');
+                    let bInput = document.getElementById('catB_manual');
+                    let cInput = document.getElementById('catC_manual');
+                    
+                    let a = parseInt(aInput.value) || 0;
+                    let b = parseInt(bInput.value) || 0;
+                    let c = parseInt(cInput.value) || 0;
+
+                    if (a > 30) { a = 30; aInput.value = 30; }
+                    if (b > 40) { b = 40; bInput.value = 40; }
+                    if (c > 30) { c = 30; cInput.value = 30; }
+                    
+                    if (a < 0) { a = 0; aInput.value = 0; }
+                    if (b < 0) { b = 0; bInput.value = 0; }
+                    if (c < 0) { c = 0; cInput.value = 0; }
+
+                    val = a + b + c;
+                }
+
                 if(val > 100) val = 100;
                 if(val < 0) val = 0;
-                document.getElementById('manualPoints').value = val;
-                document.getElementById('manualStatusText').innerText = this.calculateStatus(val);
+                
+                if (mode === 'total') {
+                    document.getElementById('manualPoints').value = val;
+                }
+
+                const status = this.calculateStatus(val);
+                document.getElementById('manualStatusText').innerText = `${val}/100 - ${status}`;
             },
 
             analyzeAI() {
                 const text = document.getElementById('aiInputText').value.toLowerCase();
                 if(!text || text.length < 10) { alert("Vnesi nekoliko bolj obširen opis za analizo!"); return; }
 
-                let points = 50; // Začetna osnova
+                let points = 50;
                 const positiveWords = ['odličn', 'najboljš', 'zaupa', 'vedno', 'super', 'rad', 'ljubez', 'prijatelj', 'pogosto', 'iskren', 'podpira', 'razume', 'vsak dan'];
                 const negativeWords = ['slab', 'laž', 'ne zaupa', 'neiskren', 'kreten', 'obup', 'nikoli', 'redko', 'ignorira', 'sovraž', 'konflikt', 'krega', 'izkorišča'];
                 const strongMultiplier = ['zelo', 'izjemno', 'popolnoma', 'vedno'];
@@ -858,7 +995,6 @@
                 let opomba = "";
                 let raw = { A: 0, B: 0, C: 0 };
 
-                // Pridobi točke glede na izbran način vpisa
                 if (this.currentMethod === 'standard') {
                     raw.A = parseInt(document.getElementById('catA1').value) + parseInt(document.getElementById('catA2').value) + parseInt(document.getElementById('catA3').value);
                     raw.B = parseInt(document.getElementById('catB1').value) + parseInt(document.getElementById('catB2').value) + parseInt(document.getElementById('catB3').value);
@@ -866,13 +1002,20 @@
                     points = raw.A + raw.B + raw.C;
                     opomba = document.getElementById('komentarOpomba').value;
                 } else if (this.currentMethod === 'points') {
-                    points = parseInt(document.getElementById('manualPoints').value) || 0;
+                    const mode = document.querySelector('input[name="pointsMode"]:checked').value;
+                    if (mode === 'total') {
+                        points = parseInt(document.getElementById('manualPoints').value) || 0;
+                        raw = { A: Math.round(points * 0.3), B: Math.round(points * 0.4), C: Math.round(points * 0.3) };
+                    } else {
+                        raw.A = parseInt(document.getElementById('catA_manual').value) || 0;
+                        raw.B = parseInt(document.getElementById('catB_manual').value) || 0;
+                        raw.C = parseInt(document.getElementById('catC_manual').value) || 0;
+                        points = raw.A + raw.B + raw.C;
+                    }
                     opomba = document.getElementById('pointsOpomba').value;
-                    // Približek za poročila:
-                    raw = { A: Math.round(points * 0.3), B: Math.round(points * 0.4), C: Math.round(points * 0.3) };
                 } else if (this.currentMethod === 'ai') {
                     if (this.aiCalculatedPoints === 0 && document.getElementById('aiInputText').value.length > 5) {
-                        this.analyzeAI(); // Izvedi analizo ob oddaji, če ni bila prej
+                        this.analyzeAI();
                     }
                     points = this.aiCalculatedPoints || 0;
                     opomba = document.getElementById('aiOpomba').value;
@@ -931,7 +1074,6 @@
                 }
             },
 
-            // --- NOVO: Podrobnejši izris skupin ---
             renderGroups() {
                 const container = document.getElementById('groupsList');
                 container.innerHTML = '';
@@ -939,7 +1081,6 @@
                 Object.keys(this.data.groups).forEach(gId => {
                     const g = this.data.groups[gId];
                     
-                    // Naberemo podatke članov in njihove zadnje ocene
                     let membersData = [];
                     Object.keys(this.data.people).forEach(pId => {
                         let p = this.data.people[pId];
@@ -958,10 +1099,8 @@
                         }
                     });
 
-                    // Razvrstimo padajoče glede na točke
                     membersData.sort((a,b) => b.points - a.points);
 
-                    // Pripravimo statistiko statusov
                     let statsHtml = '';
                     if(membersData.length > 0) {
                         let stats = {};
@@ -979,7 +1118,6 @@
                         statsHtml += `</div>`;
                     }
 
-                    // Seznam članov za HTML
                     let membersHtml = '';
                     if(membersData.length > 0) {
                         membersData.forEach((m, idx) => {
@@ -987,7 +1125,7 @@
                             let medalIcon = idx < 3 ? `<i class="fa-solid fa-medal ${rankColor} w-6 text-center"></i>` : `<span class="w-6 inline-block text-center text-gray-400 font-bold text-xs">${idx+1}.</span>`;
                             
                             membersHtml += `
-                                <div onclick="app.showPersonDetails('${m.id}'); app.navigate('poizvedovanje');" class="flex justify-between items-center p-2 hover:bg-indigo-50 rounded cursor-pointer transition border-b border-gray-100 last:border-0">
+                                <div onclick="app.showPersonDetails('${m.id}'); app.navigate('poizvedovanje'); event.stopPropagation();" class="flex justify-between items-center p-2 hover:bg-indigo-50 rounded cursor-pointer transition border-b border-gray-100 last:border-0">
                                     <div class="flex items-center">
                                         ${medalIcon}
                                         <span class="font-bold text-gray-700 ml-1">${m.name}</span>
@@ -1004,20 +1142,166 @@
                     }
                     
                     container.innerHTML += `
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col h-full">
-                            <div class="flex justify-between items-center mb-2 border-b pb-3">
-                                <h4 class="font-bold text-xl text-indigo-800"><i class="fa-solid fa-users mr-2 text-indigo-400"></i>${g.name}</h4>
-                                <button onclick="app.deleteGroup('${gId}')" class="text-red-300 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                            <div class="flex-grow">
-                                ${statsHtml}
-                                <div class="space-y-1 max-h-64 overflow-y-auto pr-2">
-                                    ${membersHtml}
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onclick="app.openGroupView('${gId}')">
+                            <div class="p-5 flex-grow pointer-events-none">
+                                <div class="flex justify-between items-center mb-2 border-b pb-3 pointer-events-auto">
+                                    <h4 class="font-bold text-xl text-indigo-800 hover:text-indigo-600 transition-colors"><i class="fa-solid fa-users mr-2 text-indigo-400"></i>${g.name}</h4>
+                                    <button onclick="app.deleteGroup('${gId}'); event.stopPropagation();" class="text-red-300 hover:text-red-500 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>
                                 </div>
+                                <div class="pointer-events-auto">
+                                    ${statsHtml}
+                                    <div class="space-y-1 max-h-64 overflow-y-auto pr-2">
+                                        ${membersHtml}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-indigo-50 text-indigo-600 text-center py-2 text-sm font-bold hover:bg-indigo-100 transition-colors pointer-events-auto">
+                                ODPRITE ZA PREDSTAVITEV <i class="fa-solid fa-arrow-right ml-1"></i>
                             </div>
                         </div>
                     `;
                 });
+            },
+
+            // --- PREDSTAVITEV SKUPINE ---
+            openGroupView(gId) {
+                const g = this.data.groups[gId];
+                if (!g) return;
+
+                document.getElementById('modalGroupName').innerText = g.name;
+                
+                let membersData = [];
+                Object.keys(this.data.people).forEach(pId => {
+                    let p = this.data.people[pId];
+                    if (p.group === g.name) {
+                        let latestAss = null;
+                        if (p.assessments) {
+                            const asses = Object.values(p.assessments).sort((a,b) => new Date(b.date) - new Date(a.date));
+                            latestAss = asses[0];
+                        }
+                        membersData.push({
+                            id: pId,
+                            name: p.name,
+                            points: latestAss ? latestAss.points : 0,
+                            status: latestAss ? latestAss.status : 'Ni ocenjeno'
+                        });
+                    }
+                });
+
+                membersData.sort((a,b) => b.points - a.points); // Za seznam: od najboljšega
+                this.currentGroupMembers = membersData;
+
+                const membersContainer = document.getElementById('modalGroupMembers');
+                membersContainer.innerHTML = '';
+                
+                if(membersData.length === 0) {
+                    membersContainer.innerHTML = '<p class="text-gray-500 text-center py-10 text-xl">V tej skupini ni še nobene osebe.</p>';
+                } else {
+                    let html = '<div class="space-y-3">';
+                    membersData.forEach((m, idx) => {
+                        let rankColor = idx === 0 ? 'text-yellow-400' : (idx === 1 ? 'text-gray-400' : (idx === 2 ? 'text-orange-400' : 'text-gray-300'));
+                        let medalIcon = idx < 3 ? `<i class="fa-solid fa-medal ${rankColor} text-2xl w-8 text-center"></i>` : `<span class="w-8 inline-block text-center text-gray-400 font-bold text-lg">${idx+1}.</span>`;
+                        
+                        html += `
+                            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <div class="flex items-center text-xl">
+                                    ${medalIcon}
+                                    <span class="font-bold text-gray-800 ml-3">${m.name}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-2xl font-black text-indigo-600">${m.points} t</span>
+                                    <span class="block text-sm text-gray-500 uppercase font-bold">${m.status}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    membersContainer.innerHTML = html;
+                }
+
+                document.getElementById('groupDetailModal').classList.remove('hidden');
+            },
+
+            closeGroupView() {
+                document.getElementById('groupDetailModal').classList.add('hidden');
+            },
+
+            startPresentation() {
+                if(this.currentGroupMembers.length === 0) {
+                    alert('Skupina je prazna, predstavitev ni mogoča!');
+                    return;
+                }
+                
+                // Za predstavitev želimo od najslabšega do najboljšega (Naraščajoče)
+                this.presentationMembers = [...this.currentGroupMembers].sort((a,b) => a.points - b.points);
+                this.currentSlideIndex = 0;
+
+                this.closeGroupView();
+                document.getElementById('presentationMode').classList.remove('hidden');
+
+                // Vklopi Fullscreen če brskalnik podpira
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => console.log("Fullscreen API error:", err));
+                }
+
+                this.showSlide();
+            },
+
+            showSlide() {
+                const container = document.getElementById('slideContent');
+                
+                // Restart animation
+                container.classList.remove('slide-animate');
+                void container.offsetWidth; // Trigger reflow
+                container.classList.add('slide-animate');
+
+                if(this.currentSlideIndex >= this.presentationMembers.length) {
+                    // Konec predstavitve
+                    container.innerHTML = `
+                        <i class="fa-solid fa-flag-checkered text-7xl text-white mb-6"></i>
+                        <h1 class="text-5xl md:text-7xl font-bold mb-8">Konec predstavitve!</h1>
+                        <button onclick="app.closePresentation(event)" class="mt-8 bg-indigo-600 hover:bg-indigo-700 px-10 py-5 rounded-2xl text-2xl font-bold transition-transform hover:scale-105 shadow-[0_0_30px_rgba(79,70,229,0.5)]">ZAKLJUČI</button>
+                    `;
+                    document.querySelector('#presentationMode .animate-pulse').classList.add('hidden');
+                    return;
+                }
+
+                document.querySelector('#presentationMode .animate-pulse').classList.remove('hidden');
+                
+                const m = this.presentationMembers[this.currentSlideIndex];
+                const total = this.presentationMembers.length;
+                const rank = total - this.currentSlideIndex; // 1 = najboljši, 2 = drugi...
+                
+                let iconHtml = '<i class="fa-solid fa-user text-[100px] text-gray-600 mb-8 block drop-shadow-lg"></i>';
+                if(rank === 1) iconHtml = '<i class="fa-solid fa-medal text-[120px] medal-gold mb-4 block"></i><p class="text-yellow-400 font-bold text-2xl mb-4 tracking-widest uppercase">Zlato - 1. Mesto</p>';
+                else if(rank === 2) iconHtml = '<i class="fa-solid fa-medal text-[110px] medal-silver mb-4 block"></i><p class="text-gray-300 font-bold text-2xl mb-4 tracking-widest uppercase">Srebro - 2. Mesto</p>';
+                else if(rank === 3) iconHtml = '<i class="fa-solid fa-medal text-[100px] medal-bronze mb-4 block"></i><p class="text-orange-400 font-bold text-2xl mb-4 tracking-widest uppercase">Bron - 3. Mesto</p>';
+                
+                container.innerHTML = `
+                    ${iconHtml}
+                    <h2 class="text-6xl md:text-8xl font-black mb-6 tracking-tight drop-shadow-2xl text-white">${m.name}</h2>
+                    <div class="inline-block bg-white/10 backdrop-blur-md rounded-3xl px-12 py-6 border border-white/20 mt-4 shadow-2xl">
+                        <span class="block text-5xl md:text-6xl font-bold text-blue-400 drop-shadow-md">${m.points} točk</span>
+                        <div class="mt-4 pt-4 border-t border-white/20">
+                            <span class="block text-2xl md:text-3xl text-gray-200 uppercase tracking-widest font-semibold">${m.status}</span>
+                        </div>
+                    </div>
+                `;
+            },
+
+            nextSlide() {
+                if(this.currentSlideIndex >= this.presentationMembers.length) return;
+                this.currentSlideIndex++;
+                this.showSlide();
+            },
+
+            closePresentation(e) {
+                if(e) e.stopPropagation();
+                document.getElementById('presentationMode').classList.add('hidden');
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(err => console.log(err));
+                }
             },
 
             async changePin() {
