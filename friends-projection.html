@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skakalni Scoreboard</title>
+    <title>Podelitev</title>
     <style>
-        /* Osnovne nastavitve za celoten ekran */
+        /* SVETLA TEMA - Osnovne nastavitve */
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            overflow: hidden; /* TV grafike navadno ne drsijo */
+            background-color: #f4f6f9; /* Svetlo sivo/belo ozadje */
+            color: #333333;
+            overflow: hidden; 
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -22,9 +22,9 @@
         #nav-bar {
             display: flex;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.9);
+            background: #ffffff;
             padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             position: relative;
             z-index: 100;
             transition: top 0.5s;
@@ -37,9 +37,9 @@
         }
 
         button {
-            background: linear-gradient(180deg, #333, #111);
-            color: white;
-            border: 1px solid #555;
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #ccc;
             padding: 10px 20px;
             margin: 0 10px;
             font-size: 16px;
@@ -48,28 +48,32 @@
             border-radius: 4px;
             text-transform: uppercase;
             transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         button:hover {
-            background: linear-gradient(180deg, #0056b3, #003d82);
+            background: #e9ecef;
             border-color: #007bff;
+            color: #0056b3;
         }
 
         .btn-admin {
             position: absolute;
             right: 20px;
-            background: linear-gradient(180deg, #8b0000, #5a0000);
+            background: #fff0f0;
+            border-color: #ffcccc;
+            color: #d32f2f;
         }
 
         .btn-admin:hover {
-            background: linear-gradient(180deg, #b30000, #800000);
+            background: #ffe6e6;
+            border-color: #d32f2f;
         }
 
         /* Pogledi (Views) */
         .view {
             display: none;
             flex-grow: 1;
-            padding: 20px;
             position: relative;
             width: 100%;
             height: 100%;
@@ -77,26 +81,28 @@
         }
 
         .view.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         /* ADMIN pogled */
         .admin-container {
             max-width: 600px;
-            margin: 0 auto;
-            background: #222;
+            margin: 40px auto;
+            background: #ffffff;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 100%;
         }
         .admin-form input {
             width: calc(100% - 20px);
             padding: 10px;
             margin-bottom: 15px;
-            border: none;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            background: #333;
-            color: white;
+            background: #fdfdfd;
+            color: #333;
         }
         .admin-list {
             margin-top: 20px;
@@ -106,24 +112,26 @@
         .admin-list th, .admin-list td {
             text-align: left;
             padding: 10px;
-            border-bottom: 1px solid #444;
+            border-bottom: 1px solid #eee;
         }
 
         /* TABELA pogled */
         .table-container {
             max-width: 800px;
-            margin: 0 auto;
-            background: rgba(0, 0, 0, 0.8);
+            margin: 40px auto;
+            background: #ffffff;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            width: 100%;
         }
         .results-table {
             width: 100%;
             border-collapse: collapse;
         }
         .results-table th {
-            background: #003d82;
+            background: #0056b3;
+            color: white;
             padding: 15px;
             text-align: left;
             font-size: 18px;
@@ -132,65 +140,71 @@
             padding: 15px;
             font-size: 20px;
             font-weight: bold;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #eee;
         }
         .results-table tr:nth-child(even) {
-            background: #1a1a1a;
+            background: #f8f9fa;
         }
         .medal {
             font-size: 24px;
             margin-right: 10px;
         }
-        .color-gold { color: #ffd700; }
-        .color-silver { color: #c0c0c0; }
-        .color-bronze { color: #cd7f32; }
 
         /* PROJEKCIJA pogled */
-        .competitor-list {
+        
+        /* Vrstica z imeni vedno na vrhu projekcije */
+        #projection-top-bar {
+            background: #ffffff;
+            padding: 15px;
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
-            margin-top: 50px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            z-index: 80;
+            min-height: 60px;
         }
         .comp-btn {
-            font-size: 20px;
-            padding: 15px 30px;
-            background: #333;
+            font-size: 16px;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
         }
-        .comp-btn:hover { background: #007bff; }
+        .comp-btn:hover { background: #e2e6ea; border-color: #007bff; color: #0056b3; }
 
         /* TV Grafika znotraj projekcije */
         #tv-graphics {
             display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Da kliki grejo skozi za aktivacijo animacij */
+            position: relative;
+            flex-grow: 1;
+            width: 100%;
         }
         
-        /* Ovojnica za sprejem klikov na celotnem ekranu */
+        /* Ovojnica za sprejem klikov (NE PREKRIVA ZGORNJE VRSTICE) */
         #reveal-click-area {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 50;
             cursor: pointer;
             pointer-events: auto;
+            display: none;
         }
 
-        /* Tabela najboljših 5 (Spodaj levo) */
+        /* Tabela najboljših 5 (Spodaj levo) - Svetlejša TV grafika */
         .top5-table {
             position: absolute;
             bottom: 40px;
             left: 40px;
             width: 350px;
-            background: rgba(0, 0, 0, 0.85);
-            border-top: 4px solid #007bff;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 4px solid #0056b3;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.15);
             pointer-events: none;
             z-index: 60;
         }
         .top5-title {
-            background: #003d82;
+            background: #0056b3;
+            color: white;
             padding: 10px;
             font-weight: bold;
             text-align: center;
@@ -198,12 +212,13 @@
         .top5-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 15px;
-            border-bottom: 1px solid #333;
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            color: #333;
         }
         .top5-row.leader {
-            background: linear-gradient(90deg, #4b3e00, transparent);
-            color: #ffd700;
+            background: linear-gradient(90deg, #fff3cd, transparent);
+            color: #856404;
         }
 
         /* Glavna pasica za tekmovalca (Spodaj desno) */
@@ -212,14 +227,15 @@
             bottom: 40px;
             right: 40px;
             width: 700px;
-            background: rgba(0, 0, 0, 0.9);
-            border-left: 6px solid #007bff;
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 6px solid #0056b3;
             display: flex;
             align-items: center;
             padding: 15px 25px;
-            box-shadow: -5px 5px 15px rgba(0,0,0,0.5);
+            box-shadow: -5px 5px 20px rgba(0,0,0,0.15);
             pointer-events: none;
             z-index: 60;
+            color: #333;
         }
         .rb-name {
             font-size: 28px;
@@ -231,19 +247,19 @@
             display: flex;
             gap: 15px;
             font-size: 24px;
-            color: #aaa;
+            color: #888;
         }
         .rb-total {
             font-size: 32px;
             font-weight: 900;
-            color: #ffd700;
+            color: #b8860b; /* Temnejša zlata za svetlo ozadje */
             margin-left: 20px;
             opacity: 0;
             transition: opacity 0.5s ease-in;
         }
         .rb-rank {
-            background: white;
-            color: black;
+            background: #333;
+            color: white;
             font-size: 32px;
             font-weight: 900;
             padding: 5px 20px;
@@ -257,68 +273,61 @@
             transform: translateX(0);
         }
 
-        /* Moder graf (Ski jumping virtual line) */
+        /* Moder graf (Svetlejše ozadje) */
         .graph-container {
             position: absolute;
             bottom: 140px;
             right: 150px;
             width: 80px;
             height: 300px;
-            background: rgba(0, 0, 0, 0.6);
-            border-left: 2px solid white;
-            border-bottom: 2px solid white;
+            background: rgba(255, 255, 255, 0.7);
+            border-left: 2px solid #333;
+            border-bottom: 2px solid #333;
             display: none;
             z-index: 60;
+            box-shadow: -2px 2px 10px rgba(0,0,0,0.1);
         }
         .graph-target-line {
             position: absolute;
             width: 120%;
             left: -10%;
-            border-top: 3px dashed #00ff00;
+            border-top: 3px dashed #28a745;
             z-index: 2;
         }
         .graph-target-label {
             position: absolute;
             right: -60px;
             top: -10px;
-            color: #00ff00;
+            color: #28a745;
             font-weight: bold;
             font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
         .graph-bar {
             position: absolute;
             bottom: 0;
             width: 100%;
-            background: linear-gradient(0deg, #003d82, #007bff);
+            background: linear-gradient(0deg, #0056b3, #007bff);
             height: 0%;
             transition: height 2s ease-out;
             z-index: 1;
         }
 
-        #btn-continue-reveal {
-            position: absolute;
-            bottom: 120px;
-            right: 40px;
-            display: none;
-            z-index: 70;
-            background: #28a745;
-        }
-        
         #btn-podium-trigger {
-            position: absolute;
-            bottom: 120px;
-            right: 40px;
-            display: none;
-            z-index: 70;
             background: #ffc107;
             color: black;
-            font-size: 20px;
+            font-size: 18px;
+            border-color: #e0a800;
+            display: none;
+        }
+        #btn-podium-trigger:hover {
+            background: #e0a800;
         }
 
-        /* STOPNIČKE (Podium) animacija */
+        /* STOPNIČKE (Podium) animacija - Svetla različica */
         #podium-view {
-            background: radial-gradient(circle, #1a2a6c, #112942, #000000);
-            display: none; /* flex overriden when active */
+            background: radial-gradient(circle, #ffffff, #e9ecef, #ced4da);
+            display: none; 
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
@@ -333,8 +342,7 @@
             font-size: 48px;
             font-weight: bold;
             text-transform: uppercase;
-            color: #ffd700;
-            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+            color: #333;
             animation: fadeInDown 1s ease;
         }
         .podium-stands {
@@ -352,37 +360,46 @@
             padding-top: 20px;
             font-size: 24px;
             font-weight: bold;
-            color: black;
+            color: white;
             position: relative;
-            transform: translateY(100vh); /* Start off-screen bottom */
+            transform: translateY(100vh);
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
         }
         .step-name {
             position: absolute;
-            top: -60px;
-            color: white;
+            top: -70px;
+            color: #333;
             text-align: center;
             width: 200px;
             font-size: 22px;
-            text-shadow: 2px 2px 4px #000;
             opacity: 0;
             transition: opacity 1s;
         }
-        .step.rank-1 { background: linear-gradient(180deg, #ffd700, #b8860b); height: 100%; z-index: 3; transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s; }
-        .step.rank-2 { background: linear-gradient(180deg, #e0e0e0, #808080); height: 75%; z-index: 2; transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s; }
-        .step.rank-3 { background: linear-gradient(180deg, #cd7f32, #8b4513); height: 50%; z-index: 1; transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0s; }
+        .step.rank-1 { background: linear-gradient(180deg, #ffd700, #daa520); height: 100%; z-index: 3; transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s; }
+        .step.rank-2 { background: linear-gradient(180deg, #e0e0e0, #a9a9a9); height: 75%; z-index: 2; transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s; }
+        .step.rank-3 { background: linear-gradient(180deg, #cd7f32, #a0522d); height: 50%; z-index: 1; transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0s; }
         
         .step.animate-up { transform: translateY(0); }
         .step.animate-up .step-name { opacity: 1; transition-delay: 2s; }
 
-        .step-number { font-size: 60px; opacity: 0.3; }
+        .step-number { font-size: 60px; opacity: 0.5; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
 
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-50px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Pomožni razredi */
-        .bold-score { font-weight: 900; color: white; }
+        .bold-score { font-weight: 900; color: #000; }
+        
+        /* Opozorilo, ko ni več tekmovalcev za projekcijo */
+        #empty-projection-msg {
+            text-align: center;
+            margin-top: 100px;
+            font-size: 24px;
+            color: #666;
+            display: none;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -415,31 +432,24 @@
     <!-- POGLED 2: PROJEKCIJA -->
     <div id="projection-view" class="view">
         
-        <!-- Začetni seznam preostalih tekmovalcev -->
-        <div id="projection-start-screen">
-            <h2 style="text-align:center; font-size: 32px;">Pripravljeni tekmovalci</h2>
-            <div class="competitor-list" id="unrevealed-list">
-                <!-- Gumbi -->
-            </div>
-            <div style="text-align:center; margin-top:50px;">
-                <button id="btn-podium-trigger" onclick="startPodiumAnimation()">Podeli stopničke 🏆</button>
-            </div>
+        <!-- Vrstica z imeni vedno na vrhu -->
+        <div id="projection-top-bar">
+            <!-- Gumbi se generirajo tukaj -->
         </div>
 
-        <!-- TV Grafike (aktivne ob kliku na tekmovalca) -->
+        <!-- TV Grafike (spodnji del ekrana) -->
         <div id="tv-graphics">
-            <!-- Gumb za nadaljevanje, ko je cikel zaključen -->
-            <button id="btn-continue-reveal" onclick="finishRevealCycle()">Nadaljuj</button>
+            
+            <!-- Obvestilo, če so vsi že obdelani -->
+            <div id="empty-projection-msg">Vsi tekmovalci so razkriti. Lahko podeliš stopničke!</div>
 
             <!-- Spodaj levo TOP 5 -->
-            <div class="top5-table">
+            <div class="top5-table" id="top5-container" style="display:none;">
                 <div class="top5-title">TRENUTNO VODILNI (TOP 5)</div>
-                <div id="top5-body">
-                    <!-- Dinamično -->
-                </div>
+                <div id="top5-body"></div>
             </div>
 
-            <!-- Moder Graf (pojavi se po potrebi) -->
+            <!-- Moder Graf -->
             <div class="graph-container" id="reveal-graph">
                 <div class="graph-target-line" id="graph-line">
                     <div class="graph-target-label" id="graph-label">Meja</div>
@@ -448,18 +458,14 @@
             </div>
 
             <!-- Spodaj desno Glavna vrstica -->
-            <div class="reveal-banner">
+            <div class="reveal-banner" id="main-banner" style="display:none;">
                 <div class="rb-name" id="rb-name">Ime Priimek</div>
-                <div class="rb-scores" id="rb-scores">
-                    <!-- Pretekle serije -->
-                </div>
-                <div class="rb-total" id="rb-total">
-                    <!-- Zadnja serija + seštevek -->
-                </div>
+                <div class="rb-scores" id="rb-scores"></div>
+                <div class="rb-total" id="rb-total"></div>
                 <div class="rb-rank" id="rb-rank">1</div>
             </div>
 
-            <!-- Preko celega ekrana za zaznavo klika za začetek rasti grafa -->
+            <!-- Zaznava klika za zagon grafa (spodnji del ekrana, ne prekriva gumbov) -->
             <div id="reveal-click-area" onclick="triggerRevealStep()"></div>
         </div>
     </div>
@@ -475,7 +481,7 @@
                 <label>Rezultati serij (ločeni z vejico):</label>
                 <input type="text" id="admin-scores" placeholder="Npr. 125.5, 133.0">
                 
-                <button onclick="addCompetitor()">Dodaj tekmovalca</button>
+                <button onclick="addCompetitor()" style="background: #0056b3; color: white; border:none;">Dodaj tekmovalca</button>
             </div>
 
             <table class="admin-list">
@@ -492,7 +498,7 @@
             </table>
             
             <br>
-            <button onclick="resetSystem()" style="background:#dc3545; font-size:12px;">Resetiraj vse</button>
+            <button onclick="resetSystem()" style="background:#dc3545; color: white; font-size:12px; border:none;">Resetiraj vse</button>
         </div>
     </div>
 
@@ -523,6 +529,20 @@
         let activeId = null; 
         let revealPhase = 0; // 0: initial, 1: graph growing/waiting, 2: done waiting
         let graphTimeout = null;
+
+        // --- LOCAL STORAGE ---
+        function saveData() {
+            localStorage.setItem('skiScoreboard_Competitors', JSON.stringify(competitors));
+            localStorage.setItem('skiScoreboard_Revealed', JSON.stringify(revealedIds));
+        }
+
+        function loadData() {
+            const storedComp = localStorage.getItem('skiScoreboard_Competitors');
+            const storedRev = localStorage.getItem('skiScoreboard_Revealed');
+            
+            if (storedComp) competitors = JSON.parse(storedComp);
+            if (storedRev) revealedIds = JSON.parse(storedRev);
+        }
 
         // --- ADMIN LOGIKA ---
         function addCompetitor() {
@@ -555,13 +575,17 @@
             nameEl.value = '';
             scoresEl.value = '';
             
+            saveData();
             updateAdminTable();
+            renderProjectionTopBar(); // Posodobi gori v ozadju
         }
 
         function removeCompetitor(id) {
             competitors = competitors.filter(c => c.id !== id);
             revealedIds = revealedIds.filter(rid => rid !== id);
+            saveData();
             updateAdminTable();
+            renderProjectionTopBar();
         }
 
         function updateAdminTable() {
@@ -573,7 +597,7 @@
                     <td>${c.name}</td>
                     <td>${c.scores.join(' / ')}</td>
                     <td><b>${c.total.toFixed(1)}</b></td>
-                    <td><button onclick="removeCompetitor('${c.id}')" style="padding: 5px; font-size: 12px; background:#dc3545;">Odstrani</button></td>
+                    <td><button onclick="removeCompetitor('${c.id}')" style="padding: 5px; font-size: 12px; background:#dc3545; color:white; border:none;">Odstrani</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -583,7 +607,9 @@
             if(confirm("Ste prepričani, da želite izbrisati vse podatke?")) {
                 competitors = [];
                 revealedIds = [];
+                saveData();
                 updateAdminTable();
+                renderProjectionTopBar();
             }
         }
 
@@ -592,19 +618,16 @@
             const tbody = document.getElementById('full-table-body');
             tbody.innerHTML = '';
             
-            // Pokaži samo razkrite v tekmovanju, če gremo "live", ali pa kar vse, če želimo.
-            // Za scoreboard na televiziji med samo tekmo, tabela kaže trenutno razkrite
             const visibleCompetitors = competitors.filter(c => revealedIds.includes(c.id))
                                                   .sort((a,b) => b.total - a.total);
 
             visibleCompetitors.forEach((c, index) => {
                 const tr = document.createElement('tr');
                 let rankStr = `${index + 1}.`;
-                let medalClass = '';
                 
-                if (index === 0) { rankStr = `<span class="medal color-gold">🥇</span> 1.`; }
-                else if (index === 1) { rankStr = `<span class="medal color-silver">🥈</span> 2.`; }
-                else if (index === 2) { rankStr = `<span class="medal color-bronze">🥉</span> 3.`; }
+                if (index === 0) { rankStr = `<span class="medal" style="color: #ffd700;">🥇</span> 1.`; }
+                else if (index === 1) { rankStr = `<span class="medal" style="color: #a9a9a9;">🥈</span> 2.`; }
+                else if (index === 2) { rankStr = `<span class="medal" style="color: #cd7f32;">🥉</span> 3.`; }
 
                 tr.innerHTML = `
                     <td>${rankStr}</td>
@@ -616,9 +639,9 @@
         }
 
         // --- PROJEKCIJA LOGIKA ---
-        function renderProjectionStartScreen() {
-            const listDiv = document.getElementById('unrevealed-list');
-            listDiv.innerHTML = '';
+        function renderProjectionTopBar() {
+            const topBar = document.getElementById('projection-top-bar');
+            topBar.innerHTML = '';
             
             const unrevealed = competitors.filter(c => !revealedIds.includes(c.id));
             
@@ -627,15 +650,24 @@
                 btn.className = 'comp-btn';
                 btn.textContent = c.name;
                 btn.onclick = () => startReveal(c.id);
-                listDiv.appendChild(btn);
+                topBar.appendChild(btn);
             });
 
-            // Gumb podeli stopničke
-            const podiumBtn = document.getElementById('btn-podium-trigger');
+            // Gumb podeli stopničke znotraj iste vrstice (na koncu)
             if (unrevealed.length === 0 && competitors.length >= 3) {
+                const podiumBtn = document.createElement('button');
+                podiumBtn.id = 'btn-podium-trigger';
+                podiumBtn.textContent = 'Podeli stopničke 🏆';
+                podiumBtn.onclick = startPodiumAnimation;
                 podiumBtn.style.display = 'inline-block';
+                topBar.appendChild(podiumBtn);
+            }
+
+            // Pokaži obvestilo, če ni nobenega za obdelat
+            if (unrevealed.length === 0 && competitors.length > 0) {
+                document.getElementById('empty-projection-msg').style.display = 'block';
             } else {
-                podiumBtn.style.display = 'none';
+                document.getElementById('empty-projection-msg').style.display = 'none';
             }
         }
 
@@ -646,35 +678,33 @@
         }
 
         function startReveal(id) {
+            // Zakleni zgornjo vrstico, da med animacijo ne klikaš drugih
+            document.getElementById('projection-top-bar').style.pointerEvents = 'none';
+            document.getElementById('empty-projection-msg').style.display = 'none';
+
             activeId = id;
             revealPhase = 0;
             const comp = competitors.find(c => c.id === id);
             const leaderTotal = getLeaderTotal();
             
-            // Skrij nav bar in začetni zaslon
-            document.getElementById('nav-bar').classList.add('hidden');
-            document.getElementById('projection-start-screen').style.display = 'none';
-            document.getElementById('tv-graphics').style.display = 'block';
+            // Pokaži spodnje elemente
+            document.getElementById('top5-container').style.display = 'block';
+            document.getElementById('main-banner').style.display = 'flex';
             
             // Reset grafičnih elementov
             document.getElementById('rb-total').style.opacity = '0';
             document.getElementById('rb-rank').classList.remove('show');
-            document.getElementById('btn-continue-reveal').style.display = 'none';
             document.getElementById('reveal-graph').style.display = 'none';
             document.getElementById('graph-bar').style.height = '0%';
-            document.getElementById('graph-bar').style.transition = 'none'; // reset transition
+            document.getElementById('graph-bar').style.transition = 'none';
 
-            // Nastavi Top 5
-            renderTop5();
+            renderTop5(); // Nariši trenutne top 5
 
             // Nastavi Banner tekmovalca
             document.getElementById('rb-name').textContent = comp.name;
-            
             const scoresHtml = comp.scores.slice(0, -1).map(s => `<span>${s.toFixed(1)}</span>`).join(' | ');
             document.getElementById('rb-scores').innerHTML = scoresHtml;
 
-            // Preveri če rabimo graf (če je oddaljen manj kot 13 točk ali pa prehiteva vodilnega)
-            // in seveda, če vodilni sploh obstaja
             let gap = leaderTotal - comp.total;
             let needsGraph = (leaderTotal > 0) && (gap <= 13 || comp.total > leaderTotal);
 
@@ -682,64 +712,52 @@
                 setupGraph(leaderTotal, comp.total);
             }
 
-            // Ovojnica čaka na klik (zato da uporabnik - operater sam sproži graf)
-            // Stanje preide na čakanje prvega klika
+            // Aktivira se cona za klike, uporabnik sam sproži graf s klikom
             document.getElementById('reveal-click-area').style.display = 'block';
         }
 
         function setupGraph(leaderTotal, compTotal) {
             document.getElementById('reveal-graph').style.display = 'block';
-            
-            // Matematika za graf
-            // Najvišja vrednost bo malenkost večja od večje izmed obeh vrednosti
             const maxVal = Math.max(leaderTotal, compTotal) + 15;
             
-            // Linija (meja za vodstvo)
             const linePct = (leaderTotal / maxVal) * 100;
             document.getElementById('graph-line').style.bottom = `${linePct}%`;
             document.getElementById('graph-label').textContent = leaderTotal.toFixed(1);
 
-            // Shranimo ciljno višino bara v atribut
             const barPct = (compTotal / maxVal) * 100;
             document.getElementById('graph-bar').setAttribute('data-target-height', `${barPct}%`);
         }
 
-        // Ta funkcija se zgodi ob kliku kjerkoli na ekran v času projekcije
         function triggerRevealStep() {
             if (revealPhase === 0) {
-                // Faza 0 -> 1: Začnemo animacijo grafa (ali pa takoj pokažemo rezultat, če grafa ni)
                 revealPhase = 1;
                 
                 const graphContainer = document.getElementById('reveal-graph');
                 if (graphContainer.style.display === 'block') {
-                    // Animacija rasti grafa
                     const bar = document.getElementById('graph-bar');
-                    // enable transition again
                     setTimeout(() => {
                         bar.style.transition = 'height 2s ease-out';
                         bar.style.height = bar.getAttribute('data-target-height');
                     }, 50);
 
-                    // Po 5 sekundah od trenutka klika (rast traja 2s, nato še 3s čakanja) graf izgine in prikaže se točke
+                    // Po 5 sekundah
                     graphTimeout = setTimeout(() => {
                         finishRevealAnimation();
                     }, 5000);
                 } else {
-                    // Ni grafa, samo prikažemo točke takoj
                     finishRevealAnimation();
                 }
             }
         }
 
         function finishRevealAnimation() {
-            revealPhase = 2; // Faza končana
-            document.getElementById('reveal-click-area').style.display = 'none'; // Preprečimo nadaljnje klike
+            revealPhase = 2; 
+            document.getElementById('reveal-click-area').style.display = 'none'; 
             document.getElementById('reveal-graph').style.display = 'none';
             
             const comp = competitors.find(c => c.id === activeId);
-            
-            // Sestavimo zadnjo oceno krepko in seštevek
             const lastScore = comp.scores[comp.scores.length - 1];
+            
             let totalHtml = `<span class="bold-score">${lastScore.toFixed(1)}</span> / ${comp.total.toFixed(1)}`;
             if(comp.scores.length === 1) {
                 totalHtml = `<span class="bold-score">${comp.total.toFixed(1)}</span>`;
@@ -749,7 +767,6 @@
             rbTotal.innerHTML = totalHtml;
             rbTotal.style.opacity = '1';
 
-            // Določimo mesto (z začasnim dodajanjem v revealed listo)
             const tempRevealed = [...revealedIds, activeId];
             const sorted = competitors.filter(c => tempRevealed.includes(c.id)).sort((a,b) => b.total - a.total);
             const rank = sorted.findIndex(c => c.id === activeId) + 1;
@@ -758,22 +775,15 @@
             rankEl.textContent = rank;
             rankEl.classList.add('show');
 
-            // Posodobimo Top 5 takoj po razkritju
             revealedIds.push(activeId);
-            renderTop5();
+            saveData(); // Shranimo v LocalStorage!
+            renderTop5(); // Osveži top 5 po prihodu novega
 
-            // Pokaži gumb za nadaljevanje na seznam
+            // Po 3 sekundah odklepamo zgornjo vrstico in osvežimo gumbe
             setTimeout(() => {
-                document.getElementById('btn-continue-reveal').style.display = 'block';
-            }, 1000);
-        }
-
-        function finishRevealCycle() {
-            // Nazaj na start screen
-            document.getElementById('tv-graphics').style.display = 'none';
-            document.getElementById('projection-start-screen').style.display = 'block';
-            document.getElementById('nav-bar').classList.remove('hidden');
-            renderProjectionStartScreen();
+                document.getElementById('projection-top-bar').style.pointerEvents = 'auto';
+                renderProjectionTopBar(); // Odstrani gumb ravno obdelanega
+            }, 3000);
         }
 
         function renderTop5() {
@@ -782,7 +792,7 @@
             
             const visibleCompetitors = competitors.filter(c => revealedIds.includes(c.id))
                                                   .sort((a,b) => b.total - a.total)
-                                                  .slice(0, 5); // Samo top 5
+                                                  .slice(0, 5);
 
             visibleCompetitors.forEach((c, index) => {
                 const div = document.createElement('div');
@@ -798,19 +808,16 @@
         // --- STOPNIČKE LOGIKA ---
         function startPodiumAnimation() {
             switchView('podium');
-            document.getElementById('nav-bar').classList.add('hidden'); // Skrij nav
+            document.getElementById('nav-bar').classList.add('hidden');
             
             const top3 = competitors.sort((a,b) => b.total - a.total).slice(0, 3);
             
-            // Reset razreda
             document.querySelectorAll('.step').forEach(s => s.classList.remove('animate-up'));
 
-            // Nastavi podatke
             if(top3[0]) document.getElementById('podium-name-1').innerHTML = `${top3[0].name}<br><small>${top3[0].total.toFixed(1)}</small>`;
             if(top3[1]) document.getElementById('podium-name-2').innerHTML = `${top3[1].name}<br><small>${top3[1].total.toFixed(1)}</small>`;
             if(top3[2]) document.getElementById('podium-name-3').innerHTML = `${top3[2].name}<br><small>${top3[2].total.toFixed(1)}</small>`;
 
-            // Zagon animacije malce za tem ko se okno pokaže
             setTimeout(() => {
                 document.querySelectorAll('.step').forEach(s => s.classList.add('animate-up'));
             }, 100);
@@ -820,24 +827,35 @@
         function switchView(viewName) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             
+            // Če nismo v podelitvi ali projekciji in je navigacija skrita, jo pokaži nazaj
+            if (viewName !== 'podium' && document.getElementById('nav-bar').classList.contains('hidden')) {
+                document.getElementById('nav-bar').classList.remove('hidden');
+            }
+            
             if (viewName === 'admin') {
                 document.getElementById('admin-view').classList.add('active');
-                document.getElementById('nav-bar').classList.remove('hidden');
                 updateAdminTable();
             } else if (viewName === 'table') {
                 document.getElementById('table-view').classList.add('active');
-                document.getElementById('nav-bar').classList.remove('hidden');
                 generateFullTable();
             } else if (viewName === 'projection') {
                 document.getElementById('projection-view').classList.add('active');
-                document.getElementById('nav-bar').classList.remove('hidden');
-                document.getElementById('projection-start-screen').style.display = 'block';
-                document.getElementById('tv-graphics').style.display = 'none';
-                renderProjectionStartScreen();
+                document.getElementById('tv-graphics').style.display = 'flex';
+                // Skrij spodnje elemente dokler ne klikneš na tekmovalca
+                document.getElementById('top5-container').style.display = 'none';
+                document.getElementById('main-banner').style.display = 'none';
+                document.getElementById('reveal-graph').style.display = 'none';
+                renderProjectionTopBar();
             } else if (viewName === 'podium') {
                 document.getElementById('podium-view').classList.add('active');
             }
         }
+
+        // ZAČETNI ZAGON APP-A
+        window.onload = () => {
+            loadData();
+            updateAdminTable();
+        };
 
     </script>
 </body>
