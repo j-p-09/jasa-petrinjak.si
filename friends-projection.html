@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Podelitev</title>
     <style>
-        /* SVETLA IN ČISTA TEMA - Osnovne nastavitve */
+        /* SVETLA TEMA - Osnovne nastavitve */
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #ffffff; /* Popolnoma belo ozadje */
+            background-color: #f4f6f9; /* Svetlo sivo/belo ozadje */
             color: #333333;
             overflow: hidden; 
             height: 100vh;
@@ -24,11 +24,10 @@
             justify-content: center;
             background: #ffffff;
             padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); /* Nežnejša senca */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             position: relative;
             z-index: 100;
             transition: top 0.5s;
-            border-bottom: 1px solid #f0f0f0;
         }
         
         #nav-bar.hidden {
@@ -49,11 +48,12 @@
             border-radius: 4px;
             text-transform: uppercase;
             transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         button:hover {
-            background: #f4f6f9;
-            border-color: #0056b3;
+            background: #e9ecef;
+            border-color: #007bff;
             color: #0056b3;
         }
 
@@ -78,7 +78,6 @@
             width: 100%;
             height: 100%;
             box-sizing: border-box;
-            background: #ffffff;
         }
 
         .view.active {
@@ -93,8 +92,7 @@
             background: #ffffff;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            border: 1px solid #f0f0f0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             width: 100%;
         }
         .admin-form input {
@@ -124,8 +122,7 @@
             background: #ffffff;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-            border: 1px solid #f0f0f0;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
             width: 100%;
         }
         .results-table {
@@ -146,7 +143,7 @@
             border-bottom: 1px solid #eee;
         }
         .results-table tr:nth-child(even) {
-            background: #f8f9fa; /* Zelo nežno siva za vsako drugo vrstico */
+            background: #f8f9fa;
         }
         .medal {
             font-size: 24px;
@@ -158,39 +155,22 @@
         /* Vrstica z imeni vedno na vrhu projekcije */
         #projection-top-bar {
             background: #ffffff;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             justify-content: center;
-            border-bottom: 1px solid #eee;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             z-index: 80;
             min-height: 60px;
         }
-        
         .comp-btn {
             font-size: 16px;
             padding: 10px 20px;
-            background: #ffffff;
-            border: 2px solid #0056b3;
-            color: #0056b3;
-            font-weight: bold;
-            border-radius: 6px;
-        }
-        
-        .comp-btn:hover { 
-            background: #0056b3; 
-            color: #ffffff; 
-        }
-
-        /* Stil za tiste, ki so že bili prikazani na projekciji */
-        .comp-btn.revealed {
             background: #f8f9fa;
-            border: 2px solid #e9ecef;
-            color: #adb5bd;
-            text-decoration: line-through;
-            pointer-events: none; /* Prepreči ponoven klik */
+            border: 1px solid #ddd;
         }
+        .comp-btn:hover { background: #e2e6ea; border-color: #007bff; color: #0056b3; }
 
         /* TV Grafika znotraj projekcije */
         #tv-graphics {
@@ -198,7 +178,6 @@
             position: relative;
             flex-grow: 1;
             width: 100%;
-            background: #ffffff;
         }
         
         /* Ovojnica za sprejem klikov (NE PREKRIVA ZGORNJE VRSTICE) */
@@ -217,10 +196,9 @@
             bottom: 40px;
             left: 40px;
             width: 350px;
-            background: #ffffff;
-            border: 1px solid #eee;
+            background: rgba(255, 255, 255, 0.95);
             border-top: 4px solid #0056b3;
-            box-shadow: 5px 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.15);
             pointer-events: none;
             z-index: 60;
         }
@@ -239,7 +217,7 @@
             color: #333;
         }
         .top5-row.leader {
-            background: linear-gradient(90deg, #fffcf0, transparent);
+            background: linear-gradient(90deg, #fff3cd, transparent);
             color: #856404;
         }
 
@@ -249,13 +227,12 @@
             bottom: 40px;
             right: 40px;
             width: 700px;
-            background: #ffffff;
-            border: 1px solid #eee;
+            background: rgba(255, 255, 255, 0.95);
             border-left: 6px solid #0056b3;
             display: flex;
             align-items: center;
             padding: 15px 25px;
-            box-shadow: -5px 5px 20px rgba(0,0,0,0.08);
+            box-shadow: -5px 5px 20px rgba(0,0,0,0.15);
             pointer-events: none;
             z-index: 60;
             color: #333;
@@ -271,11 +248,19 @@
             gap: 15px;
             font-size: 24px;
             color: #888;
+            align-items: center;
+        }
+        .new-score-placeholder {
+            font-weight: bold;
+            color: #0056b3;
+            background: #e9ecef;
+            padding: 0 10px;
+            border-radius: 4px;
         }
         .rb-total {
             font-size: 32px;
             font-weight: 900;
-            color: #b8860b; 
+            color: #b8860b;
             margin-left: 20px;
             opacity: 0;
             transition: opacity 0.5s ease-in;
@@ -303,11 +288,12 @@
             right: 150px;
             width: 80px;
             height: 300px;
-            background: #f8f9fa;
-            border-left: 2px solid #ddd;
-            border-bottom: 2px solid #ddd;
+            background: rgba(255, 255, 255, 0.7);
+            border-left: 2px solid #333;
+            border-bottom: 2px solid #333;
             display: none;
             z-index: 60;
+            box-shadow: -2px 2px 10px rgba(0,0,0,0.1);
         }
         .graph-target-line {
             position: absolute;
@@ -323,6 +309,7 @@
             color: #28a745;
             font-weight: bold;
             font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
         .graph-bar {
             position: absolute;
@@ -338,19 +325,16 @@
             background: #ffc107;
             color: black;
             font-size: 18px;
-            border: 2px solid #ffc107;
+            border-color: #e0a800;
             display: none;
-            border-radius: 6px;
         }
         #btn-podium-trigger:hover {
             background: #e0a800;
-            border-color: #e0a800;
-            color: black;
         }
 
-        /* STOPNIČKE (Podium) animacija - Svetla različica */
+        /* STOPNIČKE (Podium) animacija */
         #podium-view {
-            background: #ffffff;
+            background: radial-gradient(circle, #ffffff, #e9ecef, #ced4da);
             display: none; 
             flex-direction: column;
             align-items: center;
@@ -387,7 +371,7 @@
             color: white;
             position: relative;
             transform: translateY(100vh);
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
         }
         .step-name {
             position: absolute;
@@ -406,7 +390,7 @@
         .step.animate-up { transform: translateY(0); }
         .step.animate-up .step-name { opacity: 1; transition-delay: 2s; }
 
-        .step-number { font-size: 60px; opacity: 0.5; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+        .step-number { font-size: 60px; opacity: 0.5; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
 
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-50px); }
@@ -418,12 +402,11 @@
         /* Opozorilo, ko ni več tekmovalcev za projekcijo */
         #empty-projection-msg {
             text-align: center;
-            margin-top: 150px;
-            font-size: 28px;
-            color: #333;
+            margin-top: 100px;
+            font-size: 24px;
+            color: #666;
             display: none;
             width: 100%;
-            font-weight: bold;
         }
     </style>
 </head>
@@ -442,7 +425,7 @@
                     <tr>
                         <th>Mesto</th>
                         <th>Tekmovalec</th>
-                        <th>Točke</th>
+                        <th>Trenutne Točke</th>
                     </tr>
                 </thead>
                 <tbody id="full-table-body">
@@ -458,10 +441,7 @@
 
         <div id="tv-graphics">
             
-            <div id="empty-projection-msg">
-                Vsi tekmovalci so razkriti.<br><br>
-                <button id="btn-podium-trigger" onclick="startPodiumAnimation()">Podeli stopničke 🏆</button>
-            </div>
+            <div id="empty-projection-msg">Vse serije in tekmovalci so razkriti. Lahko podeliš stopničke!</div>
 
             <div class="top5-table" id="top5-container" style="display:none;">
                 <div class="top5-title">TRENUTNO VODILNI (TOP 5)</div>
@@ -504,7 +484,7 @@
                     <tr>
                         <th>Tekmovalec</th>
                         <th>Serije</th>
-                        <th>Skupaj</th>
+                        <th>Končni seštevek</th>
                         <th>Akcija</th>
                     </tr>
                 </thead>
@@ -539,7 +519,8 @@
     <script>
         // GLOBALI IN STANJE APLIKACIJE
         let competitors = [];
-        let revealedIds = []; 
+        let revealedState = {}; // { id_tekmovalca: število_razkritih_serij }
+        
         let activeId = null; 
         let revealPhase = 0; // 0: initial, 1: graph growing/waiting, 2: done waiting
         let graphTimeout = null;
@@ -547,15 +528,23 @@
         // --- LOCAL STORAGE ---
         function saveData() {
             localStorage.setItem('skiScoreboard_Competitors', JSON.stringify(competitors));
-            localStorage.setItem('skiScoreboard_Revealed', JSON.stringify(revealedIds));
+            localStorage.setItem('skiScoreboard_RevealedState', JSON.stringify(revealedState));
         }
 
         function loadData() {
             const storedComp = localStorage.getItem('skiScoreboard_Competitors');
-            const storedRev = localStorage.getItem('skiScoreboard_Revealed');
+            const storedState = localStorage.getItem('skiScoreboard_RevealedState');
             
             if (storedComp) competitors = JSON.parse(storedComp);
-            if (storedRev) revealedIds = JSON.parse(storedRev);
+            if (storedState) revealedState = JSON.parse(storedState);
+        }
+
+        // Pomožna funkcija: vrne trenutni seštevek točk glede na to, koliko serij je razkritih
+        function getCurrentTotal(id, targetSeriesCount = null) {
+            const comp = competitors.find(c => c.id === id);
+            if (!comp) return 0;
+            const count = targetSeriesCount !== null ? targetSeriesCount : (revealedState[id] || 0);
+            return comp.scores.slice(0, count).reduce((sum, val) => sum + val, 0);
         }
 
         // --- ADMIN LOGIKA ---
@@ -578,13 +567,16 @@
             }
 
             const total = scores.reduce((sum, val) => sum + val, 0);
+            const newId = Date.now().toString();
 
             competitors.push({
-                id: Date.now().toString(),
+                id: newId,
                 name: name,
                 scores: scores,
                 total: total
             });
+            
+            revealedState[newId] = 0; // Na začetku ni razkrita nobena serija
 
             nameEl.value = '';
             scoresEl.value = '';
@@ -596,7 +588,7 @@
 
         function removeCompetitor(id) {
             competitors = competitors.filter(c => c.id !== id);
-            revealedIds = revealedIds.filter(rid => rid !== id);
+            delete revealedState[id];
             saveData();
             updateAdminTable();
             renderProjectionTopBar();
@@ -618,17 +610,12 @@
         }
 
         function resetSystem() {
-            if(confirm("Ste prepričani, da želite izbrisati vse podatke?")) {
+            if(confirm("Ste prepričani, da želite izbrisati vse podatke? To bo ponastavilo celotno aplikacijo.")) {
                 competitors = [];
-                revealedIds = [];
+                revealedState = {};
                 saveData();
                 updateAdminTable();
                 renderProjectionTopBar();
-                
-                // Skrij morebitne vidne elemente v projekciji
-                document.getElementById('top5-container').style.display = 'none';
-                document.getElementById('main-banner').style.display = 'none';
-                document.getElementById('empty-projection-msg').style.display = 'none';
             }
         }
 
@@ -637,8 +624,10 @@
             const tbody = document.getElementById('full-table-body');
             tbody.innerHTML = '';
             
-            const visibleCompetitors = competitors.filter(c => revealedIds.includes(c.id))
-                                                  .sort((a,b) => b.total - a.total);
+            // Prikazujemo samo tiste, ki imajo vsaj 1 serijo razkrito, razvrščeno po trenutnih točkah
+            const visibleCompetitors = competitors.filter(c => (revealedState[c.id] || 0) > 0)
+                .map(c => ({...c, currTotal: getCurrentTotal(c.id)}))
+                .sort((a,b) => b.currTotal - a.currTotal);
 
             visibleCompetitors.forEach((c, index) => {
                 const tr = document.createElement('tr');
@@ -651,7 +640,7 @@
                 tr.innerHTML = `
                     <td>${rankStr}</td>
                     <td>${c.name}</td>
-                    <td>${c.total.toFixed(1)}</td>
+                    <td>${c.currTotal.toFixed(1)}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -662,54 +651,49 @@
             const topBar = document.getElementById('projection-top-bar');
             topBar.innerHTML = '';
             
-            // Prikazujemo VSE tekmovalce (ne glede na to, ali so že razkriti)
+            let pendingCount = 0;
+            
             competitors.forEach(c => {
-                const btn = document.createElement('button');
-                btn.className = 'comp-btn';
-                btn.textContent = c.name;
-                
-                // Če je že bil prikazan, gumb posivimo in onemogočimo
-                if (revealedIds.includes(c.id)) {
-                    btn.classList.add('revealed');
-                    btn.disabled = true;
-                } else {
-                    // Če še ni bil, mu dodamo akcijo klika
+                const countRevealed = revealedState[c.id] || 0;
+                // Če ima tekmovalec še kako nerazkrito serijo, ustvari gumb zanj
+                if (countRevealed < c.scores.length) {
+                    pendingCount++;
+                    const btn = document.createElement('button');
+                    btn.className = 'comp-btn';
+                    btn.textContent = `${c.name} (Serija ${countRevealed + 1})`;
                     btn.onclick = () => startReveal(c.id);
+                    topBar.appendChild(btn);
                 }
-                
-                topBar.appendChild(btn);
             });
 
-            // Preverimo, če so že vsi obdelani
-            const unrevealed = competitors.filter(c => !revealedIds.includes(c.id));
-            const btnPodium = document.getElementById('btn-podium-trigger');
-            
-            if (unrevealed.length === 0 && competitors.length >= 3) {
+            // Gumb podeli stopničke, ko so razkrite vse serije vseh tekmovalcev
+            if (pendingCount === 0 && competitors.length >= 3) {
+                const podiumBtn = document.createElement('button');
+                podiumBtn.id = 'btn-podium-trigger';
+                podiumBtn.textContent = 'Podeli stopničke 🏆';
+                podiumBtn.onclick = startPodiumAnimation;
+                podiumBtn.style.display = 'inline-block';
+                topBar.appendChild(podiumBtn);
+            }
+
+            if (pendingCount === 0 && competitors.length > 0) {
                 document.getElementById('empty-projection-msg').style.display = 'block';
-                btnPodium.style.display = 'inline-block';
             } else {
                 document.getElementById('empty-projection-msg').style.display = 'none';
-                btnPodium.style.display = 'none';
             }
         }
 
-        function getLeaderTotal() {
-            const revealed = competitors.filter(c => revealedIds.includes(c.id));
-            if (revealed.length === 0) return 0;
-            return Math.max(...revealed.map(c => c.total));
-        }
-
         function startReveal(id) {
-            // Zakleni zgornjo vrstico
+            // Zakleni zgornjo vrstico, da med animacijo ne klikaš drugih
             document.getElementById('projection-top-bar').style.pointerEvents = 'none';
             document.getElementById('empty-projection-msg').style.display = 'none';
 
             activeId = id;
             revealPhase = 0;
             const comp = competitors.find(c => c.id === id);
-            const leaderTotal = getLeaderTotal();
+            const targetSeriesIndex = revealedState[id] || 0; // Serija, ki jo razkrivamo sedaj (0-based)
             
-            // Pokaži elemente (Top 5 ostane viden ves čas po prvem razkritju, Main banner se pokaže)
+            // Pokaži spodnje elemente
             document.getElementById('top5-container').style.display = 'block';
             document.getElementById('main-banner').style.display = 'flex';
             
@@ -720,33 +704,50 @@
             document.getElementById('graph-bar').style.height = '0%';
             document.getElementById('graph-bar').style.transition = 'none';
 
-            renderTop5(); // Nariši trenutne top 5
+            renderTop5(); // Nariši trenutne top 5 pred novo oceno
 
             // Nastavi Banner tekmovalca
             document.getElementById('rb-name').textContent = comp.name;
-            const scoresHtml = comp.scores.slice(0, -1).map(s => `<span>${s.toFixed(1)}</span>`).join(' | ');
+            
+            // Sestavi prikaz prejšnjih in nove serije
+            const previousScores = comp.scores.slice(0, targetSeriesIndex);
+            let scoresHtml = previousScores.map(s => `<span>${s.toFixed(1)}</span>`).join(' | ');
+            if (scoresHtml !== '') scoresHtml += ' | ';
+            scoresHtml += `<span class="new-score-placeholder" id="new-score-placeholder"> ? </span>`;
+            
             document.getElementById('rb-scores').innerHTML = scoresHtml;
 
-            let gap = leaderTotal - comp.total;
-            let needsGraph = (leaderTotal > 0) && (gap <= 13 || comp.total > leaderTotal);
+            // Poišči vodilnega, s katerim se primerjamo (le tisti, ki imajo razkrito TO ali višjo serijo)
+            let leaderTotal = 0;
+            const requiredSeriesCount = targetSeriesIndex + 1;
+            const peers = competitors.filter(c => (revealedState[c.id] || 0) >= requiredSeriesCount);
+            if (peers.length > 0) {
+                leaderTotal = Math.max(...peers.map(c => getCurrentTotal(c.id, requiredSeriesCount)));
+            }
+
+            const currentSum = getCurrentTotal(id, targetSeriesIndex);
+            const newTotal = currentSum + comp.scores[targetSeriesIndex];
+
+            let gap = leaderTotal - newTotal;
+            let needsGraph = (leaderTotal > 0) && (gap <= 25 || newTotal > leaderTotal);
 
             if (needsGraph) {
-                setupGraph(leaderTotal, comp.total);
+                setupGraph(leaderTotal, newTotal);
             }
 
             // Aktivira se cona za klike, uporabnik sam sproži graf s klikom
             document.getElementById('reveal-click-area').style.display = 'block';
         }
 
-        function setupGraph(leaderTotal, compTotal) {
+        function setupGraph(leaderTotal, targetTotal) {
             document.getElementById('reveal-graph').style.display = 'block';
-            const maxVal = Math.max(leaderTotal, compTotal) + 15;
+            const maxVal = Math.max(leaderTotal, targetTotal) + 20;
             
             const linePct = (leaderTotal / maxVal) * 100;
             document.getElementById('graph-line').style.bottom = `${linePct}%`;
             document.getElementById('graph-label').textContent = leaderTotal.toFixed(1);
 
-            const barPct = (compTotal / maxVal) * 100;
+            const barPct = (targetTotal / maxVal) * 100;
             document.getElementById('graph-bar').setAttribute('data-target-height', `${barPct}%`);
         }
 
@@ -762,13 +763,17 @@
                         bar.style.height = bar.getAttribute('data-target-height');
                     }, 50);
 
-                    // Po 5 sekundah
+                    // Po 5 sekundah samodejno naprej
                     graphTimeout = setTimeout(() => {
                         finishRevealAnimation();
                     }, 5000);
                 } else {
                     finishRevealAnimation();
                 }
+            } else if (revealPhase === 1) {
+                // Če uporabnik med animacijo klikne ponovno, preskočimo animacijo in pokažemo rezultat
+                if (graphTimeout) clearTimeout(graphTimeout);
+                finishRevealAnimation();
             }
         }
 
@@ -778,30 +783,40 @@
             document.getElementById('reveal-graph').style.display = 'none';
             
             const comp = competitors.find(c => c.id === activeId);
-            const lastScore = comp.scores[comp.scores.length - 1];
+            const targetSeriesIndex = revealedState[activeId] || 0;
+            const newScore = comp.scores[targetSeriesIndex];
             
-            let totalHtml = `<span class="bold-score">${lastScore.toFixed(1)}</span> / ${comp.total.toFixed(1)}`;
-            if(comp.scores.length === 1) {
-                totalHtml = `<span class="bold-score">${comp.total.toFixed(1)}</span>`;
+            // Zamenjaj vprašaj z dejansko številko
+            const placeholder = document.getElementById('new-score-placeholder');
+            if(placeholder) {
+                placeholder.innerHTML = newScore.toFixed(1);
+                placeholder.style.background = 'transparent';
+                placeholder.style.padding = '0';
             }
             
+            // Povečaj števec razkritih serij
+            revealedState[activeId] = targetSeriesIndex + 1;
+            const newTotal = getCurrentTotal(activeId);
+            
+            // Prikaz skupnega rezultata
+            let totalHtml = `<span class="bold-score">${newTotal.toFixed(1)}</span>`;
             const rbTotal = document.getElementById('rb-total');
             rbTotal.innerHTML = totalHtml;
             rbTotal.style.opacity = '1';
 
-            const tempRevealed = [...revealedIds, activeId];
-            const sorted = competitors.filter(c => tempRevealed.includes(c.id)).sort((a,b) => b.total - a.total);
-            const rank = sorted.findIndex(c => c.id === activeId) + 1;
+            // Rank izračun v primerjavi z vsemi, ki so že skočili vsaj 1 serijo
+            const peers = competitors.filter(c => (revealedState[c.id] || 0) > 0);
+            peers.sort((a,b) => getCurrentTotal(b.id) - getCurrentTotal(a.id));
+            const rank = peers.findIndex(c => c.id === activeId) + 1;
 
             const rankEl = document.getElementById('rb-rank');
             rankEl.textContent = rank;
             rankEl.classList.add('show');
 
-            revealedIds.push(activeId);
-            saveData(); // Shrani stanje
-            renderTop5(); // Osveži top 5 po prihodu novega
+            saveData(); // Shranimo napredek v LocalStorage
+            renderTop5(); // Osveži top 5 po prihodu nove ocene
 
-            // Po 3 sekundah odklepamo zgornjo vrstico in jo osvežimo (tekmovalec postane siv)
+            // Po 3 sekundah odklepamo zgornjo vrstico in osvežimo gumbe (če ima še kako serijo, se pojavi z novo številko)
             setTimeout(() => {
                 document.getElementById('projection-top-bar').style.pointerEvents = 'auto';
                 renderProjectionTopBar(); 
@@ -812,16 +827,17 @@
             const tbody = document.getElementById('top5-body');
             tbody.innerHTML = '';
             
-            const visibleCompetitors = competitors.filter(c => revealedIds.includes(c.id))
-                                                  .sort((a,b) => b.total - a.total)
-                                                  .slice(0, 5);
+            const visibleCompetitors = competitors.filter(c => (revealedState[c.id] || 0) > 0)
+                .map(c => ({...c, currTotal: getCurrentTotal(c.id)}))
+                .sort((a,b) => b.currTotal - a.currTotal)
+                .slice(0, 5);
 
             visibleCompetitors.forEach((c, index) => {
                 const div = document.createElement('div');
                 div.className = 'top5-row' + (index === 0 ? ' leader' : '');
                 div.innerHTML = `
                     <span><b>${index + 1}.</b> ${c.name}</span>
-                    <span><b>${c.total.toFixed(1)}</b></span>
+                    <span><b>${c.currTotal.toFixed(1)}</b></span>
                 `;
                 tbody.appendChild(div);
             });
@@ -832,13 +848,16 @@
             switchView('podium');
             document.getElementById('nav-bar').classList.add('hidden');
             
-            const top3 = competitors.sort((a,b) => b.total - a.total).slice(0, 3);
+            const top3 = competitors
+                .map(c => ({...c, currTotal: getCurrentTotal(c.id)}))
+                .sort((a,b) => b.currTotal - a.currTotal)
+                .slice(0, 3);
             
             document.querySelectorAll('.step').forEach(s => s.classList.remove('animate-up'));
 
-            if(top3[0]) document.getElementById('podium-name-1').innerHTML = `${top3[0].name}<br><small>${top3[0].total.toFixed(1)}</small>`;
-            if(top3[1]) document.getElementById('podium-name-2').innerHTML = `${top3[1].name}<br><small>${top3[1].total.toFixed(1)}</small>`;
-            if(top3[2]) document.getElementById('podium-name-3').innerHTML = `${top3[2].name}<br><small>${top3[2].total.toFixed(1)}</small>`;
+            if(top3[0]) document.getElementById('podium-name-1').innerHTML = `${top3[0].name}<br><small>${top3[0].currTotal.toFixed(1)}</small>`;
+            if(top3[1]) document.getElementById('podium-name-2').innerHTML = `${top3[1].name}<br><small>${top3[1].currTotal.toFixed(1)}</small>`;
+            if(top3[2]) document.getElementById('podium-name-3').innerHTML = `${top3[2].name}<br><small>${top3[2].currTotal.toFixed(1)}</small>`;
 
             setTimeout(() => {
                 document.querySelectorAll('.step').forEach(s => s.classList.add('animate-up'));
@@ -849,7 +868,7 @@
         function switchView(viewName) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             
-            // Prikaz navigacije, če se vrnemo iz stopničk
+            // Če nismo v podelitvi ali projekciji in je navigacija skrita, jo pokaži nazaj
             if (viewName !== 'podium' && document.getElementById('nav-bar').classList.contains('hidden')) {
                 document.getElementById('nav-bar').classList.remove('hidden');
             }
@@ -863,14 +882,10 @@
             } else if (viewName === 'projection') {
                 document.getElementById('projection-view').classList.add('active');
                 document.getElementById('tv-graphics').style.display = 'flex';
-                
-                // Če še ni bilo nobenega razkritega, skrijemo spodnje plošče
-                if(revealedIds.length === 0) {
-                    document.getElementById('top5-container').style.display = 'none';
-                }
+                // Skrij spodnje elemente dokler ne klikneš na tekmovalca
+                document.getElementById('top5-container').style.display = 'none';
                 document.getElementById('main-banner').style.display = 'none';
                 document.getElementById('reveal-graph').style.display = 'none';
-                
                 renderProjectionTopBar();
             } else if (viewName === 'podium') {
                 document.getElementById('podium-view').classList.add('active');
@@ -880,6 +895,18 @@
         // ZAČETNI ZAGON APP-A
         window.onload = () => {
             loadData();
+            
+            // Migracija na nov način (če bi kdo imel podatke še od stare verzije)
+            if(!localStorage.getItem('skiScoreboard_RevealedState') && localStorage.getItem('skiScoreboard_Revealed')) {
+                 let oldRev = JSON.parse(localStorage.getItem('skiScoreboard_Revealed'));
+                 oldRev.forEach(id => {
+                     let c = competitors.find(x => x.id === id);
+                     if(c) revealedState[id] = c.scores.length; // Simuliramo, da so vse serije prebrane
+                 });
+                 saveData();
+                 localStorage.removeItem('skiScoreboard_Revealed');
+            }
+
             updateAdminTable();
         };
 
