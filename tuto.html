@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUTO Aplikacija</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        /* SVETLA TEMA */
+        :root {
+            --bg-color: #f2fbf5;
+            --primary-green: #1abc9c;
+            --dark-text: #1a202c;
+            --light-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --danger: #e53e3e;
+            --gray: #a0aec0;
+            --warning: #f6ad55;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--dark-text); display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* HEADER */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 40px; background-color: var(--light-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;
+        }
+        .logo { height: 50px; cursor: pointer; font-size: 24px; font-weight: bold; color: var(--primary-green); display: flex; align-items: center; }
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+        
+        /* GUMBI */
+        .btn {
+            background-color: var(--primary-green); color: white; border: none;
+            padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn:hover { background-color: #16a085; transform: translateY(-2px); }
+        .btn-outline { background-color: transparent; color: var(--primary-green); border: 2px solid var(--primary-green); }
+        .btn-outline:hover { background-color: var(--primary-green); color: white; }
+        .btn-danger { background-color: transparent; color: var(--danger); border: 2px solid var(--danger); }
+        .btn-danger:hover { background-color: var(--danger); color: white; }
+        
+        /* ZVONČEK IN OBVESTILA */
+        .bell-container { position: relative; cursor: pointer; font-size: 24px; margin-right: 10px; }
+        .red-dot {
+            position: absolute; top: -5px; right: -5px; width: 12px; height: 12px;
+            background-color: var(--danger); border-radius: 50%; display: none;
+        }
+        .notifications-dropdown {
+            display: none; position: absolute; top: 40px; right: 0; width: 320px;
+            background: var(--light-bg); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 8px; padding: 0; z-index: 200; border: 1px solid var(--border-color);
+            overflow: hidden; text-align: left;
+        }
+        .notif-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .notif-item:hover { filter: brightness(0.95); }
+
+        /* VSEBINA (SECTIONS) */
+        main { flex: 1; padding: 40px; display: flex; justify-content: center; }
+        .section { display: none; width: 100%; max-width: 1000px; animation: fadeIn 0.4s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* KARTICE IN OBRAZCI */
+        .card { background: var(--light-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--primary-green); }
+
+        /* MODAL ZA OBVESTILA */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: var(--light-bg); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; position: relative; }
+        .close { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; color: var(--gray); }
+        .close:hover { color: var(--danger); }
+
+        /* PAKETI LIST */
+        .package-list { list-style: none; padding: 0; }
+        .package-list li { padding: 10px; border-bottom: 1px solid var(--border-color); }
+        .package-list li strong { color: var(--primary-green); }
+        
+        /* ADMIN TABS */
+        .admin-nav { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        
+        #return-admin-btn { position: fixed; bottom: 20px; right: 20px; z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        footer { text-align: center; padding: 20px; font-size: 12px; color: var(--gray); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" onclick="navigate('home')">TUTO</div>
+        
+        <div class="header-controls">
+            <div id="promo-countdown" style="display: none; font-weight: bold; color: var(--danger); font-size: 14px; margin-right: 15px;">
+                Paket poteče: <span id="promo-timer"></span>
+            </div>
+
+            <div id="user-controls" style="display: none; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-outline" onclick="navigate('home')">DOMOV</button>
+                <button class="btn btn-outline" id="btn-tutorials" onclick="navigate('tutorials')">TUTORIALI</button>
+                <button class="btn btn-outline" id="btn-termini" onclick="navigate('termini')">TERMINI</button>
+                <button class="btn btn-outline" id="btn-paket" onclick="navigate('paket')">PAKET</button>
+                <button class="btn btn-outline" id="btn-admin" onclick="navigate('admin')" style="display: none; border-color: var(--danger); color: var(--danger);">ADMIN</button>
+                
+                <div class="bell-container" onclick="toggleNotifications()">
+                    🔔 <div class="red-dot" id="notif-dot"></div>
+                    <div class="notifications-dropdown" id="notif-dropdown"></div>
+                </div>
+                
+                <button class="btn" onclick="logout()">ODJAVA</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="sec-login" class="section active">
+            <div class="card" style="max-width: 400px; margin: 5vh auto;">
+                <h2 style="margin-bottom: 20px; text-align: center;">Prijava v sistem</h2>
+                <div class="input-group">
+                    <label>Vnesite šifro</label>
+                    <input type="password" id="login-sifra" placeholder="Vaša šifra ali ADMIN">
+                </div>
+                <button class="btn" style="width: 100%;" onclick="login()">Prijava</button>
+            </div>
+        </section>
+
+        <section id="sec-home" class="section">
+            <div class="card">
+                <h2>Dobrodošli, <span id="home-name" style="color:var(--primary-green);"></span></h2>
+                <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f7fafc; padding: 15px; border-radius: 8px;">
+                    <div><strong>Ime in priimek:</strong> <span id="info-name"></span></div>
+                    <div><strong>Šifra:</strong> <span id="info-sifra"></span></div>
+                    <div><strong>Aktiven paket:</strong> <span id="info-paket" style="color:var(--primary-green); font-weight:bold;"></span></div>
+                    <div><strong>Zadnja prijava:</strong> <span id="info-lastlogin"></span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Pregled vseh paketov</h3>
+                <ul class="package-list" style="margin-top: 15px;">
+                    <li><strong>Paket Free:</strong> 1x short tutorial (Tutorial po izbiri – ni mogoče izbrati košarice!)</li>
+                    <li><strong>Paket "za 3":</strong> 2x short tutorial, 1x full tutorial (Ni mogoče izbrati košarice!)</li>
+                    <li><strong>Paket Osnovni:</strong> 3x short tutoriali, 2x full tutorial (Ni mogoče izbrati košarice!)</li>
+                    <li><strong>Paket Spodnji VIP:</strong> neomejeno short tutorialov, 3x full tutoriale (katerekoli)</li>
+                    <li><strong>Paket VIP:</strong> neomejeno vseh tutorialov + interaktivni pdf za predogled</li>
+                    <li><strong>Paket MAX:</strong> izdelava interaktivnega pdf-ja v celoti</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="sec-tutorials" class="section">
+            <div class="card">
+                <h2>Naročilo tutorialov</h2>
+                <div id="tutorial-form-container">
+                    <p style="margin-bottom: 20px; color: var(--gray);">Izberite poglavja, ki jih želite obdelati. Vaš paket določa, koliko in katere tutoriale lahko izberete.</p>
+                    
+                    <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px;">
+                            <h4 style="margin-bottom: 10px;">Short Tutoriali</h4>
+                            <label><input type="checkbox" class="short-cb" value="NASLOVNICA"> NASLOVNICA</label><br>
+                            <label><input type="checkbox" class="short-cb" value="MENI"> MENI</label><br>
+                            <label><input type="checkbox" class="short-cb" value="NUTRITION FACTS"> NUTRITION FACTS</label><br>
+                            <label id="short-kosarica-label"><input type="checkbox" class="short-cb kosarica-cb" value="KOŠARICA"> KOŠARICA</label>
+                        </div>
+                        <div style="flex: 1; min-width: 200px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px;">
+                            <h4 style="margin-bottom: 10px;">Full Tutoriali</h4>
+                            <label><input type="checkbox" class="full-cb" value="NASLOVNICA"> NASLOVNICA</label><br>
+                            <label><input type="checkbox" class="full-cb" value="MENI"> MENI</label><br>
+                            <label><input type="checkbox" class="full-cb" value="NUTRITION FACTS"> NUTRITION FACTS</label><br>
+                            <label id="full-kosarica-label"><input type="checkbox" class="full-cb kosarica-cb" value="KOŠARICA"> KOŠARICA</label>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Predlagan termin (Kdaj bi koristili?)</label>
+                        <input type="text" id="tutorial-termin" placeholder="Npr. 15. maj ob 16:00, klic">
+                    </div>
+
+                    <button class="btn" onclick="submitTutorialRequest()">Oddaj naročilo</button>
+                </div>
+                
+                <div id="tutorial-submitted-message" style="display: none; padding: 20px; background: #e6ffed; border-radius: 8px; color: #2f855a; font-weight: bold; text-align: center;">
+                    Svoje tutoriale za ta paket ste že uspešno oddali! Dokler se vaš paket ne spremeni, ne morete oddati novih zahtevkov.
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-termini" class="section">
+            <div class="card">
+                <h2>Zgodovina vaših terminov</h2>
+                <div id="user-termini-list" style="margin-top: 20px;"></div>
+            </div>
+        </section>
+
+        <section id="sec-paket" class="section">
+            <div class="card">
+                <h2>Sprememba paketa</h2>
+                <div style="margin-bottom: 20px; display: flex; gap: 15px;">
+                    <label><input type="radio" name="pkg-type" value="promo" checked onchange="togglePkgForm()"> Promo koda</label>
+                    <label><input type="radio" name="pkg-type" value="request" onchange="togglePkgForm()"> Odobritev (prošnja)</label>
+                </div>
+
+                <div id="form-promo">
+                    <div class="input-group">
+                        <label>Vnesite promo kodo</label>
+                        <input type="text" id="promo-code-input">
+                    </div>
+                    <button class="btn" onclick="applyPromoCode()">Aktiviraj kodo</button>
+                </div>
+
+                <div id="form-request" style="display: none;">
+                    <div class="input-group">
+                        <label>Izberite želeni paket</label>
+                        <select id="request-pkg-select">
+                            <option value="Free">Paket Free</option>
+                            <option value="za 3">Paket "za 3"</option>
+                            <option value="Osnovni">Paket Osnovni</option>
+                            <option value="Spodnji VIP">Paket Spodnji VIP</option>
+                            <option value="VIP">Paket VIP</option>
+                            <option value="MAX">Paket MAX</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="requestPackage()">Pošlji prošnjo</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-admin" class="section">
+            <h2 style="color: var(--danger); margin-bottom: 20px;">Admin Konzola</h2>
+            <div class="admin-nav">
+                <button class="btn btn-outline" onclick="showAdminTab('admin-sporočila')">Sporočila</button>
+                <button class="btn btn-outline" onclick="showAdminTab('admin-uporabniki')">Uporabniki</button>
+                <button class="btn btn-outline" onclick="showAdminTab('admin-termini')">Termini</button>
+                <button class="btn btn-outline" onclick="showAdminTab('admin-kode')">Kode</button>
+                <button class="btn btn-outline" onclick="showAdminTab('admin-pogledi')">Pogledi</button>
+                <button class="btn btn-outline" onclick="showAdminTab('admin-paketi')">Paketi</button>
+            </div>
+
+            <div id="admin-sporočila" class="card admin-tab">
+                <h3>Pošlji obvestilo</h3>
+                <div class="input-group" style="margin-top: 15px;">
+                    <label>Prejemnik</label>
+                    <select id="notif-target"></select>
+                </div>
+                <div class="input-group">
+                    <label>Zadeva</label>
+                    <input type="text" id="new-notif-title">
+                </div>
+                <div class="input-group">
+                    <label>Vsebina</label>
+                    <textarea id="new-notif-text" rows="3"></textarea>
+                </div>
+                <button class="btn" onclick="sendNotification()">Pošlji obvestilo</button>
+            </div>
+
+            <div id="admin-uporabniki" class="admin-tab" style="display: none;">
+                <div class="card" style="margin-bottom: 20px;">
+                    <h3>Ustvari novega uporabnika</h3>
+                    <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                        <input type="text" id="new-user-name" placeholder="Ime in priimek" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <input type="text" id="new-user-sifra" placeholder="Šifra (npr. JP0917)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <input type="text" id="new-user-admin" placeholder="Admin dodatek (npr. JP)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <select id="new-user-paket" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                            <option value="Free">Free</option>
+                            <option value="za 3">za 3</option>
+                            <option value="Osnovni">Osnovni</option>
+                            <option value="Spodnji VIP">Spodnji VIP</option>
+                            <option value="VIP">VIP</option>
+                            <option value="MAX">MAX</option>
+                        </select>
+                        <button class="btn" onclick="addUser()">Dodaj</button>
+                    </div>
+                </div>
+                <h3>Seznam uporabnikov</h3>
+                <div id="admin-users-list" style="margin-top: 15px;"></div>
+            </div>
+
+            <div id="admin-termini" class="admin-tab" style="display: none;">
+                <div class="card">
+                    <h3>Upravljanje terminov</h3>
+                    <div id="admin-termini-list" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <div id="admin-kode" class="admin-tab" style="display: none;">
+                <div class="card">
+                    <h3>Ustvari novo promocijsko kodo</h3>
+                    <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                        <input type="text" id="new-koda-koda" placeholder="Koda (npr. TUTO100)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <select id="new-koda-paket" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                            <option value="Free">Free</option>
+                            <option value="za 3">za 3</option>
+                            <option value="Osnovni">Osnovni</option>
+                            <option value="Spodnji VIP">Spodnji VIP</option>
+                            <option value="VIP">VIP</option>
+                            <option value="MAX">MAX</option>
+                        </select>
+                        <input type="number" id="new-koda-uses" placeholder="Število uporab" style="width: 120px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <input type="number" id="new-koda-days" placeholder="Veljavnost v dneh" style="width: 150px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <button class="btn" onclick="addKoda()">Ustvari</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Aktivne kode</h3>
+                    <div id="admin-kode-list"></div>
+                </div>
+            </div>
+
+            <div id="admin-pogledi" class="admin-tab" style="display: none;">
+                <div class="card">
+                    <h3>Poglej kot uporabnik</h3>
+                    <p style="color: var(--gray); margin-bottom: 15px;">Izberi uporabnika in začasno prevzemi njegov pogled.</p>
+                    <div id="admin-pogledi-list"></div>
+                </div>
+            </div>
+
+            <div id="admin-paketi" class="admin-tab" style="display: none;">
+                <div class="card">
+                    <h3>Prošnje za spremembo paketa</h3>
+                    <div id="admin-paketi-list" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="message-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modal-title" style="color:var(--primary-green); font-weight:bold; margin-bottom: 5px;">Zadeva</h3>
+            <p id="modal-meta" style="font-size:12px; color:var(--gray); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"></p>
+            <p id="modal-text" style="margin: 20px 0; line-height: 1.5;"></p>
+            
+            <div id="modal-reply-section" style="margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                <label style="font-weight: bold; display:block; margin-bottom: 10px;">Odgovori pošiljatelju:</label>
+                <textarea id="modal-reply-text" rows="3" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:10px; outline:none;"></textarea>
+                <button class="btn" onclick="sendReply()">Pošlji odgovor</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="return-admin-btn" class="btn btn-danger" style="display: none;" onclick="returnToAdmin()">ZAKLJUČI POGLED KOT UPORABNIK</button>
+
+    <footer>
+        &copy; Jaša Petrinjak – vse pravice pridržane – Marec 2026
+    </footer>
+
+    <script>
+        // --- 1. FIREBASE INITIALIZATION ---
+        const firebaseConfig = {
+            databaseURL: "https://jasa-petrinak-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let db = { users: [], termini: [], kode: [], packageRequests: [], notifications: [] };
+        let currentUser = null;
+        let originalAdminUser = null; // Used for "View As" feature
+        let currentOpenNotifId = null;
+        let countdownInterval = null;
+
+        // Ensure unique device token
+        let deviceToken = localStorage.getItem('tutoAppDeviceToken');
+        if (!deviceToken) {
+            deviceToken = 'dev_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('tutoAppDeviceToken', deviceToken);
+        }
+
+        // --- 2. DATABASE SYNC ---
+        database.ref('/tuto_app').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                db = data;
+                if (!db.users) db.users = [];
+                if (!db.termini) db.termini = [];
+                if (!db.kode) db.kode = [];
+                if (!db.packageRequests) db.packageRequests = [];
+                if (!db.notifications) db.notifications = [];
+            } else {
+                // Initialize empty DB with super admin
+                db = {
+                    users: [
+                        { id: 1, name: "Jaša Petrinjak", sifa: "ADMIN", adminDodatek: "", role: "admin", paket: "MAX", blocked: false, deviceToken: "", lastLogin: "" }
+                    ],
+                    termini: [], kode: [], packageRequests: [], notifications: []
+                };
+                saveDB();
+            }
+
+            // Keep user session updated
+            if (currentUser) {
+                const updatedUser = db.users.find(u => u.id === currentUser.id);
+                if (updatedUser) {
+                    if (updatedUser.blocked && updatedUser.role !== 'admin') {
+                        alert("Vaš dostop je bil začasno odvzet.");
+                        logout();
+                    } else {
+                        currentUser = updatedUser;
+                        if (!originalAdminUser) {
+                            localStorage.setItem('tutoCurrentUser', JSON.stringify(currentUser));
+                        }
+                        refreshUI();
+                    }
+                } else {
+                    logout();
+                }
+            }
+        });
+
+        function saveDB() {
+            database.ref('/tuto_app').set(db);
+        }
+
+        // Check active session on load
+        window.onload = () => {
+            const stored = localStorage.getItem('tutoCurrentUser');
+            if (stored) {
+                currentUser = JSON.parse(stored);
+                // Verify with db will happen once Firebase loads. UI refreshed optimistically.
+                navigate('home');
+                refreshUI();
+            } else {
+                navigate('login');
+            }
+        };
+
+        // --- 3. LOGIN & AUTH ---
+        function login() {
+            const inputCode = document.getElementById('login-sifra').value.trim();
+            if (!inputCode) return alert("Vnesite šifro!");
+
+            // 1. Check Super Admin hardcoded logic
+            if (inputCode === "ADMIN") {
+                const adminUser = db.users.find(u => u.id === 1);
+                finishLogin(adminUser, true);
+                return;
+            }
+
+            // 2. Try exact match for normal sifa
+            let matchedUser = db.users.find(u => u.sifa === inputCode);
+            let usedAdminDodatek = false;
+
+            // 3. Try match with Admin Dodatek (sifa + adminDodatek)
+            if (!matchedUser) {
+                matchedUser = db.users.find(u => u.sifa && u.adminDodatek && inputCode === (u.sifa + u.adminDodatek));
+                if (matchedUser) usedAdminDodatek = true;
+            }
+
+            if (!matchedUser) return alert("Neveljavna šifra.");
+            if (matchedUser.blocked) return alert("Dostop onemogočen.");
+
+            // Device Token Check
+            if (matchedUser.role !== 'admin') {
+                if (!matchedUser.deviceToken) {
+                    // First login
+                    matchedUser.deviceToken = deviceToken;
+                    saveDB();
+                } else if (matchedUser.deviceToken !== deviceToken) {
+                    // Device mismatch
+                    if (!usedAdminDodatek) {
+                        return alert("Naprava ni prepoznana. Za prijavo na tej napravi potrebujete admin dodatek.");
+                    }
+                    // If used admin dodatek, we allow temporary login (bypass), but do not overwrite token.
+                }
+            }
+
+            finishLogin(matchedUser, false);
+        }
+
+        function finishLogin(user, isSuperAdmin) {
+            currentUser = user;
+            
+            const now = new Date();
+            currentUser.lastLogin = `${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()} ob ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            saveDB();
+            localStorage.setItem('tutoCurrentUser', JSON.stringify(currentUser));
+            
+            document.getElementById('login-sifra').value = '';
+            refreshUI();
+            navigate('home');
+        }
+
+        function logout() {
+            currentUser = null;
+            originalAdminUser = null;
+            localStorage.removeItem('tutoCurrentUser');
+            document.getElementById('btn-admin').style.display = 'none';
+            document.getElementById('user-controls').style.display = 'none';
+            document.getElementById('return-admin-btn').style.display = 'none';
+            if (countdownInterval) clearInterval(countdownInterval);
+            navigate('login');
+        }
+
+        // --- 4. NAVIGATION & UI REFRESH ---
+        function navigate(sectionId) {
+            if (!currentUser && sectionId !== 'login') return navigate('login');
+            
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById('sec-' + sectionId).classList.add('active');
+            document.getElementById('notif-dropdown').style.display = 'none';
+
+            if (sectionId === 'tutorials') renderTutorialsForm();
+            if (sectionId === 'termini') renderUserTermini();
+        }
+
+        function refreshUI() {
+            if (!currentUser) return;
+            
+            document.getElementById('sec-login').classList.remove('active');
+            document.getElementById('user-controls').style.display = 'flex';
+            
+            // Home Info Update
+            document.getElementById('home-name').innerText = currentUser.name;
+            document.getElementById('info-name').innerText = currentUser.name;
+            document.getElementById('info-sifra').innerText = currentUser.sifa;
+            document.getElementById('info-paket').innerText = currentUser.paket;
+            document.getElementById('info-lastlogin').innerText = currentUser.lastLogin || "Prva prijava";
+
+            // Role visibility
+            if (currentUser.role === 'admin' || originalAdminUser) {
+                document.getElementById('btn-admin').style.display = 'inline-block';
+                renderAdminNav();
+            } else {
+                document.getElementById('btn-admin').style.display = 'none';
+            }
+
+            // View As Mode
+            if (originalAdminUser) {
+                document.getElementById('return-admin-btn').style.display = 'block';
+            } else {
+                document.getElementById('return-admin-btn').style.display = 'none';
+            }
+
+            // Promo Countdown
+            handlePromoCountdown();
+            
+            // Notifications
+            renderNotificationsDropdown();
+        }
+
+        function handlePromoCountdown() {
+            const promoDiv = document.getElementById('promo-countdown');
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            if (currentUser.paketExpires && currentUser.paketExpires > Date.now()) {
+                promoDiv.style.display = 'block';
+                countdownInterval = setInterval(() => {
+                    const diff = currentUser.paketExpires - Date.now();
+                    if (diff <= 0) {
+                        clearInterval(countdownInterval);
+                        promoDiv.style.display = 'none';
+                        currentUser.paket = "Free"; // Revert to free
+                        currentUser.paketExpires = null;
+                        saveDB();
+                    } else {
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        document.getElementById('promo-timer').innerText = `${days}d ${hours}h`;
+                    }
+                }, 1000);
+            } else {
+                promoDiv.style.display = 'none';
+                if (currentUser.paketExpires && currentUser.paketExpires <= Date.now()) {
+                    currentUser.paket = "Free";
+                    currentUser.paketExpires = null;
+                    saveDB();
+                }
+            }
+        }
+
+        // --- 5. TUTORIALS LOGIC ---
+        function renderTutorialsForm() {
+            const container = document.getElementById('tutorial-form-container');
+            const msg = document.getElementById('tutorial-submitted-message');
+
+            if (currentUser.hasSubmittedTutorials) {
+                container.style.display = 'none';
+                msg.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'block';
+            msg.style.display = 'none';
+
+            // Reset checkboxes
+            document.querySelectorAll('.short-cb, .full-cb').forEach(cb => { cb.checked = false; cb.disabled = false; });
+
+            // Package limits
+            const p = currentUser.paket;
+            const kosaricaDisabled = (p === "Free" || p === "za 3" || p === "Osnovni");
+            
+            if (kosaricaDisabled) {
+                document.querySelectorAll('.kosarica-cb').forEach(cb => { cb.disabled = true; });
+                document.getElementById('short-kosarica-label').style.color = 'var(--gray)';
+                document.getElementById('full-kosarica-label').style.color = 'var(--gray)';
+            } else {
+                document.getElementById('short-kosarica-label').style.color = 'inherit';
+                document.getElementById('full-kosarica-label').style.color = 'inherit';
+            }
+
+            let shortLimit = 0, fullLimit = 0;
+            if (p === "Free") { shortLimit = 1; fullLimit = 0; }
+            else if (p === "za 3") { shortLimit = 2; fullLimit = 1; }
+            else if (p === "Osnovni") { shortLimit = 3; fullLimit = 2; }
+            else if (p === "Spodnji VIP") { shortLimit = 99; fullLimit = 3; }
+            else if (p === "VIP" || p === "MAX") { shortLimit = 99; fullLimit = 99; }
+
+            // Add event listeners to limit selection
+            const shorts = document.querySelectorAll('.short-cb:not(:disabled)');
+            const fulls = document.querySelectorAll('.full-cb:not(:disabled)');
+
+            shorts.forEach(cb => {
+                cb.onchange = () => {
+                    const checked = document.querySelectorAll('.short-cb:checked').length;
+                    if (checked > shortLimit) cb.checked = false;
+                }
+            });
+
+            fulls.forEach(cb => {
+                cb.onchange = () => {
+                    const checked = document.querySelectorAll('.full-cb:checked').length;
+                    if (checked > fullLimit) cb.checked = false;
+                }
+            });
+        }
+
+        function submitTutorialRequest() {
+            const shortSelected = Array.from(document.querySelectorAll('.short-cb:checked')).map(cb => cb.value);
+            const fullSelected = Array.from(document.querySelectorAll('.full-cb:checked')).map(cb => cb.value);
+            const termin = document.getElementById('tutorial-termin').value.trim();
+
+            if (shortSelected.length === 0 && fullSelected.length === 0) return alert("Izberite vsaj en tutorial.");
+            if (!termin) return alert("Vnesite predlagan termin.");
+
+            db.termini.push({
+                id: Date.now(),
+                userId: currentUser.id,
+                userName: currentUser.name,
+                shortChapters: shortSelected,
+                fullChapters: fullSelected,
+                proposedTime: termin,
+                finalTime: "",
+                status: "ČAKA NA ODOBRITEV",
+                createdAt: new Date().toLocaleDateString()
+            });
+
+            currentUser.hasSubmittedTutorials = true;
+            saveDB();
+            
+            alert("Naročilo uspešno oddano!");
+            renderTutorialsForm();
+        }
+
+        function renderUserTermini() {
+            const container = document.getElementById('user-termini-list');
+            const myTermini = db.termini.filter(t => t.userId === currentUser.id).reverse();
+
+            if (myTermini.length === 0) {
+                container.innerHTML = '<p style="color:var(--gray);">Nimate oddanih terminov.</p>';
+                return;
+            }
+
+            container.innerHTML = myTermini.map(t => {
+                let statusColor = "var(--gray)";
+                if (t.status === "ODOBRENO, ČAKA NA IZVEDBO") statusColor = "var(--warning)";
+                if (t.status === "KONČANO") statusColor = "var(--primary-green)";
+
+                let shortHtml = t.shortChapters.length > 0 ? `<div style="font-size:13px;"><b>Short:</b> ${t.shortChapters.join(', ')}</div>` : '';
+                let fullHtml = t.fullChapters.length > 0 ? `<div style="font-size:13px;"><b>Full:</b> ${t.fullChapters.join(', ')}</div>` : '';
+
+                return `
+                <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <strong>ID Naročila: #${t.id}</strong>
+                        <span style="font-weight:bold; color:${statusColor};">${t.status}</span>
+                    </div>
+                    ${shortHtml}
+                    ${fullHtml}
+                    <div style="margin-top: 10px; font-size: 14px;">
+                        <b>Predlagan termin:</b> ${t.proposedTime}<br>
+                        <b style="color:var(--primary-green);">Določen termin:</b> ${t.finalTime || 'Še ni določen'}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // --- 6. PAKET LOGIC ---
+        function togglePkgForm() {
+            const isPromo = document.querySelector('input[name="pkg-type"]:checked').value === 'promo';
+            document.getElementById('form-promo').style.display = isPromo ? 'block' : 'none';
+            document.getElementById('form-request').style.display = isPromo ? 'none' : 'block';
+        }
+
+        function applyPromoCode() {
+            const codeInput = document.getElementById('promo-code-input').value.trim();
+            if (!codeInput) return;
+
+            const kodaIndex = db.kode.findIndex(k => k.code === codeInput);
+            if (kodaIndex === -1) return alert("Neveljavna koda.");
+            
+            const koda = db.kode[kodaIndex];
+            if (koda.usesLeft <= 0) return alert("Koda je bila že porabljena.");
+
+            // Apply Package
+            currentUser.paket = koda.paket;
+            currentUser.hasSubmittedTutorials = false; // Reset submission capability on upgrade
+            
+            if (koda.durationDays > 0) {
+                currentUser.paketExpires = Date.now() + (koda.durationDays * 24 * 60 * 60 * 1000);
+            } else {
+                currentUser.paketExpires = null; // Infinite
+            }
+
+            // Deduct use
+            db.kode[kodaIndex].usesLeft -= 1;
+            saveDB();
+
+            alert(`Paket uspešno spremenjen na: ${koda.paket}`);
+            document.getElementById('promo-code-input').value = '';
+            refreshUI();
+        }
+
+        function requestPackage() {
+            const reqPkg = document.getElementById('request-pkg-select').value;
+            db.packageRequests.push({
+                id: Date.now(),
+                userId: currentUser.id,
+                userName: currentUser.name,
+                requestedPaket: reqPkg,
+                status: "PENDING"
+            });
+            saveDB();
+            alert("Prošnja za paket oddana! Počakajte na odobritev.");
+        }
+
+        // --- 7. NOTIFICATIONS ---
+        function getMyNotifs() {
+            if (!currentUser) return [];
+            return db.notifications.filter(n => n.target === 'all' || n.target === currentUser.id);
+        }
+
+        function renderNotificationsDropdown() {
+            const myNotifs = getMyNotifs().slice().reverse();
+            const unread = myNotifs.filter(n => !n.readBy.includes(currentUser.id));
+            document.getElementById('notif-dot').style.display = unread.length > 0 ? 'block' : 'none';
+
+            const container = document.getElementById('notif-dropdown');
+            if (myNotifs.length === 0) {
+                container.innerHTML = '<div style="padding:15px; text-align:center;">Ni novih obvestil.</div>';
+                return;
+            }
+
+            let html = '';
+            myNotifs.slice(0, 5).forEach((n, index) => {
+                const isRead = n.readBy.includes(currentUser.id);
+                let bg = isRead ? '#ffffff' : '#e6ffed';
+                html += `
+                    <div class="notif-item" style="background:${bg};" onclick="openMessageModal(${n.id})">
+                        <div style="color:var(--primary-green); font-weight:bold; margin-bottom:5px;">${n.title}</div>
+                        <div style="font-size: 12px; color: var(--gray);">${n.dateStr || ''}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notif-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function openMessageModal(notifId) {
+            const n = db.notifications.find(x => x.id === notifId);
+            if (!n) return;
+            
+            if (!n.readBy.includes(currentUser.id)) {
+                n.readBy.push(currentUser.id);
+                saveDB();
+            }
+
+            currentOpenNotifId = notifId;
+            document.getElementById('notif-dropdown').style.display = 'none';
+
+            document.getElementById('modal-title').innerText = n.title;
+            const senderName = n.senderName || "Sistem";
+            document.getElementById('modal-meta').innerText = `${n.dateStr || ''} • Pošiljatelj: ${senderName}`;
+            document.getElementById('modal-text').innerText = n.text;
+            document.getElementById('modal-reply-text').value = '';
+
+            document.getElementById('message-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('message-modal').style.display = 'none';
+            currentOpenNotifId = null;
+        }
+
+        function sendReply() {
+            const text = document.getElementById('modal-reply-text').value;
+            if(!text.trim()) return;
+            const originalNotif = db.notifications.find(x => x.id === currentOpenNotifId);
+            const targetId = originalNotif.senderId ? originalNotif.senderId : 1; 
+            
+            const now = new Date();
+            const dateStr = `${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()} ob ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            db.notifications.push({
+                id: Date.now(), title: `Odgovor: ${originalNotif.title}`, text: text,
+                target: targetId, senderId: currentUser.id, senderName: currentUser.name,
+                dateStr: dateStr, readBy: []
+            });
+            saveDB();
+            alert("Odgovor poslan!");
+            closeModal();
+        }
+
+        // --- 8. ADMIN FUNCTIONS ---
+        function showAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(el => el.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+        }
+
+        function renderAdminNav() {
+            updateNotifTargets();
+            renderAdminUsers();
+            renderAdminTermini();
+            renderAdminKode();
+            renderAdminPogledi();
+            renderAdminPaketi();
+        }
+
+        function updateNotifTargets() {
+            const select = document.getElementById('notif-target');
+            if (!select) return;
+            let html = `<option value="all">Vsi uporabniki</option>`;
+            db.users.filter(u => u.role !== 'admin').forEach(u => {
+                html += `<option value="${u.id}">${u.name} (${u.sifa})</option>`;
+            });
+            select.innerHTML = html;
+        }
+
+        function sendNotification() {
+            const t = document.getElementById('new-notif-title').value;
+            const x = document.getElementById('new-notif-text').value;
+            const targetVal = document.getElementById('notif-target').value;
+            if(!t || !x) return alert("Izpolni vsa polja.");
+
+            const now = new Date();
+            const dateStr = `${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()} ob ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            db.notifications.push({
+                id: Date.now(), title: t, text: x, 
+                target: targetVal === 'all' ? 'all' : parseInt(targetVal), 
+                senderId: currentUser.id, senderName: currentUser.name,
+                dateStr: dateStr, readBy: []
+            });
+            saveDB();
+            alert("Obvestilo poslano!");
+            document.getElementById('new-notif-title').value = '';
+            document.getElementById('new-notif-text').value = '';
+        }
+
+        function renderAdminUsers() {
+            const container = document.getElementById('admin-users-list');
+            container.innerHTML = db.users.filter(u => u.id !== 1).map(u => `
+                <div class="card" style="padding: 15px; margin-bottom: 15px; border-left: 5px solid ${u.blocked ? 'var(--danger)' : 'var(--primary-green)'};">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <div class="input-group" style="flex: 1; margin-bottom:0;">
+                            <label style="font-size: 12px;">Ime in priimek</label>
+                            <input type="text" id="edit-name-${u.id}" value="${u.name}">
+                        </div>
+                        <div class="input-group" style="flex: 1; margin-bottom:0;">
+                            <label style="font-size: 12px;">Šifra</label>
+                            <input type="text" id="edit-sifra-${u.id}" value="${u.sifa}">
+                        </div>
+                        <div class="input-group" style="flex: 1; margin-bottom:0;">
+                            <label style="font-size: 12px;">Admin Dodatek</label>
+                            <input type="text" id="edit-adminDodatek-${u.id}" value="${u.adminDodatek || ''}">
+                        </div>
+                        <div class="input-group" style="flex: 1; margin-bottom:0;">
+                            <label style="font-size: 12px;">Paket</label>
+                            <select id="edit-paket-${u.id}">
+                                <option value="Free" ${u.paket==='Free'?'selected':''}>Free</option>
+                                <option value="za 3" ${u.paket==='za 3'?'selected':''}>za 3</option>
+                                <option value="Osnovni" ${u.paket==='Osnovni'?'selected':''}>Osnovni</option>
+                                <option value="Spodnji VIP" ${u.paket==='Spodnji VIP'?'selected':''}>Spodnji VIP</option>
+                                <option value="VIP" ${u.paket==='VIP'?'selected':''}>VIP</option>
+                                <option value="MAX" ${u.paket==='MAX'?'selected':''}>MAX</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: var(--gray); margin-top: 10px;">Zadnja prijava: ${u.lastLogin || 'Nikoli'} | Naprava zaklenjena: ${u.deviceToken ? 'Da' : 'Ne'}</div>
+                    <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn" style="padding: 5px 15px; font-size: 12px;" onclick="saveUserEdit(${u.id})">Shrani</button>
+                        <button class="btn btn-outline" style="padding: 5px 15px; font-size: 12px;" onclick="resetDeviceToken(${u.id})">Odkleni napravo</button>
+                        <button class="btn ${u.blocked ? 'btn' : 'btn-danger'}" style="padding: 5px 15px; font-size: 12px;" onclick="toggleUserBlock(${u.id})">
+                            ${u.blocked ? 'Vrni dostop' : 'Blokiraj'}
+                        </button>
+                        <button class="btn btn-danger" style="padding: 5px 15px; font-size: 12px;" onclick="deleteUser(${u.id})">Izbriši</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addUser() {
+            const name = document.getElementById('new-user-name').value;
+            const sifra = document.getElementById('new-user-sifra').value;
+            const adminDodatek = document.getElementById('new-user-admin').value;
+            const paket = document.getElementById('new-user-paket').value;
+            
+            if(!name || !sifra) return alert("Ime in šifra sta obvezna.");
+            if(db.users.find(u => u.sifa === sifra)) return alert("Ta šifra že obstaja!");
+            
+            db.users.push({ 
+                id: Date.now(), name: name, sifa: sifra, adminDodatek: adminDodatek, 
+                role: "user", paket: paket, blocked: false, deviceToken: "", 
+                hasSubmittedTutorials: false, lastLogin: ""
+            });
+            saveDB();
+            
+            document.getElementById('new-user-name').value = ''; 
+            document.getElementById('new-user-sifra').value = ''; 
+            document.getElementById('new-user-admin').value = '';
+            alert("Uporabnik dodan!");
+        }
+
+        function saveUserEdit(id) {
+            const u = db.users.find(x => x.id === id);
+            const stariPaket = u.paket;
+            u.name = document.getElementById(`edit-name-${id}`).value;
+            u.sifa = document.getElementById(`edit-sifra-${id}`).value;
+            u.adminDodatek = document.getElementById(`edit-adminDodatek-${id}`).value;
+            u.paket = document.getElementById(`edit-paket-${id}`).value;
+            
+            if (stariPaket !== u.paket) u.hasSubmittedTutorials = false; // Reset form limit
+            saveDB();
+            alert("Shranjeno.");
+        }
+
+        function resetDeviceToken(id) { const u = db.users.find(x => x.id === id); u.deviceToken = ""; saveDB(); alert("Zaklep naprave odstranjen."); }
+        function toggleUserBlock(id) { const u = db.users.find(x => x.id === id); u.blocked = !u.blocked; saveDB(); }
+        function deleteUser(id) { if(confirm("Res želiš izbrisati?")) { db.users = db.users.filter(x => x.id !== id); saveDB(); } }
+
+        function renderAdminTermini() {
+            const container = document.getElementById('admin-termini-list');
+            if (db.termini.length === 0) { container.innerHTML = '<p>Ni terminov.</p>'; return; }
+
+            container.innerHTML = db.termini.slice().reverse().map(t => `
+                <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <strong>Uporabnik: ${t.userName} (ID Naročila: #${t.id})</strong>
+                        <span style="font-weight:bold; color:var(--primary-green);">${t.status}</span>
+                    </div>
+                    <div style="font-size: 13px; margin-bottom: 10px;">
+                        ${t.shortChapters.length > 0 ? `<b>Short:</b> ${t.shortChapters.join(', ')}<br>` : ''}
+                        ${t.fullChapters.length > 0 ? `<b>Full:</b> ${t.fullChapters.join(', ')}` : ''}
+                    </div>
+                    <p style="font-size: 14px;"><b>Predlagal:</b> ${t.proposedTime}</p>
+                    
+                    <div style="margin-top: 10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <input type="text" id="final-time-${t.id}" value="${t.finalTime}" placeholder="Vnesi končni termin" style="padding:8px; border:1px solid var(--border-color); border-radius:4px; flex:1;">
+                        <select id="status-${t.id}" style="padding:8px; border:1px solid var(--border-color); border-radius:4px;">
+                            <option value="ČAKA NA ODOBRITEV" ${t.status==='ČAKA NA ODOBRITEV'?'selected':''}>ČAKA NA ODOBRITEV</option>
+                            <option value="ODOBRENO, ČAKA NA IZVEDBO" ${t.status==='ODOBRENO, ČAKA NA IZVEDBO'?'selected':''}>ODOBRENO, ČAKA NA IZVEDBO</option>
+                            <option value="KONČANO" ${t.status==='KONČANO'?'selected':''}>KONČANO</option>
+                        </select>
+                        <button class="btn" style="padding: 5px 15px; font-size: 12px;" onclick="saveTermin(${t.id})">Shrani spremembe</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveTermin(id) {
+            const t = db.termini.find(x => x.id === id);
+            t.finalTime = document.getElementById(`final-time-${id}`).value;
+            t.status = document.getElementById(`status-${id}`).value;
+            saveDB();
+            alert("Termin posodobljen.");
+        }
+
+        function addKoda() {
+            const koda = document.getElementById('new-koda-koda').value;
+            const paket = document.getElementById('new-koda-paket').value;
+            const uses = parseInt(document.getElementById('new-koda-uses').value) || 1;
+            const days = parseInt(document.getElementById('new-koda-days').value) || 0; // 0 = unlimited
+
+            if (!koda) return alert("Vnesi kodo.");
+            db.kode.push({ id: Date.now(), code: koda, paket: paket, usesLeft: uses, durationDays: days });
+            saveDB();
+            document.getElementById('new-koda-koda').value = '';
+            alert("Koda ustvarjena!");
+            renderAdminKode();
+        }
+
+        function renderAdminKode() {
+            const container = document.getElementById('admin-kode-list');
+            container.innerHTML = db.kode.map(k => `
+                <div style="border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 5px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color:var(--primary-green); font-size:16px;">${k.code}</strong> 
+                        <span style="color:var(--gray); font-size:14px;">(Paket: ${k.paket}, Preostalo uporab: ${k.usesLeft}, Dnevi: ${k.durationDays === 0 ? 'Neomejeno' : k.durationDays})</span>
+                    </div>
+                    <button class="btn btn-danger" style="padding: 4px 10px; font-size:12px;" onclick="deleteKoda(${k.id})">Izbriši</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteKoda(id) { db.kode = db.kode.filter(x => x.id !== id); saveDB(); renderAdminKode(); }
+
+        function renderAdminPogledi() {
+            const container = document.getElementById('admin-pogledi-list');
+            container.innerHTML = db.users.filter(u => u.id !== 1).map(u => `
+                <div style="border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 5px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>${u.name} (${u.sifa})</span>
+                    <button class="btn btn-outline" style="padding: 4px 10px; font-size:12px;" onclick="viewAsUser(${u.id})">Poglej kot ta uporabnik</button>
+                </div>
+            `).join('');
+        }
+
+        function viewAsUser(id) {
+            const targetUser = db.users.find(u => u.id === id);
+            if (!targetUser) return;
+            originalAdminUser = currentUser;
+            currentUser = targetUser;
+            refreshUI();
+            navigate('home');
+        }
+
+        function returnToAdmin() {
+            if (!originalAdminUser) return;
+            currentUser = originalAdminUser;
+            originalAdminUser = null;
+            refreshUI();
+            navigate('admin');
+            showAdminTab('admin-pogledi');
+        }
+
+        function renderAdminPaketi() {
+            const container = document.getElementById('admin-paketi-list');
+            const pending = db.packageRequests.filter(r => r.status === "PENDING");
+            
+            if (pending.length === 0) { container.innerHTML = '<p>Ni prošenj.</p>'; return; }
+
+            container.innerHTML = pending.map(r => `
+                <div style="border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 5px; display:flex; justify-content:space-between; align-items:center;">
+                    <div><strong>${r.userName}</strong> prosi za <strong>Paket ${r.requestedPaket}</strong></div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn" style="padding: 4px 10px; font-size:12px;" onclick="resolvePackageReq(${r.id}, true)">Odobri</button>
+                        <button class="btn btn-danger" style="padding: 4px 10px; font-size:12px;" onclick="resolvePackageReq(${r.id}, false)">Zavrni</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function resolvePackageReq(reqId, approve) {
+            const req = db.packageRequests.find(x => x.id === reqId);
+            if (!req) return;
+            req.status = approve ? "APPROVED" : "REJECTED";
+            
+            if (approve) {
+                const user = db.users.find(u => u.id === req.userId);
+                if (user) {
+                    user.paket = req.requestedPaket;
+                    user.hasSubmittedTutorials = false; // reset
+                }
+            }
+            saveDB();
+            alert(approve ? "Paket odobren!" : "Prošnja zavrnjena.");
+            renderAdminPaketi();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('message-modal');
+            if (event.target === modal) closeModal();
+        }
+    </script>
+</body>
+</html>
