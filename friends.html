@@ -567,7 +567,7 @@
         const FIREBASE_URL = 'https://friends-a8f21-default-rtdb.europe-west1.firebasedatabase.app';
 
         const app = {
-            data: { people: {}, groups: {}, settings: { pin: "1812" } },
+            data: { people: {}, groups: {}, settings: { pin: "2402" } },
             currentPersonId: null,
             
             // WIZARD STATE
@@ -595,7 +595,7 @@
             async init() {
                 const settings = await this.apiGet('/settings');
                 if (settings && settings.pin) this.data.settings.pin = settings.pin;
-                else await this.apiPut('/settings', { pin: "1812" });
+                else await this.apiPut('/settings', { pin: "2402" });
             },
 
             login() {
