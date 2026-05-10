@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLICE SECURE DB // TERAPIJSKI SISTEM</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-color: #050a0f;
+            --text-color: #00ff41;
+            --text-dim: #008f11;
+            --alert-color: #ff003c;
+            --border-color: #00ff41;
+            --bg-panel: rgba(0, 255, 65, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Share Tech Mono', 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-transform: uppercase;
+            overflow-x: hidden;
+            background-image: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+        }
+
+        /* --- LOGIN ZASLON --- */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .login-box {
+            border: 2px solid var(--border-color);
+            padding: 40px;
+            background: var(--bg-panel);
+            box-shadow: 0 0 15px var(--text-dim);
+            width: 400px;
+        }
+
+        .login-box h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--text-color);
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        input[type="text"]:focus, input[type="password"]:focus {
+            box-shadow: 0 0 8px var(--text-color);
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        button {
+            width: 100%;
+            background: var(--text-dim);
+            color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--text-color);
+            box-shadow: 0 0 10px var(--text-color);
+        }
+
+        /* --- GLAVNI APP --- */
+        #app-screen {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header-title { font-size: 24px; text-shadow: 0 0 5px var(--text-color); }
+        .user-info { font-size: 14px; color: var(--text-dim); }
+
+        nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        nav button {
+            width: auto;
+            padding: 8px 20px;
+            background: transparent;
+            color: var(--text-color);
+        }
+
+        nav button.active {
+            background: var(--text-color);
+            color: var(--bg-color);
+        }
+
+        .tab-content { display: none; flex: 1; }
+        .tab-content.active { display: block; }
+
+        /* TABELE IN SEZNAMI */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid var(--text-dim);
+            padding: 10px;
+            text-align: left;
+        }
+
+        th { background: var(--bg-panel); color: var(--text-color); }
+        td { color: #fff; }
+
+        /* --- TERAPIJA POGLED --- */
+        .therapy-layout {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 160px);
+        }
+
+        .left-panel {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            background: var(--bg-panel);
+            overflow-y: auto;
+        }
+
+        .right-panel {
+            flex: 2;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        select {
+            width: 100%;
+            background: #000;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .person-details h2 { margin-bottom: 10px; border-bottom: 1px dashed var(--text-dim); padding-bottom: 5px; }
+        .person-details p { color: #fff; margin-bottom: 5px; }
+
+        .therapy-list-item {
+            border: 1px solid var(--text-dim);
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .therapy-list-item .date { color: var(--text-color); font-weight: bold; margin-bottom: 5px; }
+        .therapy-list-item .notes { color: #ccc; white-space: pre-wrap;}
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+        }
+
+        .btn-small { width: auto; padding: 5px 10px; font-size: 14px; margin-top: 10px;}
+        .btn-danger { color: var(--alert-color); border-color: var(--alert-color); }
+        .btn-danger:hover { background: var(--alert-color); color: #000; box-shadow: 0 0 10px var(--alert-color);}
+
+        #error-msg { color: var(--alert-color); margin-top: 10px; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h1>SISTEM ZA TERAPIJE<br>[ ODOBREN DOSTOP ]</h1>
+            <input type="text" id="username" placeholder="UPORABNIŠKO IME" value="ADMIN">
+            <input type="password" id="password" placeholder="GESLO" value="ADMIN">
+            <button onclick="login()">AVTENTIKACIJA</button>
+            <div id="error-msg"></div>
+        </div>
+    </div>
+
+    <div id="app-screen">
+        <header>
+            <div class="header-title">BAZA PODATKOV // SEKTOR TERAPIJA</div>
+            <div class="user-info">PRIJAVLJEN: <span id="logged-user" style="color: #fff;"></span> | STATUS: SECURE | <a href="#" onclick="logout()" style="color: var(--alert-color);">ODJAVA</a></div>
+        </header>
+
+        <nav>
+            <button id="nav-terapija" class="active" onclick="switchTab('terapija')">TERAPIJA</button>
+            <button id="nav-osebe" onclick="switchTab('osebe')">BAZA OSEB</button>
+            <button id="nav-uporabniki" onclick="switchTab('uporabniki')">UPORABNIKI</button>
+            <button id="nav-racun" onclick="switchTab('racun')">RAČUN</button>
+        </nav>
+
+        <main id="tab-terapija" class="tab-content active">
+            <div class="therapy-layout">
+                <div class="left-panel">
+                    <h3>IZBERI OSEBO:</h3>
+                    <select id="person-select" onchange="selectPerson()"></select>
+                    
+                    <div id="person-details" class="person-details" style="display:none; margin-top: 20px;">
+                        <h2>DOSJE OSEBE</h2>
+                        <p><strong>IME IN PRIIMEK:</strong> <span id="pd-name"></span></p>
+                        <p><strong>DATUM ROJSTVA:</strong> <span id="pd-dob"></span></p>
+                        <p><strong>STATUS:</strong> AKTIVEN</p>
+                        <p><strong>OPOMBE:</strong> <span id="pd-notes"></span></p>
+                    </div>
+                </div>
+                
+                <div class="right-panel">
+                    <div id="therapy-history-view">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>ZGODOVINA TERAPIJ</h3>
+                            <button class="btn-small" onclick="openTherapyEditor()">[ VNESI NOVO TERAPIJO ]</button>
+                        </div>
+                        <div id="therapy-list-container">
+                            </div>
+                    </div>
+
+                    <div id="therapy-editor-view" style="display:none;">
+                        <h3>VNOS NOVE TERAPIJE</h3>
+                        <p style="margin: 10px 0; color: var(--text-dim);">Vpišite povzetek seanse. Zapis bo trajno shranjen v bazo.</p>
+                        <textarea id="new-therapy-text" placeholder="Zapis terapije..."></textarea>
+                        <button onclick="saveTherapy()">[ SHRANI ZAPIS ]</button>
+                        <button class="btn-small" style="margin-left: 10px;" onclick="closeTherapyEditor()">[ PREKLIČI ]</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main id="tab-osebe" class="tab-content">
+            <h3>DODAJ NOVO OSEBO V SISTEM</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <input type="text" id="new-person-name" placeholder="IME IN PRIIMEK" style="width: 30%;">
+                <input type="text" id="new-person-dob" placeholder="DATUM ROJSTVA (DD.MM.LLLL)" style="width: 30%;">
+                <input type="text" id="new-person-notes" placeholder="OPOMBE" style="width: 40%;">
+            </div>
+            <button class="btn-small" onclick="addPerson()">[ DODAJ OSEBO ]</button>
+
+            <h3 style="margin-top: 30px;">SEZNAM OSEB</h3>
+            <table>
+                <thead><tr><th>ID</th><th>IME IN PRIIMEK</th><th>DATUM ROJSTVA</th><th>OPOMBE</th></tr></thead>
+                <tbody id="persons-table-body"></tbody>
+            </table>
+        </main>
+
+        <main id="tab-uporabniki" class="tab-content">
+            <h3>UPRAVLJANJE ZAPOSLENIH</h3>
+            <p style="color: var(--text-dim); margin-bottom: 15px;">Dostop dovoljen samo administratorjem z nivojem 5.</p>
+            <table>
+                <thead><tr><th>UPORABNIŠKO IME</th><th>VLOGA</th><th>STATUS</th><th>AKCIJA</th></tr></thead>
+                <tbody id="users-table-body">
+                    <tr>
+                        <td>ADMIN</td>
+                        <td>ADMINISTRATOR</td>
+                        <td style="color: var(--text-color);">AKTIVEN</td>
+                        <td><button class="btn-small">UREDI</button> <button class="btn-small btn-danger">ONEMOGOČI</button></td>
+                    </tr>
+                    <tr>
+                        <td>DR.NOVAK</td>
+                        <td>TERAPEVT</td>
+                        <td style="color: var(--text-color);">AKTIVEN</td>
+                        <td><button class="btn-small">UREDI</button> <button class="btn-small btn-danger">ONEMOGOČI</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+
+        <main id="tab-racun" class="tab-content">
+            <h3>MOJ RAČUN</h3>
+            <div style="max-width: 400px; margin-top: 20px;">
+                <label>UPORABNIŠKO IME:</label>
+                <input type="text" id="my-username" disabled>
+                <label>NOVO GESLO:</label>
+                <input type="password" id="my-password" placeholder="VNESITE NOVO GESLO">
+                <button onclick="updateAccount()">[ POSODOBI PODATKE ]</button>
+                <div id="account-msg" style="margin-top: 10px; color: var(--text-color);"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- FIREBASE KONFIGURACIJA ---
+        const DB_URL = "https://terapija-a0a42-default-rtdb.europe-west1.firebasedatabase.app";
+        
+        // Začasne lokalne spremenljivke
+        let currentPersonId = null;
+        let personsData = {};
+        let therapiesData = {};
+
+        // --- SISTEM PRIJAVE ---
+        function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const err = document.getElementById('error-msg');
+
+            if (user === 'ADMIN' && pass === 'ADMIN') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'flex';
+                document.getElementById('logged-user').innerText = user;
+                document.getElementById('my-username').value = user;
+                
+                // Naloži podatke ob uspešni prijavi
+                fetchData();
+            } else {
+                err.innerText = ">> NAPAKA: NEVELJAVNI PODATKI <<";
+            }
+        }
+
+        function logout() {
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('password').value = '';
+        }
+
+        // --- NAVIGACIJA ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.getElementById('nav-' + tabId).classList.add('active');
+        }
+
+        // --- BAZA PODATKOV (REST API) ---
+        async function fetchData() {
+            try {
+                // Preberi Osebe
+                let resPersons = await fetch(`${DB_URL}/persons.json`);
+                personsData = await resPersons.json() || {};
+                
+                // Preberi Terapije
+                let resTherapies = await fetch(`${DB_URL}/therapies.json`);
+                therapiesData = await resTherapies.json() || {};
+
+                renderPersons();
+                renderPersonSelect();
+            } catch (error) {
+                console.error("Napaka pri branju iz Firebase:", error);
+                alert("Opozorilo: Povezava s Firebase ni uspela. Preverite pravila (Rules) v bazi!");
+            }
+        }
+
+        // --- OSEBE ---
+        async function addPerson() {
+            const name = document.getElementById('new-person-name').value;
+            const dob = document.getElementById('new-person-dob').value;
+            const notes = document.getElementById('new-person-notes').value;
+
+            if(!name) { alert("IME JE OBVEZNO!"); return; }
+
+            const newPerson = { name, dob, notes, created: new Date().toISOString() };
+            
+            try {
+                let res = await fetch(`${DB_URL}/persons.json`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(newPerson)
+                });
+                let data = await res.json();
+                
+                personsData[data.name] = newPerson; // Posodobi lokalno
+                
+                document.getElementById('new-person-name').value = '';
+                document.getElementById('new-person-dob').value = '';
+                document.getElementById('new-person-notes').value = '';
+                
+                renderPersons();
+                renderPersonSelect();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderPersons() {
+            const tbody = document.getElementById('persons-table-body');
+            tbody.innerHTML = '';
+            for (const id in personsData) {
+                const p = personsData[id];
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color:var(--text-dim)">${id.substring(1, 6)}...</td>
+                        <td>${p.name}</td>
+                        <td>${p.dob || '/'}</td>
+                        <td>${p.notes || '/'}</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderPersonSelect() {
+            const select = document.getElementById('person-select');
+            select.innerHTML = '<option value="">-- IZBERI OSEBO --</option>';
+            for (const id in personsData) {
+                select.innerHTML += `<option value="${id}">${personsData[id].name}</option>`;
+            }
+        }
+
+        // --- TERAPIJA POGLED ---
+        function selectPerson() {
+            const id = document.getElementById('person-select').value;
+            currentPersonId = id;
+            
+            const detailsDiv = document.getElementById('person-details');
+            
+            if (id && personsData[id]) {
+                document.getElementById('pd-name').innerText = personsData[id].name;
+                document.getElementById('pd-dob').innerText = personsData[id].dob || 'Ni podatka';
+                document.getElementById('pd-notes').innerText = personsData[id].notes || '/';
+                detailsDiv.style.display = 'block';
+                
+                renderTherapiesForPerson(id);
+                closeTherapyEditor(); // Vrni se na seznam, če je bil urejevalnik odprt
+            } else {
+                detailsDiv.style.display = 'none';
+                document.getElementById('therapy-list-container').innerHTML = '';
+            }
+        }
+
+        function renderTherapiesForPerson(personId) {
+            const container = document.getElementById('therapy-list-container');
+            container.innerHTML = '';
+            
+            let hasTherapies = false;
+            
+            for (const tId in therapiesData) {
+                if (therapiesData[tId].personId === personId) {
+                    hasTherapies = true;
+                    const dateStr = new Date(therapiesData[tId].date).toLocaleString('sl-SI');
+                    container.innerHTML += `
+                        <div class="therapy-list-item">
+                            <div class="date">[ DATUM: ${dateStr} ]</div>
+                            <div class="notes">${therapiesData[tId].notes}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            if (!hasTherapies) {
+                container.innerHTML = '<p style="color: var(--text-dim);">NI ZAPISOV O TERAPIJAH ZA TO OSEBO.</p>';
+            }
+        }
+
+        function openTherapyEditor() {
+            if(!currentPersonId) {
+                alert("NAJPREJ IZBERI OSEBO!"); return;
+            }
+            document.getElementById('therapy-history-view').style.display = 'none';
+            document.getElementById('therapy-editor-view').style.display = 'block';
+            document.getElementById('new-therapy-text').value = '';
+        }
+
+        function closeTherapyEditor() {
+            document.getElementById('therapy-editor-view').style.display = 'none';
+            document.getElementById('therapy-history-view').style.display = 'block';
+        }
+
+        async function saveTherapy() {
+            const text = document.getElementById('new-therapy-text').value;
+            if(!text.trim()) return;
+
+            const newTherapy = {
+                personId: currentPersonId,
+                notes: text,
+                date: new Date().toISOString()
+            };
+
+            try {
+                let res = await fetch(`${DB_URL}/therapies.json`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(newTherapy)
+                });
+                let data = await res.json();
+                
+                therapiesData[data.name] = newTherapy; // Posodobi lokalno
+                
+                closeTherapyEditor();
+                renderTherapiesForPerson(currentPersonId);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // --- RAČUN ---
+        function updateAccount() {
+            const pass = document.getElementById('my-password').value;
+            const msg = document.getElementById('account-msg');
+            if(pass) {
+                msg.innerText = ">> PODATKI USPEŠNO POSODOBLJENI <<";
+                setTimeout(() => msg.innerText = '', 3000);
+            }
+        }
+    </script>
+</body>
+</html>
