@@ -1,0 +1,922 @@
+# Responsive HTML aplikacija za ocene (Firebase)
+
+```html
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redovalnica</title>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #eef2f7;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .screen {
+      width: 100%;
+      min-height: 100vh;
+      padding-bottom: 90px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      margin: auto;
+      margin-top: 70px;
+    }
+
+    h1, h2, h3 {
+      margin-bottom: 15px;
+    }
+
+    input, select, button, textarea {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .welcome {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .clock {
+      font-size: 20px;
+      color: #444;
+    }
+
+    .date-title {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #666;
+    }
+
+    .assessment {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      border-radius: 15px;
+      background: #f8fafc;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      flex-wrap: wrap;
+    }
+
+    .assessment-left {
+      flex: 1;
+    }
+
+    .subject {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .type {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .type.pisno {
+      color: #2563eb;
+    }
+
+    .type.ustno {
+      color: #16a34a;
+    }
+
+    .type.izdelek {
+      color: #9333ea;
+    }
+
+    .grade-box {
+      width: 55px;
+      height: 55px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 14px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .grade-good {
+      background: #d8f5dc;
+    }
+
+    .grade-bad {
+      background: #ffd8d8;
+    }
+
+    .edit-btn {
+      width: 55px;
+      height: 55px;
+      border-radius: 14px;
+      font-size: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: white;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    .section-title {
+      margin-top: 30px;
+      margin-bottom: 15px;
+      font-size: 22px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+      z-index: 999;
+    }
+
+    .nav-btn {
+      border: none;
+      background: none;
+      color: #444;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      width: auto;
+      padding: 5px 10px;
+    }
+
+    .nav-btn.active {
+      color: #2563eb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow-x: auto;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    th {
+      background: #f1f5f9;
+    }
+
+    .grade-pill {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .pill-pisno {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .pill-ustno {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pill-izdelek {
+      background: #f3e8ff;
+      color: #7e22ce;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 15px;
+    }
+
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 20px;
+      padding: 25px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .close-btn {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .flex {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .type-select-btn {
+      flex: 1;
+      min-width: 100px;
+      background: white;
+      border: 2px solid #ccc;
+      color: black;
+    }
+
+    .type-select-btn.selected {
+      border-color: #2563eb;
+      background: #dbeafe;
+    }
+
+    .flash {
+      animation: flashGreen 1s;
+    }
+
+    @keyframes flashGreen {
+      from {
+        background: #bbf7d0;
+      }
+      to {
+        background: transparent;
+      }
+    }
+
+    @media(max-width: 768px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      table {
+        font-size: 14px;
+      }
+
+      th, td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen">
+  <div class="container">
+    <div class="card login-box">
+      <h1>Prijava</h1>
+
+      <input type="text" id="username" placeholder="Uporabniško ime">
+      <input type="password" id="password" placeholder="Geslo">
+      <button onclick="login()">Prijava</button>
+
+      <p id="loginError" style="color:red;margin-top:15px"></p>
+    </div>
+  </div>
+</div>
+
+<div id="appScreen" class="screen hidden">
+
+  <div id="homePage" class="container">
+
+    <div class="topbar">
+      <div>
+        <div class="welcome">Živjo, Jaša</div>
+        <div id="todayDate" class="date-title"></div>
+      </div>
+
+      <div id="clock" class="clock"></div>
+    </div>
+
+    <div class="card">
+      <h2>Napovedana ocenjevanja</h2>
+      <div id="todayAssessments"></div>
+    </div>
+
+    <div class="card">
+      <h2>Zamujena ocenjevanja brez ocene</h2>
+      <div id="pastAssessments"></div>
+    </div>
+
+    <div class="card">
+      <button onclick="openAddAssessment()">+ Vpiši ocenjevanje</button>
+      <button style="margin-top:10px" onclick="openCalendar()">📅 Koledar</button>
+    </div>
+  </div>
+
+  <div id="gradesPage" class="container hidden">
+    <div class="card">
+      <h2>Redovalnica</h2>
+
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Predmet</th>
+              <th>1. obdobje</th>
+              <th>Dodaj</th>
+              <th>2. obdobje</th>
+              <th>Dodaj</th>
+              <th>Končna</th>
+            </tr>
+          </thead>
+          <tbody id="gradeTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="dataPage" class="container hidden">
+    <div class="card">
+      <h2>Podatki uporabnika</h2>
+
+      <p><b>Ime:</b> Jaša</p>
+      <p><b>Priimek:</b> Petrinjak</p>
+      <p><b>Uporabniško ime:</b> pjasa</p>
+      <p><b>Geslo:</b> Gorenje 1</p>
+
+      <h3 style="margin-top:20px">Predmeti</h3>
+
+      <ul id="subjectList" style="margin-top:15px;padding-left:20px"></ul>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="showPage('homePage', this)">DOMAČA</button>
+    <button class="nav-btn" onclick="showPage('gradesPage', this)">REDOVALNICA</button>
+    <button class="nav-btn" onclick="logout()">ODJAVA</button>
+    <button class="nav-btn" onclick="showPage('dataPage', this)">PODATKI</button>
+  </div>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-content" id="modalContent"></div>
+</div>
+
+<script>
+
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://ocene-1b6fd-default-rtdb.europe-west1.firebasedatabase.app/",
+    projectId: "ocene-1b6fd",
+    storageBucket: "ocene-1b6fd.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const subjects = [
+    "Matematika",
+    "Slovenščina",
+    "Angleščina",
+    "Kemija",
+    "Fizika",
+    "Biologija",
+    "Geografija",
+    "Zgodovina"
+  ];
+
+  let selectedType1 = {};
+  let selectedType2 = {};
+
+  function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    if(username === 'pjasa' && password === 'Gorenje 1') {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+
+      loadAssessments();
+      renderSubjects();
+      renderGradeTable();
+    } else {
+      document.getElementById('loginError').innerText = 'Napačni podatki za prijavo.';
+    }
+  }
+
+  function logout() {
+    location.reload();
+  }
+
+  function showPage(id, btn) {
+    document.querySelectorAll('#homePage, #gradesPage, #dataPage').forEach(p => p.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function updateClock() {
+    const now = new Date();
+
+    document.getElementById('clock').innerText = now.toLocaleTimeString('sl-SI');
+    document.getElementById('todayDate').innerText = now.toLocaleDateString('sl-SI', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  function renderSubjects() {
+    const ul = document.getElementById('subjectList');
+    ul.innerHTML = '';
+
+    subjects.forEach(subject => {
+      ul.innerHTML += `<li style="margin-bottom:8px">${subject}</li>`;
+    });
+  }
+
+  function openModal(html) {
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.add('hidden');
+  }
+
+  function openAddAssessment() {
+    let options = '';
+
+    subjects.forEach(s => {
+      options += `<option>${s}</option>`;
+    });
+
+    openModal(`
+      <span class="close-btn" onclick="closeModal()">×</span>
+
+      <h2>Dodaj ocenjevanje</h2>
+
+      <select id="newSubject">${options}</select>
+
+      <input type="date" id="newDate">
+
+      <select id="newType">
+        <option value="pisno">Pisno</option>
+        <option value="ustno">Ustno</option>
+        <option value="izdelek">Izdelek</option>
+      </select>
+
+      <select id="newPeriod">
+        <option value="1">1. ocenjevalno obdobje</option>
+        <option value="2">2. ocenjevalno obdobje</option>
+      </select>
+
+      <button onclick="saveAssessment()">Shrani</button>
+    `);
+  }
+
+  function saveAssessment() {
+    const item = {
+      subject: document.getElementById('newSubject').value,
+      date: document.getElementById('newDate').value,
+      type: document.getElementById('newType').value,
+      period: document.getElementById('newPeriod').value,
+      grade: null,
+      createdAt: Date.now()
+    };
+
+    db.ref('assessments').push(item);
+
+    closeModal();
+
+    setTimeout(loadAssessments, 500);
+  }
+
+  function loadAssessments() {
+    db.ref('assessments').on('value', snapshot => {
+
+      const todayContainer = document.getElementById('todayAssessments');
+      const pastContainer = document.getElementById('pastAssessments');
+
+      todayContainer.innerHTML = '';
+      pastContainer.innerHTML = '';
+
+      const data = snapshot.val() || {};
+      const today = new Date().toISOString().split('T')[0];
+
+      Object.entries(data).forEach(([id, item]) => {
+
+        const assessmentHTML = `
+          <div class="assessment">
+            <div class="assessment-left">
+              <div class="subject">${item.subject}</div>
+              <div class="type ${item.type}">${item.type.toUpperCase()}</div>
+            </div>
+
+            ${item.grade ? `
+              <div class="grade-box ${item.grade == 1 ? 'grade-bad' : 'grade-good'}">
+                ${item.grade}
+              </div>
+            ` : `
+              <div class="edit-btn" onclick="openGradeModal('${id}','${item.subject}','${item.type}','${item.period}')">
+                ${item.date < today ? item.date : '✏️'}
+              </div>
+            `}
+          </div>
+        `;
+
+        if(item.date === today) {
+          todayContainer.innerHTML += assessmentHTML;
+        }
+
+        if(item.date < today && !item.grade) {
+          pastContainer.innerHTML += assessmentHTML;
+        }
+      });
+    });
+  }
+
+  function openGradeModal(id, subject, type, period) {
+    openModal(`
+      <span class="close-btn" onclick="closeModal()">×</span>
+
+      <h2>Ocena za predmet ${subject}</h2>
+
+      <p style="margin-top:15px">Ocena:</p>
+
+      <input type="number" min="1" max="5" id="gradeInput">
+
+      <p style="margin-top:15px">
+        Ocena bo shranjena kot tip ${type.toUpperCase()} v ${period}. ocenjevalno obdobje.
+      </p>
+
+      <select id="borderType">
+        <option value="A">Obrobje A</option>
+        <option value="B">Obrobje B</option>
+      </select>
+
+      <button onclick="saveGrade('${id}')">Shrani</button>
+    `);
+  }
+
+  function saveGrade(id) {
+    const grade = document.getElementById('gradeInput').value;
+
+    db.ref('assessments/' + id).update({
+      grade: grade
+    });
+
+    closeModal();
+
+    setTimeout(() => {
+      loadAssessments();
+      renderGradeTable();
+    }, 500);
+  }
+
+  function renderGradeTable() {
+
+    db.ref('assessments').on('value', snapshot => {
+
+      const tbody = document.getElementById('gradeTable');
+      tbody.innerHTML = '';
+
+      const data = snapshot.val() || {};
+
+      subjects.forEach(subject => {
+
+        let first = [];
+        let second = [];
+
+        Object.entries(data).forEach(([id, item]) => {
+
+          if(item.subject === subject && item.grade) {
+
+            const pill = `
+              <span onclick="editGrade('${id}')"
+              class="grade-pill pill-${item.type}">
+                ${item.grade}
+              </span>
+            `;
+
+            if(item.period == '1') {
+              first.push(pill);
+            } else {
+              second.push(pill);
+            }
+          }
+        });
+
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${subject}</b></td>
+
+            <td>${first.join(' ')}</td>
+
+            <td>
+              <div class="flex">
+                <button class="type-select-btn"
+                  onclick="selectType('${subject}','1','pisno',this)">
+                  Pisno
+                </button>
+
+                <button class="type-select-btn"
+                  onclick="selectType('${subject}','1','ustno',this)">
+                  Ustno
+                </button>
+              </div>
+
+              <input type="number" min="1" max="5"
+                placeholder="Ocena"
+                onkeypress="addQuickGrade(event,'${subject}','1')">
+            </td>
+
+            <td>${second.join(' ')}</td>
+
+            <td>
+              <div class="flex">
+                <button class="type-select-btn"
+                  onclick="selectType('${subject}','2','pisno',this)">
+                  Pisno
+                </button>
+
+                <button class="type-select-btn"
+                  onclick="selectType('${subject}','2','ustno',this)">
+                  Ustno
+                </button>
+              </div>
+
+              <input type="number" min="1" max="5"
+                placeholder="Ocena"
+                onkeypress="addQuickGrade(event,'${subject}','2')">
+            </td>
+
+            <td contenteditable="true">-</td>
+          </tr>
+        `;
+      });
+    });
+  }
+
+  function selectType(subject, period, type, btn) {
+
+    if(period == '1') {
+      selectedType1[subject] = type;
+    } else {
+      selectedType2[subject] = type;
+    }
+
+    btn.parentElement.querySelectorAll('button').forEach(b => {
+      b.classList.remove('selected');
+    });
+
+    btn.classList.add('selected');
+  }
+
+  function addQuickGrade(event, subject, period) {
+
+    if(event.key === 'Enter') {
+
+      const grade = event.target.value;
+
+      const type = period == '1'
+        ? selectedType1[subject]
+        : selectedType2[subject];
+
+      if(!type) {
+        alert('Najprej izberi tip ocene.');
+        return;
+      }
+
+      const row = event.target.parentElement.parentElement;
+      row.classList.add('flash');
+
+      db.ref('assessments').push({
+        subject,
+        date: new Date().toISOString().split('T')[0],
+        type,
+        period,
+        grade,
+        createdAt: Date.now()
+      });
+
+      event.target.value = '';
+
+      setTimeout(() => {
+        row.classList.remove('flash');
+      }, 1000);
+    }
+  }
+
+  function editGrade(id) {
+
+    db.ref('assessments/' + id).once('value', snapshot => {
+
+      const item = snapshot.val();
+
+      openModal(`
+        <span class="close-btn" onclick="closeModal()">×</span>
+
+        <h2>Uredi oceno</h2>
+
+        <p>Trenutna ocena:</p>
+
+        <input type="number" id="currentGrade" value="${item.grade}">
+
+        <p style="margin-top:15px">
+          Datum vpisa:
+          ${new Date(item.createdAt).toLocaleDateString('sl-SI')}
+        </p>
+
+        <p style="margin-top:15px">Ocena popravljena s:</p>
+
+        <input type="number" id="newGrade">
+
+        <textarea id="note" placeholder="Morebitne opombe"></textarea>
+
+        <button onclick="deleteGrade('${id}')"
+          style="background:#dc2626;margin-top:15px">
+          Izbriši oceno
+        </button>
+
+        <button onclick="saveEditedGrade('${id}')">
+          Shrani popravek
+        </button>
+      `);
+    });
+  }
+
+  function saveEditedGrade(id) {
+
+    const current = document.getElementById('currentGrade').value;
+    const newer = document.getElementById('newGrade').value;
+    const note = document.getElementById('note').value;
+
+    db.ref('assessments/' + id).update({
+      grade: newer || current,
+      note
+    });
+
+    closeModal();
+  }
+
+  function deleteGrade(id) {
+
+    if(confirm('Izbrišem oceno?')) {
+      db.ref('assessments/' + id).remove();
+      closeModal();
+    }
+  }
+
+  function openCalendar() {
+
+    db.ref('assessments').once('value', snapshot => {
+
+      const data = snapshot.val() || {};
+
+      let html = `
+        <span class="close-btn" onclick="closeModal()">×</span>
+        <h2>Koledar ocenjevanj</h2>
+      `;
+
+      Object.values(data).forEach(item => {
+
+        html += `
+          <div class="assessment" style="margin-top:10px">
+            <div>
+              <div class="subject">${item.subject}</div>
+              <div>${item.date}</div>
+            </div>
+
+            <div class="type ${item.type}">
+              ${item.type.toUpperCase()}
+            </div>
+          </div>
+        `;
+      });
+
+      openModal(html);
+    });
+  }
+
+</script>
+
+</body>
+</html>
+```
+
+## Kaj moraš še narediti v Firebase
+
+1. Ustvari Firebase projekt.
+2. Omogoči Realtime Database.
+3. V Rules začasno nastavi:
+
+```json
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+```
+
+4. V HTML zamenjaj:
+
+* YOUR_API_KEY
+* YOUR_SENDER_ID
+* YOUR_APP_ID
+
+5. Shrani datoteko kot:
+
+```txt
+index.html
+```
+
+6. Odpri datoteko v brskalniku.
+
+Aplikacija je:
+
+* popolnoma responsive,
+* deluje na telefonu,
+* deluje na računalniku,
+* uporablja Firebase Realtime Database,
+* vsebuje prijavo,
+* domačo stran,
+* redovalnico,
+* urejanje ocen,
+* koledar,
+* shranjevanje podatkov,
+* modalna okna,
+* responsive meni.
