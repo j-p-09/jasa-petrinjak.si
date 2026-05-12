@@ -1,877 +1,640 @@
-# Responsive HTML aplikacija za ocene (Firebase)
-
-```html
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redovalnica</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redovalnica Aplikacija</title>
+    <style>
+        :root {
+            --bg-color: #b2f2cc;
+            --btn-green: #3ab03a;
+            --box-bg: rgba(255, 255, 255, 0.6);
+            --red-pastel: #ffb3b3;
+            --green-pastel: #b3ffb3;
+            --pisna-color: #d11a2a;
+            --ustna-color: #000000;
+            --izdelek-color: #0000ff;
+        }
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
+        .hidden { display: none !important; }
 
-    body {
-      background: #eef2f7;
-      color: #222;
-      min-height: 100vh;
-    }
+        /* Login Screen */
+        #login-view {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-box {
+            background: transparent;
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+        }
+        .login-icon {
+            font-size: 80px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #333;
+            border-radius: 25px;
+            background: transparent;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 16px;
+        }
+        .login-btn {
+            background-color: var(--btn-green);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .forgot-pass {
+            font-size: 12px;
+            color: #555;
+            text-decoration: none;
+        }
 
-    .hidden {
-      display: none !important;
-    }
+        /* Main Layout */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #555;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 10px 20px;
+            padding-bottom: 80px;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-    .screen {
-      width: 100%;
-      min-height: 100vh;
-      padding-bottom: 90px;
-    }
+        /* Dashboard */
+        .section-title { font-size: 20px; margin-top: 20px; margin-bottom: 10px; color: #222; }
+        .assessment-list { background: white; padding: 10px; min-height: 50px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .assessment-item {
+            display: flex;
+            border: 1px solid #333;
+            background: #ffe5b4; /* default pastel orange */
+            width: fit-content;
+        }
+        .assessment-item.green { background: var(--green-pastel); }
+        .assessment-item.red { background: var(--red-pastel); }
+        .assessment-name { padding: 5px 10px; font-weight: bold; border-right: 1px solid #333; display: flex; align-items: center; }
+        .assessment-action { padding: 5px 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 40px; background: rgba(255,255,255,0.5); font-weight: bold; }
+        .assessment-action:hover { background: rgba(255,255,255,0.8); }
+        
+        .action-btns { margin-top: 20px; display: flex; gap: 10px; }
+        .action-btns button { padding: 8px 15px; border: 2px solid #333; background: white; font-weight: bold; cursor: pointer; }
 
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      margin: auto;
-      padding: 20px;
-    }
+        /* Redovalnica */
+        .redovalnica-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .table-container { flex-grow: 1; background: white; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background: #fffacd; text-align: center; }
+        .grade-cell { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+        .grade-item { font-weight: bold; cursor: pointer; padding: 2px 5px; border-radius: 3px; }
+        .grade-item:hover { background: #eee; }
+        .grade-input { width: 30px; padding: 5px; border: 1px solid #aaa; background: #fafafa; }
+        
+        .type-selector { display: flex; flex-direction: column; gap: 10px; min-width: 150px; }
+        .type-btn { padding: 10px; border: 2px solid transparent; background: white; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .type-btn.active { border-color: #333; }
+        .color-pisna { color: var(--pisna-color); }
+        .color-ustna { color: var(--ustna-color); }
+        .color-izdelek { color: var(--izdelek-color); }
 
-    .card {
-      background: white;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-    }
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #222;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+        }
+        .bottom-nav button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
 
-    .login-box {
-      width: 100%;
-      max-width: 420px;
-      margin: auto;
-      margin-top: 70px;
-    }
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .modal-btns { display: flex; justify-content: space-between; margin-top: 15px; }
+        .modal-btns button { padding: 8px 15px; cursor: pointer; border: none; background: white; font-weight: bold; border-radius: 5px; }
+        .modal-btns button.primary { background: var(--btn-green); color: white; }
+        .modal-btns button.danger { background: #ff4d4d; color: white; }
 
-    h1, h2, h3 {
-      margin-bottom: 15px;
-    }
-
-    input, select, button, textarea {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #ccc;
-      margin-top: 10px;
-      font-size: 16px;
-    }
-
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: 0.2s;
-      font-weight: bold;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .welcome {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .clock {
-      font-size: 20px;
-      color: #444;
-    }
-
-    .date-title {
-      font-size: 18px;
-      margin-bottom: 15px;
-      color: #666;
-    }
-
-    .assessment {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      padding: 15px;
-      border-radius: 15px;
-      background: #f8fafc;
-      margin-bottom: 12px;
-      border: 1px solid #ddd;
-      flex-wrap: wrap;
-    }
-
-    .assessment-left {
-      flex: 1;
-    }
-
-    .subject {
-      font-weight: bold;
-      font-size: 18px;
-      margin-bottom: 5px;
-    }
-
-    .type {
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .type.pisno {
-      color: #2563eb;
-    }
-
-    .type.ustno {
-      color: #16a34a;
-    }
-
-    .type.izdelek {
-      color: #9333ea;
-    }
-
-    .grade-box {
-      width: 55px;
-      height: 55px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 14px;
-      font-size: 24px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .grade-good {
-      background: #d8f5dc;
-    }
-
-    .grade-bad {
-      background: #ffd8d8;
-    }
-
-    .edit-btn {
-      width: 55px;
-      height: 55px;
-      border-radius: 14px;
-      font-size: 24px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: white;
-      border: 1px solid #ccc;
-      cursor: pointer;
-    }
-
-    .section-title {
-      margin-top: 30px;
-      margin-bottom: 15px;
-      font-size: 22px;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: white;
-      display: flex;
-      justify-content: space-around;
-      padding: 12px 0;
-      box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
-      z-index: 999;
-    }
-
-    .nav-btn {
-      border: none;
-      background: none;
-      color: #444;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      width: auto;
-      padding: 5px 10px;
-    }
-
-    .nav-btn.active {
-      color: #2563eb;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow-x: auto;
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: center;
-      min-width: 120px;
-    }
-
-    th {
-      background: #f1f5f9;
-    }
-
-    .grade-pill {
-      display: inline-block;
-      padding: 8px 12px;
-      border-radius: 10px;
-      margin: 4px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .pill-pisno {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
-
-    .pill-ustno {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .pill-izdelek {
-      background: #f3e8ff;
-      color: #7e22ce;
-    }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      padding: 15px;
-    }
-
-    .modal-content {
-      background: white;
-      width: 100%;
-      max-width: 500px;
-      border-radius: 20px;
-      padding: 25px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .close-btn {
-      float: right;
-      font-size: 24px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .flex {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .type-select-btn {
-      flex: 1;
-      min-width: 100px;
-      background: white;
-      border: 2px solid #ccc;
-      color: black;
-    }
-
-    .type-select-btn.selected {
-      border-color: #2563eb;
-      background: #dbeafe;
-    }
-
-    .flash {
-      animation: flashGreen 1s;
-    }
-
-    @keyframes flashGreen {
-      from {
-        background: #bbf7d0;
-      }
-      to {
-        background: transparent;
-      }
-    }
-
-    @media(max-width: 768px) {
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      table {
-        font-size: 14px;
-      }
-
-      th, td {
-        padding: 8px;
-      }
-    }
-  </style>
+        /* Profile */
+        .profile-card { background: white; padding: 20px; border-radius: 10px; }
+        .profile-card p { font-size: 18px; margin: 10px 0; }
+    </style>
 </head>
 <body>
 
-<div id="loginScreen" class="screen">
-  <div class="container">
-    <div class="card login-box">
-      <h1>Prijava</h1>
-
-      <input type="text" id="username" placeholder="Uporabniško ime">
-      <input type="password" id="password" placeholder="Geslo">
-      <button onclick="login()">Prijava</button>
-
-      <p id="loginError" style="color:red;margin-top:15px"></p>
-    </div>
-  </div>
-</div>
-
-<div id="appScreen" class="screen hidden">
-
-  <div id="homePage" class="container">
-
-    <div class="topbar">
-      <div>
-        <div class="welcome">Živjo, Jaša</div>
-        <div id="todayDate" class="date-title"></div>
-      </div>
-
-      <div id="clock" class="clock"></div>
+    <div id="login-view">
+        <div class="login-box">
+            <div class="login-icon">👤</div>
+            <input type="text" id="username" class="login-input" placeholder="Uporabniško ime">
+            <input type="password" id="password" class="login-input" placeholder="Geslo">
+            <a href="#" class="forgot-pass">Forgot Password?</a><br>
+            <button class="login-btn" onclick="login()">Login</button>
+        </div>
     </div>
 
-    <div class="card">
-      <h2>Napovedana ocenjevanja</h2>
-      <div id="todayAssessments"></div>
-    </div>
+    <div id="app-wrapper" class="hidden">
+        <div class="header">
+            <div id="user-greeting">👤 Živjo, Uporabnik</div>
+            <div id="clock">00:00:00</div>
+        </div>
 
-    <div class="card">
-      <h2>Zamujena ocenjevanja brez ocene</h2>
-      <div id="pastAssessments"></div>
-    </div>
+        <div id="dashboard-view" class="content">
+            <div class="section-title">Datum - današnje ocene:</div>
+            <div id="today-assessments" class="assessment-list">
+                </div>
 
-    <div class="card">
-      <button onclick="openAddAssessment()">+ Vpiši ocenjevanje</button>
-      <button style="margin-top:10px" onclick="openCalendar()">📅 Koledar</button>
-    </div>
-  </div>
+            <div class="section-title">Nevpisane ocene</div>
+            <div id="past-assessments" class="assessment-list">
+                </div>
 
-  <div id="gradesPage" class="container hidden">
-    <div class="card">
-      <h2>Redovalnica</h2>
-
-      <div style="overflow-x:auto">
-        <table>
-          <thead>
-            <tr>
-              <th>Predmet</th>
-              <th>1. obdobje</th>
-              <th>Dodaj</th>
-              <th>2. obdobje</th>
-              <th>Dodaj</th>
-              <th>Končna</th>
-            </tr>
-          </thead>
-          <tbody id="gradeTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div id="dataPage" class="container hidden">
-    <div class="card">
-      <h2>Podatki uporabnika</h2>
-
-      <p><b>Ime:</b> Jaša</p>
-      <p><b>Priimek:</b> Petrinjak</p>
-      <p><b>Uporabniško ime:</b> pjasa</p>
-      <p><b>Geslo:</b> Gorenje 1</p>
-
-      <h3 style="margin-top:20px">Predmeti</h3>
-
-      <ul id="subjectList" style="margin-top:15px;padding-left:20px"></ul>
-    </div>
-  </div>
-
-  <div class="bottom-nav">
-    <button class="nav-btn active" onclick="showPage('homePage', this)">DOMAČA</button>
-    <button class="nav-btn" onclick="showPage('gradesPage', this)">REDOVALNICA</button>
-    <button class="nav-btn" onclick="logout()">ODJAVA</button>
-    <button class="nav-btn" onclick="showPage('dataPage', this)">PODATKI</button>
-  </div>
-</div>
-
-<div id="modal" class="modal hidden">
-  <div class="modal-content" id="modalContent"></div>
-</div>
-
-<script>
-
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://ocene-1b6fd-default-rtdb.europe-west1.firebasedatabase.app/",
-    projectId: "ocene-1b6fd",
-    storageBucket: "ocene-1b6fd.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  const subjects = [
-    "Matematika",
-    "Slovenščina",
-    "Angleščina",
-    "Kemija",
-    "Fizika",
-    "Biologija",
-    "Geografija",
-    "Zgodovina"
-  ];
-
-  let selectedType1 = {};
-  let selectedType2 = {};
-
-  function login() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    if(username === 'pjasa' && password === 'Gorenje 1') {
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('appScreen').classList.remove('hidden');
-
-      loadAssessments();
-      renderSubjects();
-      renderGradeTable();
-    } else {
-      document.getElementById('loginError').innerText = 'Napačni podatki za prijavo.';
-    }
-  }
-
-  function logout() {
-    location.reload();
-  }
-
-  function showPage(id, btn) {
-    document.querySelectorAll('#homePage, #gradesPage, #dataPage').forEach(p => p.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  }
-
-  function updateClock() {
-    const now = new Date();
-
-    document.getElementById('clock').innerText = now.toLocaleTimeString('sl-SI');
-    document.getElementById('todayDate').innerText = now.toLocaleDateString('sl-SI', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  function renderSubjects() {
-    const ul = document.getElementById('subjectList');
-    ul.innerHTML = '';
-
-    subjects.forEach(subject => {
-      ul.innerHTML += `<li style="margin-bottom:8px">${subject}</li>`;
-    });
-  }
-
-  function openModal(html) {
-    document.getElementById('modalContent').innerHTML = html;
-    document.getElementById('modal').classList.remove('hidden');
-  }
-
-  function closeModal() {
-    document.getElementById('modal').classList.add('hidden');
-  }
-
-  function openAddAssessment() {
-    let options = '';
-
-    subjects.forEach(s => {
-      options += `<option>${s}</option>`;
-    });
-
-    openModal(`
-      <span class="close-btn" onclick="closeModal()">×</span>
-
-      <h2>Dodaj ocenjevanje</h2>
-
-      <select id="newSubject">${options}</select>
-
-      <input type="date" id="newDate">
-
-      <select id="newType">
-        <option value="pisno">Pisno</option>
-        <option value="ustno">Ustno</option>
-        <option value="izdelek">Izdelek</option>
-      </select>
-
-      <select id="newPeriod">
-        <option value="1">1. ocenjevalno obdobje</option>
-        <option value="2">2. ocenjevalno obdobje</option>
-      </select>
-
-      <button onclick="saveAssessment()">Shrani</button>
-    `);
-  }
-
-  function saveAssessment() {
-    const item = {
-      subject: document.getElementById('newSubject').value,
-      date: document.getElementById('newDate').value,
-      type: document.getElementById('newType').value,
-      period: document.getElementById('newPeriod').value,
-      grade: null,
-      createdAt: Date.now()
-    };
-
-    db.ref('assessments').push(item);
-
-    closeModal();
-
-    setTimeout(loadAssessments, 500);
-  }
-
-  function loadAssessments() {
-    db.ref('assessments').on('value', snapshot => {
-
-      const todayContainer = document.getElementById('todayAssessments');
-      const pastContainer = document.getElementById('pastAssessments');
-
-      todayContainer.innerHTML = '';
-      pastContainer.innerHTML = '';
-
-      const data = snapshot.val() || {};
-      const today = new Date().toISOString().split('T')[0];
-
-      Object.entries(data).forEach(([id, item]) => {
-
-        const assessmentHTML = `
-          <div class="assessment">
-            <div class="assessment-left">
-              <div class="subject">${item.subject}</div>
-              <div class="type ${item.type}">${item.type.toUpperCase()}</div>
+            <div class="action-btns">
+                <button onclick="openAddAssessmentModal()">VPIŠI</button>
+                <button onclick="alert('Koledar funkcija v razvoju.')">KOLEDAR</button>
             </div>
+        </div>
 
-            ${item.grade ? `
-              <div class="grade-box ${item.grade == 1 ? 'grade-bad' : 'grade-good'}">
-                ${item.grade}
-              </div>
-            ` : `
-              <div class="edit-btn" onclick="openGradeModal('${id}','${item.subject}','${item.type}','${item.period}')">
-                ${item.date < today ? item.date : '✏️'}
-              </div>
-            `}
-          </div>
-        `;
+        <div id="redovalnica-view" class="content hidden">
+            <div class="redovalnica-container">
+                <div class="table-container">
+                    <table id="grades-table">
+                        <thead>
+                            <tr>
+                                <th>Predmet</th>
+                                <th>A</th>
+                                <th>Vnos A</th>
+                                <th>B</th>
+                                <th>Vnos B</th>
+                                <th>Končna</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grades-body">
+                            </tbody>
+                    </table>
+                </div>
+                <div class="type-selector">
+                    <button class="type-btn color-pisna active" onclick="selectGradeType('PISNA OCENA', this)">PISNA OCENA</button>
+                    <button class="type-btn color-ustna" onclick="selectGradeType('USTNA OCENA', this)">USTNA OCENA</button>
+                    <button class="type-btn color-izdelek" onclick="selectGradeType('IZDELEK', this)">IZDELEK</button>
+                </div>
+            </div>
+        </div>
 
-        if(item.date === today) {
-          todayContainer.innerHTML += assessmentHTML;
-        }
+        <div id="podatki-view" class="content hidden">
+            <div class="profile-card">
+                <h2>Podatki o uporabniku</h2>
+                <p><strong>Ime:</strong> Jaša</p>
+                <p><strong>Priimek:</strong> Petrinjak</p>
+                <p><strong>Uporabniško ime:</strong> pjasa</p>
+                <p><strong>Geslo:</strong> Gorenje 1</p>
+                <h3>Predmeti:</h3>
+                <p id="profile-subjects"></p>
+            </div>
+        </div>
 
-        if(item.date < today && !item.grade) {
-          pastContainer.innerHTML += assessmentHTML;
-        }
-      });
-    });
-  }
+        <div class="bottom-nav">
+            <button onclick="switchView('dashboard-view')">DOMAČA STRAN</button>
+            <button onclick="switchView('redovalnica-view')">REDOVALNICA</button>
+            <button onclick="switchView('podatki-view')">PODATKI</button>
+            <button onclick="logout()">ODJAVA</button>
+        </div>
+    </div>
 
-  function openGradeModal(id, subject, type, period) {
-    openModal(`
-      <span class="close-btn" onclick="closeModal()">×</span>
+    <div id="grade-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Vpis ocene</h3>
+            <p>Ocena za vpis v predmet <strong id="modal-subject-name"></strong> je:</p>
+            <input type="number" id="modal-grade-input" min="1" max="5" style="width: 50px; font-size: 20px; text-align:center;">
+            <p style="font-size: 12px; color: #555;">Opomba: ocena bo avtomatsko shranjena kot <span id="modal-grade-type"></span> v obrobje <span id="modal-grade-period"></span>.</p>
+            <div class="modal-btns">
+                <button onclick="closeModal('grade-modal')">Prekliči</button>
+                <button class="primary" onclick="saveDashboardGrade()">Shrani</button>
+            </div>
+        </div>
+    </div>
 
-      <h2>Ocena za predmet ${subject}</h2>
+    <div id="edit-grade-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Urejanje ocene</h3>
+            <p>Trenutna vpisana ocena je: <strong id="edit-current-grade"></strong></p>
+            <p style="font-size: 12px;">Vpisana: <span id="edit-date"></span></p>
+            <label>Ocena popravljena s:</label>
+            <input type="number" id="edit-new-grade" min="1" max="5">
+            <label>Morebitne opombe:</label>
+            <input type="text" id="edit-notes">
+            <div class="modal-btns">
+                <button class="danger" onclick="deleteGrade()">Izbriši oceno</button>
+                <button onclick="closeModal('edit-grade-modal')">Prekliči</button>
+                <button class="primary" onclick="saveEditedGrade()">Shrani popravek</button>
+            </div>
+        </div>
+    </div>
 
-      <p style="margin-top:15px">Ocena:</p>
+    <div id="add-assessment-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Vpiši ocenjevanje</h3>
+            <label>Predmet:</label>
+            <select id="add-subj"></select>
+            <label>Datum ocenjevanja:</label>
+            <input type="date" id="add-date">
+            <label>Tip ocenjevanja:</label>
+            <select id="add-type">
+                <option value="PISNA OCENA">Pisno</option>
+                <option value="USTNA OCENA">Ustno</option>
+                <option value="IZDELEK">Izdelek</option>
+            </select>
+            <label>Ocenjevalno obdobje:</label>
+            <select id="add-period">
+                <option value="A">A</option>
+                <option value="B">B</option>
+            </select>
+            <div class="modal-btns">
+                <button onclick="closeModal('add-assessment-modal')">Prekliči</button>
+                <button class="primary" onclick="saveAssessment()">Shrani</button>
+            </div>
+        </div>
+    </div>
 
-      <input type="number" min="1" max="5" id="gradeInput">
+    <script>
+        // --- CONFIG & STATE ---
+        const DB_URL = "https://ocene-1b6fd-default-rtdb.europe-west1.firebasedatabase.app/";
+        const SUBJECTS = [
+            { code: "SLO", name: "Slovenščina" }, { code: "MAT", name: "Matematika" },
+            { code: "ANJ", name: "Angleščina" }, { code: "ZGO", name: "Zgodovina" },
+            { code: "FIZ", name: "Fizika" }, { code: "KEM", name: "Kemija" },
+            { code: "ŠVZ", name: "Športna vzgoja" }, { code: "GOB", name: "Grafično oblikovanje" },
+            { code: "TRP", name: "Tipografija in reprodukcija" }, { code: "MOB", name: "Medijsko oblikovanje" },
+            { code: "ISZ", name: "Izražanje s sliko in zvokom" }, { code: "PUD", name: "Praktično usposabljanje z delom" },
+            { code: "IND", name: "Interesne dejavnosti" }, { code: "NEJ", name: "Nemščina" }
+        ];
 
-      <p style="margin-top:15px">
-        Ocena bo shranjena kot tip ${type.toUpperCase()} v ${period}. ocenjevalno obdobje.
-      </p>
+        let state = {
+            user: null,
+            assessments: {},
+            grades: {},
+            selectedGradeType: 'PISNA OCENA',
+            currentActiveAssessmentId: null,
+            currentActiveGradeId: null
+        };
 
-      <select id="borderType">
-        <option value="A">Obrobje A</option>
-        <option value="B">Obrobje B</option>
-      </select>
-
-      <button onclick="saveGrade('${id}')">Shrani</button>
-    `);
-  }
-
-  function saveGrade(id) {
-    const grade = document.getElementById('gradeInput').value;
-
-    db.ref('assessments/' + id).update({
-      grade: grade
-    });
-
-    closeModal();
-
-    setTimeout(() => {
-      loadAssessments();
-      renderGradeTable();
-    }, 500);
-  }
-
-  function renderGradeTable() {
-
-    db.ref('assessments').on('value', snapshot => {
-
-      const tbody = document.getElementById('gradeTable');
-      tbody.innerHTML = '';
-
-      const data = snapshot.val() || {};
-
-      subjects.forEach(subject => {
-
-        let first = [];
-        let second = [];
-
-        Object.entries(data).forEach(([id, item]) => {
-
-          if(item.subject === subject && item.grade) {
-
-            const pill = `
-              <span onclick="editGrade('${id}')"
-              class="grade-pill pill-${item.type}">
-                ${item.grade}
-              </span>
-            `;
-
-            if(item.period == '1') {
-              first.push(pill);
-            } else {
-              second.push(pill);
+        // --- INIT & UTILS ---
+        window.onload = () => {
+            setInterval(updateClock, 1000);
+            populateSubjectDropdowns();
+            document.getElementById('profile-subjects').innerText = SUBJECTS.map(s => s.code + ' ' + s.name).join(', ');
+            
+            // Auto login if session exists
+            if (localStorage.getItem("loggedInUser") === "pjasa") {
+                state.user = "pjasa";
+                showApp();
             }
-          }
-        });
+        };
 
-        tbody.innerHTML += `
-          <tr>
-            <td><b>${subject}</b></td>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById("clock").innerText = now.toLocaleTimeString('sl-SI', { hour: '2-digit', minute: '2-digit' });
+        }
 
-            <td>${first.join(' ')}</td>
+        // --- AUTH ---
+        function login() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+            if (user === "pjasa" && pass === "Gorenje 1") {
+                state.user = user;
+                localStorage.setItem("loggedInUser", user);
+                showApp();
+            } else {
+                alert("Napačno uporabniško ime ali geslo.");
+            }
+        }
 
-            <td>
-              <div class="flex">
-                <button class="type-select-btn"
-                  onclick="selectType('${subject}','1','pisno',this)">
-                  Pisno
-                </button>
+        function logout() {
+            state.user = null;
+            localStorage.removeItem("loggedInUser");
+            document.getElementById("login-view").classList.remove("hidden");
+            document.getElementById("app-wrapper").classList.add("hidden");
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+        }
 
-                <button class="type-select-btn"
-                  onclick="selectType('${subject}','1','ustno',this)">
-                  Ustno
-                </button>
-              </div>
+        function showApp() {
+            document.getElementById("login-view").classList.add("hidden");
+            document.getElementById("app-wrapper").classList.remove("hidden");
+            document.getElementById("user-greeting").innerText = "👤 Živjo, Jaša";
+            fetchData();
+        }
 
-              <input type="number" min="1" max="5"
-                placeholder="Ocena"
-                onkeypress="addQuickGrade(event,'${subject}','1')">
-            </td>
+        function switchView(viewId) {
+            ['dashboard-view', 'redovalnica-view', 'podatki-view'].forEach(id => {
+                document.getElementById(id).classList.add("hidden");
+            });
+            document.getElementById(viewId).classList.remove("hidden");
+            if (viewId === 'redovalnica-view') renderRedovalnica();
+        }
 
-            <td>${second.join(' ')}</td>
+        // --- FIREBASE DATA FETCH ---
+        async function fetchData() {
+            try {
+                let resA = await fetch(DB_URL + "assessments.json");
+                state.assessments = (await resA.json()) || {};
+                
+                let resG = await fetch(DB_URL + "grades.json");
+                state.grades = (await resG.json()) || {};
+                
+                renderDashboard();
+                renderRedovalnica();
+            } catch (e) {
+                console.error("Napaka pri branju iz Firebase:", e);
+            }
+        }
 
-            <td>
-              <div class="flex">
-                <button class="type-select-btn"
-                  onclick="selectType('${subject}','2','pisno',this)">
-                  Pisno
-                </button>
+        // --- DASHBOARD RENDER ---
+        function renderDashboard() {
+            const todayContainer = document.getElementById("today-assessments");
+            const pastContainer = document.getElementById("past-assessments");
+            todayContainer.innerHTML = '';
+            pastContainer.innerHTML = '';
 
-                <button class="type-select-btn"
-                  onclick="selectType('${subject}','2','ustno',this)">
-                  Ustno
-                </button>
-              </div>
+            const todayStr = new Date().toISOString().split('T')[0];
 
-              <input type="number" min="1" max="5"
-                placeholder="Ocena"
-                onkeypress="addQuickGrade(event,'${subject}','2')">
-            </td>
+            Object.keys(state.assessments).forEach(id => {
+                const a = state.assessments[id];
+                if (a.completed) return; // Že vpisano kot ocena (ali ignoriramo)
 
-            <td contenteditable="true">-</td>
-          </tr>
-        `;
-      });
-    });
-  }
+                // Check if this assessment already has a grade in grades db linked to it
+                const hasGrade = Object.values(state.grades).some(g => g.assessmentId === id);
+                
+                const el = document.createElement("div");
+                el.className = "assessment-item";
+                
+                // Color formatting logic for grades (if grade exists)
+                let actionHtml = '';
+                if (hasGrade) {
+                    const gradeVal = Object.values(state.grades).find(g => g.assessmentId === id).value;
+                    el.classList.add(gradeVal == 1 ? "red" : "green");
+                    actionHtml = `<div class="assessment-action">${gradeVal}</div>`;
+                } else {
+                    const displayDate = new Date(a.date).toLocaleDateString('sl-SI', {day: 'numeric', month: 'numeric', year: 'numeric'});
+                    const isToday = a.date === todayStr;
+                    actionHtml = `<div class="assessment-action" onclick="openGradeModal('${id}')">${isToday ? '✏️' : displayDate}</div>`;
+                }
 
-  function selectType(subject, period, type, btn) {
+                // Text coloring based on type
+                let colorClass = "color-ustna";
+                if (a.type === "PISNA OCENA") colorClass = "color-pisna";
+                if (a.type === "IZDELEK") colorClass = "color-izdelek";
 
-    if(period == '1') {
-      selectedType1[subject] = type;
-    } else {
-      selectedType2[subject] = type;
-    }
+                el.innerHTML = `
+                    <div class="assessment-name ${colorClass}">${a.subject}</div>
+                    ${actionHtml}
+                `;
 
-    btn.parentElement.querySelectorAll('button').forEach(b => {
-      b.classList.remove('selected');
-    });
+                if (a.date === todayStr) {
+                    todayContainer.appendChild(el);
+                } else if (a.date < todayStr && !hasGrade) {
+                    pastContainer.appendChild(el);
+                }
+            });
+        }
 
-    btn.classList.add('selected');
-  }
+        // --- REDOVALNICA RENDER ---
+        function renderRedovalnica() {
+            const tbody = document.getElementById("grades-body");
+            tbody.innerHTML = '';
 
-  function addQuickGrade(event, subject, period) {
+            SUBJECTS.forEach(subj => {
+                // Find grades for this subject
+                const subjGrades = Object.entries(state.grades).filter(([id, g]) => g.subject === subj.code);
+                const gradesA = subjGrades.filter(([id, g]) => g.period === 'A');
+                const gradesB = subjGrades.filter(([id, g]) => g.period === 'B');
 
-    if(event.key === 'Enter') {
+                const formatGrades = (gradesList) => {
+                    return gradesList.map(([id, g]) => {
+                        let colorClass = g.type === 'PISNA OCENA' ? 'color-pisna' : (g.type === 'IZDELEK' ? 'color-izdelek' : 'color-ustna');
+                        let text = g.originalValue && g.originalValue !== g.value ? `<span style="font-size:10px; text-decoration:line-through;">${g.originalValue}</span> ${g.value}` : g.value;
+                        return `<span class="grade-item ${colorClass}" onclick="openEditGradeModal('${id}')">${text}</span>`;
+                    }).join(' ');
+                };
 
-      const grade = event.target.value;
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${subj.code} ${subj.name}</td>
+                    <td class="grade-cell">${formatGrades(gradesA)}</td>
+                    <td><input type="number" class="grade-input" min="1" max="5" onkeypress="handleQuickGrade(event, '${subj.code}', 'A', this)"></td>
+                    <td class="grade-cell">${formatGrades(gradesB)}</td>
+                    <td><input type="number" class="grade-input" min="1" max="5" onkeypress="handleQuickGrade(event, '${subj.code}', 'B', this)"></td>
+                    <td><input type="number" class="grade-input" style="width:40px;"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
 
-      const type = period == '1'
-        ? selectedType1[subject]
-        : selectedType2[subject];
+        function selectGradeType(type, btn) {
+            state.selectedGradeType = type;
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
 
-      if(!type) {
-        alert('Najprej izberi tip ocene.');
-        return;
-      }
+        // --- ACTIONS & MODALS ---
+        function populateSubjectDropdowns() {
+            const addSubj = document.getElementById("add-subj");
+            SUBJECTS.forEach(s => {
+                let opt = document.createElement("option");
+                opt.value = s.code;
+                opt.innerText = s.code + ' ' + s.name;
+                addSubj.appendChild(opt);
+            });
+        }
 
-      const row = event.target.parentElement.parentElement;
-      row.classList.add('flash');
+        function closeModal(id) {
+            document.getElementById(id).classList.add("hidden");
+        }
 
-      db.ref('assessments').push({
-        subject,
-        date: new Date().toISOString().split('T')[0],
-        type,
-        period,
-        grade,
-        createdAt: Date.now()
-      });
+        // 1. Dashboard Pencil -> Add Grade
+        function openGradeModal(assessmentId) {
+            state.currentActiveAssessmentId = assessmentId;
+            const a = state.assessments[assessmentId];
+            document.getElementById("modal-subject-name").innerText = a.subject;
+            document.getElementById("modal-grade-type").innerText = a.type;
+            document.getElementById("modal-grade-period").innerText = a.period;
+            document.getElementById("modal-grade-input").value = "";
+            document.getElementById("grade-modal").classList.remove("hidden");
+        }
 
-      event.target.value = '';
+        async function saveDashboardGrade() {
+            const val = document.getElementById("modal-grade-input").value;
+            if (!val || val < 1 || val > 5) return alert("Vnesite veljavno oceno (1-5)");
 
-      setTimeout(() => {
-        row.classList.remove('flash');
-      }, 1000);
-    }
-  }
+            const a = state.assessments[state.currentActiveAssessmentId];
+            const gradeData = {
+                subject: a.subject,
+                value: parseInt(val),
+                type: a.type,
+                period: a.period,
+                date: new Date().toISOString().split('T')[0],
+                assessmentId: state.currentActiveAssessmentId
+            };
 
-  function editGrade(id) {
+            await fetch(DB_URL + "grades.json", {
+                method: "POST",
+                body: JSON.stringify(gradeData)
+            });
 
-    db.ref('assessments/' + id).once('value', snapshot => {
+            closeModal('grade-modal');
+            await fetchData(); // Refresh
+        }
 
-      const item = snapshot.val();
+        // 2. Redovalnica -> Quick Add Grade via Enter
+        async function handleQuickGrade(e, subjectCode, period, inputEl) {
+            if (e.key === 'Enter') {
+                const val = inputEl.value;
+                if (!val || val < 1 || val > 5) return;
+                
+                const gradeData = {
+                    subject: subjectCode,
+                    value: parseInt(val),
+                    type: state.selectedGradeType,
+                    period: period,
+                    date: new Date().toISOString().split('T')[0]
+                };
 
-      openModal(`
-        <span class="close-btn" onclick="closeModal()">×</span>
+                inputEl.style.backgroundColor = "#b3ffb3"; // Highlight green briefly
+                await fetch(DB_URL + "grades.json", {
+                    method: "POST",
+                    body: JSON.stringify(gradeData)
+                });
+                
+                inputEl.value = '';
+                inputEl.style.backgroundColor = "#fafafa";
+                await fetchData();
+            }
+        }
 
-        <h2>Uredi oceno</h2>
+        // 3. Edit Existing Grade
+        function openEditGradeModal(gradeId) {
+            state.currentActiveGradeId = gradeId;
+            const g = state.grades[gradeId];
+            document.getElementById("edit-current-grade").innerText = g.value;
+            document.getElementById("edit-date").innerText = new Date(g.date).toLocaleDateString('sl-SI');
+            document.getElementById("edit-new-grade").value = "";
+            document.getElementById("edit-notes").value = g.notes || "";
+            document.getElementById("edit-grade-modal").classList.remove("hidden");
+        }
 
-        <p>Trenutna ocena:</p>
+        async function saveEditedGrade() {
+            const newVal = document.getElementById("edit-new-grade").value;
+            const notes = document.getElementById("edit-notes").value;
+            const g = state.grades[state.currentActiveGradeId];
+            
+            let updateData = { notes: notes };
+            if (newVal && newVal >= 1 && newVal <= 5) {
+                updateData.originalValue = g.originalValue || g.value;
+                updateData.value = parseInt(newVal);
+            }
 
-        <input type="number" id="currentGrade" value="${item.grade}">
+            await fetch(DB_URL + `grades/${state.currentActiveGradeId}.json`, {
+                method: "PATCH",
+                body: JSON.stringify(updateData)
+            });
 
-        <p style="margin-top:15px">
-          Datum vpisa:
-          ${new Date(item.createdAt).toLocaleDateString('sl-SI')}
-        </p>
+            closeModal('edit-grade-modal');
+            await fetchData();
+        }
 
-        <p style="margin-top:15px">Ocena popravljena s:</p>
+        async function deleteGrade() {
+            if(confirm("Zagotovo izbrišem oceno?")) {
+                await fetch(DB_URL + `grades/${state.currentActiveGradeId}.json`, { method: "DELETE" });
+                closeModal('edit-grade-modal');
+                await fetchData();
+            }
+        }
 
-        <input type="number" id="newGrade">
+        // 4. Add Assessment manually
+        function openAddAssessmentModal() {
+            document.getElementById("add-date").value = new Date().toISOString().split('T')[0];
+            document.getElementById("add-assessment-modal").classList.remove("hidden");
+        }
 
-        <textarea id="note" placeholder="Morebitne opombe"></textarea>
+        async function saveAssessment() {
+            const data = {
+                subject: document.getElementById("add-subj").value,
+                date: document.getElementById("add-date").value,
+                type: document.getElementById("add-type").value,
+                period: document.getElementById("add-period").value
+            };
 
-        <button onclick="deleteGrade('${id}')"
-          style="background:#dc2626;margin-top:15px">
-          Izbriši oceno
-        </button>
+            await fetch(DB_URL + "assessments.json", {
+                method: "POST",
+                body: JSON.stringify(data)
+            });
 
-        <button onclick="saveEditedGrade('${id}')">
-          Shrani popravek
-        </button>
-      `);
-    });
-  }
-
-  function saveEditedGrade(id) {
-
-    const current = document.getElementById('currentGrade').value;
-    const newer = document.getElementById('newGrade').value;
-    const note = document.getElementById('note').value;
-
-    db.ref('assessments/' + id).update({
-      grade: newer || current,
-      note
-    });
-
-    closeModal();
-  }
-
-  function deleteGrade(id) {
-
-    if(confirm('Izbrišem oceno?')) {
-      db.ref('assessments/' + id).remove();
-      closeModal();
-    }
-  }
-
-  function openCalendar() {
-
-    db.ref('assessments').once('value', snapshot => {
-
-      const data = snapshot.val() || {};
-
-      let html = `
-        <span class="close-btn" onclick="closeModal()">×</span>
-        <h2>Koledar ocenjevanj</h2>
-      `;
-
-      Object.values(data).forEach(item => {
-
-        html += `
-          <div class="assessment" style="margin-top:10px">
-            <div>
-              <div class="subject">${item.subject}</div>
-              <div>${item.date}</div>
-            </div>
-
-            <div class="type ${item.type}">
-              ${item.type.toUpperCase()}
-            </div>
-          </div>
-        `;
-      });
-
-      openModal(html);
-    });
-  }
-
-</script>
-
+            closeModal('add-assessment-modal');
+            await fetchData();
+        }
+    </script>
 </body>
 </html>
