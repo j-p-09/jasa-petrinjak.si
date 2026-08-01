@@ -79,6 +79,9 @@
             margin-top: 90px;
             padding: 20px;
             min-height: calc(100vh - 90px);
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Obvestilo */
@@ -139,6 +142,14 @@
         }
 
         /* PREDSTAVLJENA KNJIŽNICA (Začetna stran) */
+        .portfolio-title {
+            color: var(--dark);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            padding-left: 5px;
+            border-left: 4px solid var(--primary);
+        }
+
         .featured-container {
             display: flex;
             align-items: center;
@@ -149,19 +160,20 @@
             cursor: pointer;
             overflow: hidden;
             position: relative;
-            min-height: 280px;
+            min-height: 320px;
             transition: transform 0.3s;
         }
         .featured-container:hover {
             transform: translateY(-5px);
         }
         .featured-left {
-            flex: 2;
+            flex: 1.5;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
             padding-right: 20px;
+            z-index: 10;
         }
         .animated-arrow {
             font-size: 2.5rem;
@@ -187,7 +199,7 @@
         .featured-right {
             flex: 1;
             position: relative;
-            min-height: 220px;
+            min-height: 250px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -199,17 +211,22 @@
         }
         .featured-images img {
             position: absolute;
-            width: 130px;
-            height: 130px;
+            width: 120px;
+            height: 120px;
             object-fit: cover;
             border-radius: 12px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
         }
         
-        /* 3 Plavajoče slike */
-        .f-img-1 { top: 0%; left: 5%; z-index: 3; animation: float1 4s infinite ease-in-out; }
-        .f-img-2 { top: 35%; right: 5%; z-index: 2; animation: float2 5s infinite ease-in-out; }
-        .f-img-3 { bottom: -10%; left: 40%; z-index: 1; animation: float3 6s infinite ease-in-out; }
+        /* Do 8 plavajočih slik */
+        .f-img-1 { top: 0%; left: 0%; z-index: 8; animation: float1 4s infinite ease-in-out; }
+        .f-img-2 { top: 35%; right: 0%; z-index: 7; animation: float2 5s infinite ease-in-out; }
+        .f-img-3 { bottom: -10%; left: 40%; z-index: 6; animation: float3 6s infinite ease-in-out; }
+        .f-img-4 { top: 10%; right: 40%; z-index: 5; animation: float2 4.5s infinite ease-in-out; width: 90px !important; height: 90px !important; }
+        .f-img-5 { bottom: 15%; right: 10%; z-index: 4; animation: float1 5.5s infinite ease-in-out; }
+        .f-img-6 { top: 50%; left: 10%; z-index: 3; animation: float3 4.2s infinite ease-in-out; width: 100px !important; height: 100px !important; }
+        .f-img-7 { bottom: 5%; left: 10%; z-index: 2; animation: float2 5.8s infinite ease-in-out; }
+        .f-img-8 { top: 25%; left: 25%; z-index: 1; animation: float1 6.5s infinite ease-in-out; }
 
         @keyframes float1 { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(-1deg); } }
         @keyframes float2 { 0%, 100% { transform: translateY(0) rotate(5deg); } 50% { transform: translateY(-8px) rotate(8deg); } }
@@ -221,32 +238,88 @@
             .animated-arrow { animation: bounceDown 1.5s infinite; }
             @keyframes bounceDown { 0%, 100% { transform: translateY(0) rotate(90deg); } 50% { transform: translateY(12px) rotate(90deg); } }
             .featured-right { width: 100%; min-height: 250px; }
-            .f-img-1 { width: 100px; height: 100px; }
-            .f-img-2 { width: 100px; height: 100px; }
-            .f-img-3 { width: 100px; height: 100px; }
+            .featured-images img { width: 90px; height: 90px; }
         }
 
-
-        /* Galerija / Knjižnice */
+        /* Galerija / Knjižnice - MASONRY LAYOUT */
         .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
+            column-count: 3;
+            column-gap: 15px;
+            margin-top: 20px;
         }
+        @media (max-width: 900px) { .gallery-grid { column-count: 2; } }
+        @media (max-width: 500px) { .gallery-grid { column-count: 1; } }
+
         .gallery-item {
+            break-inside: avoid;
+            margin-bottom: 15px;
             position: relative;
             cursor: pointer;
             border-radius: 8px;
             overflow: hidden;
-            aspect-ratio: 1;
+            display: inline-block;
+            width: 100%;
         }
         .gallery-item img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            display: block;
             transition: transform 0.3s;
         }
-        .gallery-item:hover img { transform: scale(1.05); }
+        .gallery-item:hover img { transform: scale(1.03); }
+
+        /* Tutorial Animacija */
+        .tutorial-banner {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .tut-anim-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+        .tut-square {
+            width: 100%;
+            height: 100%;
+            background: var(--light);
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            animation: pulseSquare 2s infinite;
+        }
+        .tut-hand {
+            position: absolute;
+            bottom: -15px;
+            right: -15px;
+            font-size: 1.5rem;
+            color: var(--dark);
+            animation: clickHand 2s infinite;
+            z-index: 2;
+        }
+        .tutorial-text {
+            color: var(--secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        @keyframes clickHand {
+            0% { transform: translate(15px, 15px); }
+            40% { transform: translate(0, 0); }
+            50% { transform: scale(0.8); }
+            60% { transform: scale(1); }
+            100% { transform: translate(15px, 15px); }
+        }
+        @keyframes pulseSquare {
+            0%, 100% { transform: scale(1); background: var(--light); }
+            45% { transform: scale(1); background: var(--light); }
+            50% { transform: scale(0.95); background: var(--secondary); }
+            60% { transform: scale(1.05); background: var(--light); }
+            70% { transform: scale(1); }
+        }
 
         /* Lightbox (Povečana slika) */
         #lightbox {
@@ -283,7 +356,6 @@
         /* Watermark spremembe */
         .watermark-icon {
             position: absolute;
-            /* Na sredini slike, čisto malo višje (48%) */
             top: 48%; 
             left: 50%;
             transform: translate(-50%, -50%);
@@ -312,10 +384,12 @@
             text-align: left;
         }
         .admin-table th { background-color: var(--light); color: var(--dark); }
-        .admin-form-row { margin-bottom: 15px; }
-        .admin-form-row label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .admin-form-row input, .admin-form-row select {
-            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;
+        
+        /* Edit view slika - override za masonry izkušnjo */
+        #editLibImages .gallery-item {
+            width: auto;
+            display: inline-block;
+            break-inside: avoid;
         }
 
         .view-section { display: none; }
@@ -324,7 +398,7 @@
 </head>
 <body>
 
-    <!-- Header z navigacijo (ZAMENJANA POZICIJA) -->
+    <!-- Header z navigacijo -->
     <header>
         <div class="logo-container" onclick="showView('homeView')">
             <!-- LOGOTIP -->
@@ -339,8 +413,9 @@
             <div class="notice-banner">
                 Spletna stran je še v nastajanju...
             </div>
+            
             <div id="featuredLibraryContainer">
-                <!-- Vsebina se generira avtomatsko -->
+                <!-- Vsebina se generira avtomatsko ali prikaže "Nalagam" -->
             </div>
         </div>
 
@@ -348,6 +423,16 @@
         <div id="libraryView" class="view-section">
             <button class="btn btn-outline" onclick="showView('homeView')"><i class="fa-solid fa-arrow-left"></i> Nazaj</button>
             <h2 id="libTitle" style="margin: 20px 0; color: var(--primary);"></h2>
+            
+            <!-- TUTORIAL ANIMACIJA -->
+            <div class="tutorial-banner">
+                <div class="tut-anim-container">
+                    <div class="tut-square"></div>
+                    <i class="fa-solid fa-hand-pointer tut-hand"></i>
+                </div>
+                <div class="tutorial-text">Klikni na sliko za povečavo</div>
+            </div>
+
             <div id="libGrid" class="gallery-grid"></div>
         </div>
 
@@ -419,6 +504,10 @@
                             <option value="true">DA</option>
                         </select>
                     </td>
+                </tr>
+                <tr>
+                    <td>Število plavajočih slik na prvi strani (0-8)</td>
+                    <td><input type="number" id="editFloatingCount" min="0" max="8" value="3"></td>
                 </tr>
             </table>
 
@@ -493,7 +582,7 @@
             <img id="lightboxImg" src="" alt="Fotografija">
             <i class="fa-solid fa-lock watermark-icon" id="watermarkIcon"></i>
         </div>
-        <!-- NOV WATERMARK TEKST -->
+        <!-- WATERMARK TEKST -->
         <div class="watermark-text" id="watermarkText">Ni aktivne kode za neomejen dostop.<br>Slika prikazuje predogled.</div>
         <a id="downloadBtn" style="display:none; color:white; text-decoration:none; margin-top:15px; border:1px solid white; padding:8px 15px; border-radius:5px;" download="fotografija.jpg">Prenesi fotografijo</a>
     </div>
@@ -513,6 +602,7 @@
         // 2. GLOBALNE SPREMENLJIVKE IN LOKALNI PODATKI
         // ==========================================
         let librariesData = {};
+        let isDataLoaded = false;
         
         // Pridobi aktivne kode iz lokalne shrambe
         function getActiveCodes() {
@@ -532,6 +622,8 @@
         // ==========================================
         db.ref('libraries').on('value', (snapshot) => {
             librariesData = snapshot.val() || {};
+            isDataLoaded = true;
+            
             // Osveži trenuten pogled, če se podatki spremenijo
             if (document.getElementById('homeView').classList.contains('active')) {
                 renderHome();
@@ -570,6 +662,16 @@
 
         function renderHome() {
             const container = document.getElementById('featuredLibraryContainer');
+            
+            if (!isDataLoaded) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 50px;">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size:3rem; color:var(--primary); margin-bottom:15px;"></i>
+                        <h3 style="color:var(--dark);">NALAGAM DATABASE...</h3>
+                    </div>`;
+                return;
+            }
+
             container.innerHTML = '';
 
             // Najdi featured knjižnico
@@ -596,7 +698,10 @@
                 hasAccess = false;
             }
 
-            let html = `<div class="featured-container" onclick="openLibrary('${featuredLibId}')">`;
+            let html = `
+                <h1 class="portfolio-title">Moj portfelj</h1>
+                <div class="featured-container" onclick="openLibrary('${featuredLibId}')">
+            `;
 
             if (!hasAccess) {
                 html += `<div style="width:100%; padding: 40px; text-align:center; background:#f0f0f0; border-radius:8px;">
@@ -605,13 +710,16 @@
                          </div>`;
             } else {
                 
-                // Priprava 3 plavajočih slik
+                // Določi število plavajočih slik (0-8, privzeto 3 če ni nastavljeno)
+                let floatCount = featuredLib.floatingCount !== undefined ? parseInt(featuredLib.floatingCount) : 3;
+                if (floatCount > 8) floatCount = 8;
+                
                 let imgsHtml = '';
                 let imgKeys = Object.keys(featuredLib.images || {});
                 
-                if (imgKeys.length > 0) {
+                if (imgKeys.length > 0 && floatCount > 0) {
                     imgsHtml = '<div class="featured-images">';
-                    for (let i = 0; i < Math.min(3, imgKeys.length); i++) {
+                    for (let i = 0; i < Math.min(floatCount, imgKeys.length); i++) {
                         imgsHtml += `<img src="${featuredLib.images[imgKeys[i]]}" class="f-img-${i+1}" alt="Slika predogleda">`;
                     }
                     imgsHtml += '</div>';
@@ -643,6 +751,11 @@
                 return;
             }
 
+            // Povečaj števec ogledov (Views) s pomočjo transakcije za zanesljivost
+            db.ref('libraries/' + libId + '/views').transaction(function(currentViews) {
+                return (currentViews || 0) + 1;
+            });
+
             document.getElementById('libTitle').innerText = lib.title;
             const grid = document.getElementById('libGrid');
             grid.innerHTML = '';
@@ -672,7 +785,6 @@
                 
                 // Osveži pogled če smo v knjižnici
                 if (document.getElementById('libraryView').classList.contains('active')) {
-                    // Ponovno zgenerira in preveri pravice
                     showView('homeView'); 
                 } else {
                     renderHome();
@@ -694,10 +806,8 @@
             
             // Logika prikaza glede na stopnje
             if (lib.level === '0' || hasValidCode) {
-                // Poln dostop
                 icon.style.display = 'none';
                 text.style.display = 'none';
-                
                 if (lib.download === 'true') {
                     downloadBtn.style.display = 'inline-block';
                     downloadBtn.href = imgData;
@@ -705,7 +815,6 @@
                     downloadBtn.style.display = 'none';
                 }
             } else {
-                // Stopnja 1 brez kode (Stopnja 2 sploh ne pride do sem)
                 icon.style.display = 'block';
                 text.style.display = 'block';
                 downloadBtn.style.display = 'none';
@@ -757,6 +866,7 @@
                     <tr>
                         <th>Naslov</th>
                         <th>Stopnja</th>
+                        <th>Ogledi</th>
                         <th>Akcije</th>
                     </tr>
             `;
@@ -767,6 +877,7 @@
                     <tr>
                         <td>${lib.title} ${lib.featured === 'true' ? '<b>(Izpostavljeno)</b>' : ''}</td>
                         <td>${lib.level}</td>
+                        <td><b>${lib.views || 0}</b></td>
                         <td>
                             <button class="btn" style="padding:5px 10px;" onclick="openLibraryEditor('${id}')">Uredi</button>
                             <button class="btn btn-outline" style="padding:5px 10px;" onclick="showAccessCode('${id}')">Koda</button>
@@ -825,6 +936,7 @@
                 document.getElementById('editCode').value = lib.code || '';
                 document.getElementById('editDownload').value = lib.download || 'false';
                 document.getElementById('editFeatured').value = lib.featured || 'false';
+                document.getElementById('editFloatingCount').value = lib.floatingCount !== undefined ? lib.floatingCount : '3';
                 
                 // Prikaži obstoječe slike za brisanje
                 const imgContainer = document.getElementById('editLibImages');
@@ -834,7 +946,7 @@
                         div.className = 'gallery-item';
                         div.innerHTML = `
                             <img src="${lib.images[imgId]}">
-                            <button class="btn btn-danger" style="position:absolute; top:5px; right:5px; padding:2px 8px;" onclick="deleteImage('${id}', '${imgId}')">X</button>
+                            <button class="btn btn-danger" style="position:absolute; top:5px; right:5px; padding:2px 8px; z-index:5;" onclick="deleteImage('${id}', '${imgId}')">X</button>
                         `;
                         imgContainer.appendChild(div);
                     }
@@ -847,6 +959,7 @@
                 document.getElementById('editCode').value = '';
                 document.getElementById('editDownload').value = 'false';
                 document.getElementById('editFeatured').value = 'false';
+                document.getElementById('editFloatingCount').value = '3';
             }
 
             toggleCodeInput();
@@ -866,10 +979,11 @@
                 dateValue: document.getElementById('editDateValue').value,
                 code: document.getElementById('editCode').value,
                 download: document.getElementById('editDownload').value,
-                featured: document.getElementById('editFeatured').value
+                featured: document.getElementById('editFeatured').value,
+                floatingCount: document.getElementById('editFloatingCount').value
             };
 
-            // Če označimo novo kot featured, moramo ostalim odstraniti featured status (samo ena naenkrat)
+            // Če označimo novo kot featured, moramo ostalim odstraniti featured status
             if (libData.featured === 'true') {
                 for (let key in librariesData) {
                     if (key !== id) {
@@ -878,9 +992,12 @@
                 }
             }
 
+            // Shrani view števec, če še ne obstaja
+            if (isNew) libData.views = 0;
+
             db.ref('libraries/' + id).update(libData).then(() => {
                 alert("Podatki knjižnice shranjeni!");
-                document.getElementById('editLibId').value = id; // V primeru da dodajamo slike naknadno
+                document.getElementById('editLibId').value = id; 
             });
         }
 
@@ -951,12 +1068,12 @@
         function deleteImage(libId, imgId) {
             if (confirm("Izbrišem to sliko?")) {
                 db.ref('libraries/' + libId + '/images/' + imgId).remove().then(() => {
-                    openLibraryEditor(libId); // Osveži pogled
+                    openLibraryEditor(libId); 
                 });
             }
         }
 
-        // Inicializacija ob nalaganju strani
+        // Inicializacija ob nalaganju strani (prikaže "NALAGAM DATABASE")
         window.onload = () => {
             renderHome();
         };
