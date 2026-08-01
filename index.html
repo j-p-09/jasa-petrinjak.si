@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaša Petrinjak - Fotografija</title>
+    <title>Jaša Petrinjak</title>
     
     <!-- Firebase SDK (Version 8 za enostavno integracijo v eno datoteko) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -138,6 +138,95 @@
             border-radius: 4px;
         }
 
+        /* PREDSTAVLJENA KNJIŽNICA (Začetna stran) */
+        .featured-container {
+            display: flex;
+            align-items: center;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 30px;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            min-height: 280px;
+            transition: transform 0.3s;
+        }
+        .featured-container:hover {
+            transform: translateY(-5px);
+        }
+        .featured-left {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            padding-right: 20px;
+        }
+        .animated-arrow {
+            font-size: 2.5rem;
+            color: var(--primary);
+            animation: bounceRight 1.5s infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes bounceRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(12px); }
+        }
+        .featured-title {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        .featured-subtitle {
+            color: var(--secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .featured-right {
+            flex: 1;
+            position: relative;
+            min-height: 220px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .featured-images {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .featured-images img {
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        
+        /* 3 Plavajoče slike */
+        .f-img-1 { top: 0%; left: 5%; z-index: 3; animation: float1 4s infinite ease-in-out; }
+        .f-img-2 { top: 35%; right: 5%; z-index: 2; animation: float2 5s infinite ease-in-out; }
+        .f-img-3 { bottom: -10%; left: 40%; z-index: 1; animation: float3 6s infinite ease-in-out; }
+
+        @keyframes float1 { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(-1deg); } }
+        @keyframes float2 { 0%, 100% { transform: translateY(0) rotate(5deg); } 50% { transform: translateY(-8px) rotate(8deg); } }
+        @keyframes float3 { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(10px) rotate(3deg); } }
+
+        @media (max-width: 768px) {
+            .featured-container { flex-direction: column; text-align: center; }
+            .featured-left { align-items: center; padding-right: 0; margin-bottom: 30px; }
+            .animated-arrow { animation: bounceDown 1.5s infinite; }
+            @keyframes bounceDown { 0%, 100% { transform: translateY(0) rotate(90deg); } 50% { transform: translateY(12px) rotate(90deg); } }
+            .featured-right { width: 100%; min-height: 250px; }
+            .f-img-1 { width: 100px; height: 100px; }
+            .f-img-2 { width: 100px; height: 100px; }
+            .f-img-3 { width: 100px; height: 100px; }
+        }
+
+
         /* Galerija / Knjižnice */
         .gallery-grid {
             display: grid;
@@ -159,29 +248,22 @@
         }
         .gallery-item:hover img { transform: scale(1.05); }
 
-        /* Vrtiljak za začetno stran (Sneak peek) */
-        .carousel {
-            display: flex;
-            overflow-x: auto;
-            gap: 15px;
-            padding: 10px 0;
-            scroll-snap-type: x mandatory;
-        }
-        .carousel .gallery-item {
-            min-width: 250px;
-            scroll-snap-align: start;
-        }
-
         /* Lightbox (Povečana slika) */
         #lightbox {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             display: none;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             z-index: 3000;
+        }
+        .watermark-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         #lightbox img {
             max-width: 90%;
@@ -195,26 +277,27 @@
             color: white;
             font-size: 2rem;
             cursor: pointer;
+            z-index: 3010;
         }
         
-        /* Watermark */
-        .watermark-container {
-            position: relative;
-            display: inline-block;
-        }
+        /* Watermark spremembe */
         .watermark-icon {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
-            font-size: 3rem;
-            color: rgba(255, 255, 255, 0.4);
+            /* Na sredini slike, čisto malo višje (48%) */
+            top: 48%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: rgba(255, 255, 255, 0.45);
             pointer-events: none;
+            text-shadow: 0 0 15px rgba(0,0,0,0.3);
         }
         .watermark-text {
             color: white;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            opacity: 0.8;
+            margin-top: 20px;
+            font-size: 1rem;
+            opacity: 0.9;
+            text-align: center;
         }
 
         /* Administracija tabele */
@@ -241,13 +324,13 @@
 </head>
 <body>
 
-    <!-- Header z navigacijo -->
+    <!-- Header z navigacijo (ZAMENJANA POZICIJA) -->
     <header>
-        <button class="info-btn" onclick="openModal('infoModal')"><i class="fa-regular fa-circle-question"></i></button>
         <div class="logo-container" onclick="showView('homeView')">
             <!-- LOGOTIP -->
             <img src="logo.png" alt="Jaša Petrinjak Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'">
         </div>
+        <button class="info-btn" onclick="openModal('infoModal')"><i class="fa-regular fa-circle-question"></i></button>
     </header>
 
     <main>
@@ -410,7 +493,8 @@
             <img id="lightboxImg" src="" alt="Fotografija">
             <i class="fa-solid fa-lock watermark-icon" id="watermarkIcon"></i>
         </div>
-        <div class="watermark-text" id="watermarkText">Ni aktivne kode</div>
+        <!-- NOV WATERMARK TEKST -->
+        <div class="watermark-text" id="watermarkText">Ni aktivne kode za neomejen dostop.<br>Slika prikazuje predogled.</div>
         <a id="downloadBtn" style="display:none; color:white; text-decoration:none; margin-top:15px; border:1px solid white; padding:8px 15px; border-radius:5px;" download="fotografija.jpg">Prenesi fotografijo</a>
     </div>
 
@@ -512,33 +596,35 @@
                 hasAccess = false;
             }
 
-            let html = `
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                    <h2 style="color: var(--primary); margin-bottom: 15px;">${featuredLib.title}</h2>
-            `;
+            let html = `<div class="featured-container" onclick="openLibrary('${featuredLibId}')">`;
 
             if (!hasAccess) {
-                html += `<div style="padding: 40px; text-align:center; background:#f0f0f0; border-radius:8px;">
+                html += `<div style="width:100%; padding: 40px; text-align:center; background:#f0f0f0; border-radius:8px;">
                             <i class="fa-solid fa-lock" style="font-size:3rem; color:#ccc; margin-bottom:10px;"></i>
                             <p>Ta knjižnica je zaklenjena (Stopnja 2). Za ogled vnesite kodo v info meniju.</p>
                          </div>`;
             } else {
-                // Sneak peak vrtiljak (prvih par slik)
-                let imagesHtml = '';
-                let count = 0;
-                for (let imgId in featuredLib.images) {
-                    if (count > 5) break; // Prikaži samo prvih 6 v vrtiljaku
-                    imagesHtml += `
-                        <div class="gallery-item" onclick="openLibrary('${featuredLibId}')">
-                            <img src="${featuredLib.images[imgId]}" alt="Sneak peek">
-                        </div>`;
-                    count++;
+                
+                // Priprava 3 plavajočih slik
+                let imgsHtml = '';
+                let imgKeys = Object.keys(featuredLib.images || {});
+                
+                if (imgKeys.length > 0) {
+                    imgsHtml = '<div class="featured-images">';
+                    for (let i = 0; i < Math.min(3, imgKeys.length); i++) {
+                        imgsHtml += `<img src="${featuredLib.images[imgKeys[i]]}" class="f-img-${i+1}" alt="Slika predogleda">`;
+                    }
+                    imgsHtml += '</div>';
                 }
 
                 html += `
-                    <div class="carousel">${imagesHtml}</div>
-                    <div style="text-align:center; margin-top:20px;">
-                        <button class="btn" onclick="openLibrary('${featuredLibId}')">Do celotnega dostopa</button>
+                    <div class="featured-left">
+                        <i class="fa-solid fa-arrow-right-long animated-arrow"></i>
+                        <h2 class="featured-title">${featuredLib.title}</h2>
+                        <p class="featured-subtitle">Pritisni za ogled celotne zbirke</p>
+                    </div>
+                    <div class="featured-right">
+                        ${imgsHtml}
                     </div>
                 `;
             }
