@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aplikacija za Urnik in Napitnine</title>
+    <!-- jsPDF knjižnica za ustvarjanje PDF dokumentov -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --bg: #f4f4f9;
+            --text: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #333;
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+        }
+        #app {
+            width: 100%;
+            max-width: 480px; /* Mere telefona */
+            min-height: 100vh;
+            background-color: var(--bg);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            position: relative;
+            overflow-x: hidden;
+        }
+        .screen {
+            display: none;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .screen.active {
+            display: block;
+        }
+        h1, h2, h3 { text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="password"], input[type="number"], input[type="week"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        button:active { background-color: #45a049; }
+        .back-btn {
+            background-color: #777;
+            margin-top: 20px;
+        }
+        .day-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .day-row input { width: 80px; text-align: center; }
+        #urnik-list div, #napitnine-list div {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .user-info { text-align: center; margin-bottom: 20px; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- PRIJAVA -->
+    <div id="login-screen" class="screen active">
+        <h1>Prijava</h1>
+        <div class="form-group">
+            <label>Uporabniško ime</label>
+            <input type="text" id="username" placeholder="Vnesi uporabniško ime">
+        </div>
+        <div class="form-group">
+            <label>Geslo</label>
+            <input type="password" id="password" placeholder="Vnesi geslo">
+        </div>
+        <button onclick="login()">Prijavi se</button>
+        <p id="login-error" style="color:red; text-align:center; display:none;">Napačni podatki!</p>
+    </div>
+
+    <!-- DOMAČA STRAN -->
+    <div id="home-screen" class="screen">
+        <h2>Pozdravljen, Jaša</h2>
+        <div class="user-info">Prijavljen: Jaša Petrinjak</div>
+        <button onclick="nav('urnik-screen'); naloziUrnik();">Urnik</button>
+        <button onclick="nav('napitnine-screen')">Napitnine</button>
+        <button onclick="nav('plan-screen')">Plan</button>
+        <button onclick="nav('natisni-screen')">Natisni</button>
+        <button class="back-btn" onclick="odjava()">Odjava</button>
+    </div>
+
+    <!-- URNIK -->
+    <div id="urnik-screen" class="screen">
+        <h2>Moj urnik (Tekoči teden)</h2>
+        <div id="urnik-list">Nalagam...</div>
+        <button class="back-btn" onclick="nav('home-screen')">Nazaj</button>
+    </div>
+
+    <!-- NAPITNINE -->
+    <div id="napitnine-screen" class="screen">
+        <h2>Napitnine</h2>
+        <div class="form-group">
+            <label>Izberi teden:</label>
+            <input type="week" id="napitnine-week" onchange="naloziVnosNapitnin()">
+        </div>
+        <div id="napitnine-list">Izberi teden zgoraj, da se prikažejo dnevi.</div>
+        <button id="save-tips-btn" style="display:none;" onclick="shraniNapitnine()">Shrani napitnine</button>
+        <button class="back-btn" onclick="nav('home-screen')">Nazaj</button>
+    </div>
+
+    <!-- PLAN -->
+    <div id="plan-screen" class="screen">
+        <h2>Plan (Urnik dela)</h2>
+        <div class="form-group">
+            <label>Izberi teden:</label>
+            <input type="week" id="plan-week" onchange="naloziPlan()">
+        </div>
+        <div id="plan-form" style="display:none;">
+            <div class="day-row"><span>Ponedeljek</span><input type="number" id="plan-pon" placeholder="Ure"></div>
+            <div class="day-row"><span>Torek</span><input type="number" id="plan-tor" placeholder="Ure"></div>
+            <div class="day-row"><span>Sreda</span><input type="number" id="plan-sre" placeholder="Ure"></div>
+            <div class="day-row"><span>Četrtek</span><input type="number" id="plan-cet" placeholder="Ure"></div>
+            <div class="day-row"><span>Petek</span><input type="number" id="plan-pet" placeholder="Ure"></div>
+            <div class="day-row"><span>Sobota</span><input type="number" id="plan-sob" placeholder="Ure"></div>
+            <div class="day-row"><span>Nedelja</span><input type="number" id="plan-ned" placeholder="Ure"></div>
+            <button style="margin-top:20px;" onclick="shraniPlan()">Shrani plan</button>
+        </div>
+        <button class="back-btn" onclick="nav('home-screen')">Nazaj</button>
+    </div>
+
+    <!-- NATISNI -->
+    <div id="natisni-screen" class="screen">
+        <h2>Natisni (PDF za termo)</h2>
+        <button onclick="natisniPdf('napitnine-teden')">Napitnina za tekoči teden</button>
+        <button onclick="natisniPdf('napitnine-mesec')">Napitnina za tekoči mesec</button>
+        <button onclick="natisniPdf('ure-teden')">Seštevek ur za tekoči teden</button>
+        <button onclick="natisniPdf('ure-mesec')">Seštevek ur za tekoči mesec</button>
+        <button class="back-btn" onclick="nav('home-screen')">Nazaj</button>
+    </div>
+</div>
+
+<script>
+    const DB_URL = "https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app";
+    const dnevi = ['pon', 'tor', 'sre', 'cet', 'pet', 'sob', 'ned'];
+    const dneviImena = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota', 'Nedelja'];
+
+    // Navigacija
+    function nav(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // Prijava
+    function login() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        if ((u === 'Jasa' || u === 'jasa') && p === 'j') {
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('login-error').style.display = 'none';
+            nav('home-screen');
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    }
+
+    function odjava() {
+        nav('login-screen');
+    }
+
+    // Pomožne funkcije za datum in tedne
+    function getTekociTedenString() {
+        const d = new Date();
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+        const weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+        let m = d.getUTCMonth() + 1;
+        return `${d.getUTCFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
+    }
+
+    function getTekociMesecTedenStrings() {
+        // Zelo poenostavljeno: vrne zadnjih 5 tednov, ki lahko spadajo v tekoči mesec
+        const arr = [];
+        const d = new Date();
+        const year = d.getFullYear();
+        let week = parseInt(getTekociTedenString().split('-W')[1]);
+        for(let i=0; i<5; i++) {
+            if(week - i > 0) arr.push(`${year}-W${(week - i).toString().padStart(2, '0')}`);
+        }
+        return arr;
+    }
+
+    // API klici (Baza)
+    async function apiGet(path) {
+        try {
+            const res = await fetch(`${DB_URL}/${path}.json`);
+            return await res.json();
+        } catch (e) {
+            console.error(e); return null;
+        }
+    }
+
+    async function apiPut(path, data) {
+        try {
+            await fetch(`${DB_URL}/${path}.json`, {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            alert('Shranjeno uspešno!');
+        } catch (e) {
+            alert('Napaka pri shranjevanju.');
+        }
+    }
+
+    // --- PLAN LOGIKA ---
+    async function naloziPlan() {
+        const week = document.getElementById('plan-week').value;
+        if (!week) return;
+        document.getElementById('plan-form').style.display = 'block';
+        const data = await apiGet(`plan/${week}`) || {};
+        dnevi.forEach(dan => {
+            document.getElementById(`plan-${dan}`).value = data[dan] || '';
+        });
+    }
+
+    async function shraniPlan() {
+        const week = document.getElementById('plan-week').value;
+        const data = {};
+        dnevi.forEach(dan => {
+            const val = document.getElementById(`plan-${dan}`).value;
+            if(val) data[dan] = Number(val);
+        });
+        await apiPut(`plan/${week}`, data);
+    }
+
+    // --- URNIK LOGIKA ---
+    async function naloziUrnik() {
+        const currWeek = getTekociTedenString();
+        const data = await apiGet(`plan/${currWeek}`);
+        const div = document.getElementById('urnik-list');
+        div.innerHTML = '';
+        if (!data || Object.keys(data).length === 0) {
+            div.innerHTML = '<p>Za ta teden ni določenega plana.</p>';
+            return;
+        }
+        let html = '';
+        dnevi.forEach((dan, i) => {
+            if(data[dan]) {
+                html += `<div><strong>${dneviImena[i]}:</strong> ${data[dan]} ur</div>`;
+            }
+        });
+        div.innerHTML = html || '<p>V tem tednu nimaš delovnih ur.</p>';
+    }
+
+    // --- NAPITNINE LOGIKA ---
+    async function naloziVnosNapitnin() {
+        const week = document.getElementById('napitnine-week').value;
+        if (!week) return;
+        
+        const plan = await apiGet(`plan/${week}`);
+        const tips = await apiGet(`napitnine/${week}`) || {};
+        const listDiv = document.getElementById('napitnine-list');
+        const btn = document.getElementById('save-tips-btn');
+        
+        listDiv.innerHTML = '';
+        if (!plan || Object.keys(plan).length === 0) {
+            listDiv.innerHTML = '<p>Za ta teden ni delovnih ur (plana).</p>';
+            btn.style.display = 'none';
+            return;
+        }
+
+        let hasWork = false;
+        dnevi.forEach((dan, i) => {
+            if(plan[dan] && plan[dan] > 0) {
+                hasWork = true;
+                listDiv.innerHTML += `
+                    <div class="day-row">
+                        <span>${dneviImena[i]} (${plan[dan]}h)</span>
+                        <input type="number" id="tip-${dan}" placeholder="€" value="${tips[dan] || ''}">
+                    </div>
+                `;
+            }
+        });
+
+        if(hasWork) {
+            btn.style.display = 'block';
+        } else {
+            listDiv.innerHTML = '<p>V tem tednu nimaš vnesenih ur.</p>';
+            btn.style.display = 'none';
+        }
+    }
+
+    async function shraniNapitnine() {
+        const week = document.getElementById('napitnine-week').value;
+        const data = {};
+        dnevi.forEach(dan => {
+            const el = document.getElementById(`tip-${dan}`);
+            if (el && el.value) {
+                data[dan] = Number(el.value);
+            }
+        });
+        await apiPut(`napitnine/${week}`, data);
+    }
+
+    // --- NATISNI / PDF LOGIKA ---
+    // Sirina termalnega papirja je cca 58mm
+    async function natisniPdf(tip) {
+        const { jsPDF } = window.jspdf;
+        const currWeek = getTekociTedenString();
+        
+        // Inicializacija neskoncno dolgega PDFja - prilagodimo višino na koncu
+        // Začnemo s 58mm širino
+        let doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: [58, 500] 
+        });
+
+        doc.setFont("helvetica");
+        let y = 10; // vertikalna pozicija
+        const ml = 4; // levi rob
+        
+        // ZAGLAVJE (Stil računa)
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("IZPIS PODATKOV", ml, y); y += 6;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.text("Ime in priimek:", ml, y); y += 4;
+        doc.text("Jasa Petrinjak", ml, y); y += 6;
+        doc.text("Uporabnisko ime: Jasa", ml, y); y += 6;
+        doc.text("-------------------------", ml, y); y += 6;
+
+        if (tip === 'napitnine-teden') {
+            doc.text(`Teden: ${currWeek}`, ml, y); y += 6;
+            doc.text("NAPITNINE", ml, y); y += 6;
+            const tips = await apiGet(`napitnine/${currWeek}`) || {};
+            let sum = 0;
+            dnevi.forEach((dan, i) => {
+                if(tips[dan]) {
+                    doc.text(`${dneviImena[i].substring(0,3)}: ${tips[dan]} EUR`, ml, y); y += 4;
+                    sum += tips[dan];
+                }
+            });
+            y+=2; doc.text("-------------------------", ml, y); y += 4;
+            doc.setFont("helvetica", "bold");
+            doc.text(`SKUPAJ: ${sum} EUR`, ml, y); y += 10;
+
+        } else if (tip === 'ure-teden') {
+            doc.text(`Teden: ${currWeek}`, ml, y); y += 6;
+            doc.text("OPRAVLJENE URE", ml, y); y += 6;
+            const plan = await apiGet(`plan/${currWeek}`) || {};
+            let sum = 0;
+            dnevi.forEach((dan, i) => {
+                if(plan[dan]) {
+                    doc.text(`${dneviImena[i].substring(0,3)}: ${plan[dan]} h`, ml, y); y += 4;
+                    sum += plan[dan];
+                }
+            });
+            y+=2; doc.text("-------------------------", ml, y); y += 4;
+            doc.setFont("helvetica", "bold");
+            doc.text(`SKUPAJ: ${sum} h`, ml, y); y += 10;
+
+        } else if (tip === 'napitnine-mesec' || tip === 'ure-mesec') {
+            doc.text("MESECNI PREGLED (Zadnjih 5t)", ml, y); y += 6;
+            const weeks = getTekociMesecTedenStrings();
+            let totalSum = 0;
+            const endpoint = tip === 'napitnine-mesec' ? 'napitnine' : 'plan';
+            const enota = tip === 'napitnine-mesec' ? 'EUR' : 'h';
+
+            for (let w of weeks) {
+                const data = await apiGet(`${endpoint}/${w}`);
+                if (data) {
+                    let wSum = 0;
+                    Object.values(data).forEach(v => wSum += Number(v));
+                    if (wSum > 0) {
+                        doc.text(`${w}: ${wSum} ${enota}`, ml, y); y += 4;
+                        totalSum += wSum;
+                    }
+                }
+            }
+            y+=2; doc.text("-------------------------", ml, y); y += 4;
+            doc.setFont("helvetica", "bold");
+            doc.text(`SKUPAJ: ${totalSum} ${enota}`, ml, y); y += 10;
+        }
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6);
+        let dateStr = new Date().toLocaleString('sl-SI');
+        doc.text(`Izpisano: ${dateStr}`, ml, y); y += 10;
+
+        // Obrežemo PDF na dejansko višino
+        let height = y;
+        let finalDoc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [58, height] });
+        // Žal pri jsPDF je najlažje prenesti vsebino ali samo na novo narisati s pravilno višino.
+        // Ker jsPDF ne podpira "cropanja" strani zlahka, bomo kodo ponovili s končno višino, kar je preprost hack:
+        
+        let fd = new jsPDF({ orientation: 'p', unit: 'mm', format: [58, height] });
+        // Poenostavljen ponoven izris na fd z enako logiko:
+        fd.setFont("helvetica"); fd.setFontSize(10); fd.setFont("helvetica", "bold");
+        let yy=10; fd.text("IZPIS PODATKOV", ml, yy); yy+=6;
+        fd.setFontSize(8); fd.setFont("helvetica", "normal");
+        fd.text("Ime in priimek:", ml, yy); yy+=4; fd.text("Jasa Petrinjak", ml, yy); yy+=6;
+        fd.text("Uporabnisko ime: Jasa", ml, yy); yy+=6; fd.text("-------------------------", ml, yy); yy+=6;
+        
+        if (tip === 'napitnine-teden') {
+            fd.text(`Teden: ${currWeek}`, ml, yy); yy+=6; fd.text("NAPITNINE", ml, yy); yy+=6;
+            const tips = await apiGet(`napitnine/${currWeek}`) || {}; let sum = 0;
+            dnevi.forEach((dan, i) => { if(tips[dan]) { fd.text(`${dneviImena[i].substring(0,3)}: ${tips[dan]} EUR`, ml, yy); yy+=4; sum+=tips[dan]; }});
+            yy+=2; fd.text("-------------------------", ml, yy); yy+=4; fd.setFont("helvetica", "bold"); fd.text(`SKUPAJ: ${sum} EUR`, ml, yy); yy+=10;
+        } else if (tip === 'ure-teden') {
+            fd.text(`Teden: ${currWeek}`, ml, yy); yy+=6; fd.text("OPRAVLJENE URE", ml, yy); yy+=6;
+            const plan = await apiGet(`plan/${currWeek}`) || {}; let sum = 0;
+            dnevi.forEach((dan, i) => { if(plan[dan]) { fd.text(`${dneviImena[i].substring(0,3)}: ${plan[dan]} h`, ml, yy); yy+=4; sum+=plan[dan]; }});
+            yy+=2; fd.text("-------------------------", ml, yy); yy+=4; fd.setFont("helvetica", "bold"); fd.text(`SKUPAJ: ${sum} h`, ml, yy); yy+=10;
+        } else if (tip === 'napitnine-mesec' || tip === 'ure-mesec') {
+            fd.text("MESECNI PREGLED (Zadnjih 5t)", ml, yy); yy+=6;
+            const weeks = getTekociMesecTedenStrings(); let totalSum = 0;
+            const endpoint = tip === 'napitnine-mesec' ? 'napitnine' : 'plan';
+            const enota = tip === 'napitnine-mesec' ? 'EUR' : 'h';
+            for (let w of weeks) {
+                const data = await apiGet(`${endpoint}/${w}`);
+                if (data) {
+                    let wSum = 0; Object.values(data).forEach(v => wSum += Number(v));
+                    if (wSum > 0) { fd.text(`${w}: ${wSum} ${enota}`, ml, yy); yy+=4; totalSum+=wSum; }
+                }
+            }
+            yy+=2; fd.text("-------------------------", ml, yy); yy+=4; fd.setFont("helvetica", "bold"); fd.text(`SKUPAJ: ${totalSum} ${enota}`, ml, yy); yy+=10;
+        }
+        fd.setFont("helvetica", "normal"); fd.setFontSize(6); fd.text(`Izpisano: ${dateStr}`, ml, yy);
+
+        fd.save(`Izpis-${tip}.pdf`);
+    }
+</script>
+</body>
+</html>
