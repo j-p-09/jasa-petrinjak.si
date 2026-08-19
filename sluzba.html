@@ -3,352 +3,665 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aplikacija za Delo</title>
+    <title>Delovni Plan - Jaša</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Prilagoditev za tisk (mali tiskalniki / PDF format računa) */
+        /* Prilagoditev za mali termo tiskalnik in PDF (58mm) */
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
             #print-area {
                 position: absolute;
                 left: 0; top: 0;
-                width: 58mm; /* Standardna širina za thermal printer */
+                width: 58mm;
                 font-family: 'Courier New', Courier, monospace;
                 font-size: 12px;
-                padding: 0;
-                margin: 0;
+                padding: 0; margin: 0; color: black;
             }
             @page { margin: 0; }
         }
-        .modal { background: rgba(0,0,0,0.5); }
+        .modal { background: rgba(0,0,0,0.6); }
+        .tab-btn { transition: all 0.2s ease; }
+        .tab-btn:hover { transform: translateY(-2px); }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans h-screen flex flex-col">
+<body class="bg-gray-100 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
 
-    <!-- PRIJAVNA STRAN -->
-    <div id="login-screen" class="flex flex-col items-center justify-center h-full px-4">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
-            <h1 class="text-2xl font-bold text-center mb-6 text-blue-600">Prijava v sistem</h1>
+    <!-- 1. PRIJAVNA STRAN -->
+    <div id="view-login" class="flex flex-col items-center justify-center h-full px-4 bg-gray-200 absolute inset-0 z-50">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
+            <h1 class="text-3xl font-extrabold text-center mb-6 text-blue-600">Prijava</h1>
             <div class="mb-4">
-                <label class="block text-sm font-bold mb-2">Uporabniško ime</label>
-                <input type="text" id="username" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Vpiši ime">
+                <label class="block text-sm font-bold mb-2 text-gray-700">Uporabniško ime</label>
+                <input type="text" id="login-user" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Vpiši ime">
             </div>
             <div class="mb-6">
-                <label class="block text-sm font-bold mb-2">Geslo</label>
-                <input type="password" id="password" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Vpiši geslo">
+                <label class="block text-sm font-bold mb-2 text-gray-700">Geslo</label>
+                <input type="password" id="login-pass" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Vpiši geslo">
             </div>
-            <button onclick="login()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">PRIJAVA</button>
-            <p id="login-error" class="text-red-500 text-sm mt-3 hidden">Napačni podatki!</p>
+            <button onclick="app.login()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg">VSTOP</button>
+            <p id="login-error" class="text-red-500 text-sm mt-4 hidden text-center font-bold">Napačni podatki!</p>
         </div>
     </div>
 
-    <!-- GLAVNA APLIKACIJA -->
-    <div id="app-screen" class="hidden flex-col h-full">
-        <!-- Glava -->
-        <div class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
-            <div>
-                <p class="text-sm font-bold">Jaša Petrinjak</p>
+    <!-- GLAVNA APLIKACIJA (Glava) -->
+    <div id="app-header" class="hidden bg-blue-600 text-white p-4 shadow-md flex justify-between items-center z-10">
+        <div>
+            <p id="header-name" class="text-lg font-bold">Jaša Petrinjak</p>
+        </div>
+        <div class="text-right">
+            <p id="current-time" class="text-2xl font-bold tracking-wider">00:00:00</p>
+            <p id="current-date" class="text-sm font-medium">01.01.2024</p>
+        </div>
+    </div>
+
+    <!-- VSEBINA (Preklapljanje strani) -->
+    <div id="app-content" class="hidden flex-1 overflow-y-auto p-4 pb-10">
+
+        <!-- DOMAČA STRAN -->
+        <div id="view-home" class="view-section">
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6 text-center border-l-8 border-blue-500">
+                <h2 class="text-gray-500 text-sm uppercase tracking-wider mb-2 font-bold">Plan dela za danes</h2>
+                <p id="today-plan-display" class="text-3xl font-extrabold text-gray-800">Nalaganje...</p>
             </div>
-            <div class="text-right">
-                <p id="current-time" class="text-xl font-bold">00:00:00</p>
-                <p id="current-date" class="text-xs">01.01.2024</p>
+
+            <button onclick="app.openModal('modal-log')" class="w-full bg-green-500 text-white font-black text-2xl py-6 rounded-xl shadow-xl hover:bg-green-600 mb-8 transform transition hover:scale-105">
+                ZABELEŽI DELO
+            </button>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="app.nav('weekly')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Tedenski plan</button>
+                <button onclick="app.nav('monthly')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Mesečni plan</button>
+                <button onclick="app.nav('tips')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Napitnina</button>
+                <button onclick="app.nav('set-plan')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Nastavi plan</button>
+                <button onclick="app.nav('print')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Tiskaj</button>
+                <button onclick="app.nav('salary')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Plača</button>
+                <button onclick="app.nav('settings')" class="tab-btn col-span-2 bg-gray-800 text-white p-5 rounded-xl shadow-md font-bold text-lg">Nastavitve</button>
             </div>
         </div>
 
-        <!-- Vsebina -->
-        <div class="flex-1 overflow-y-auto p-4 pb-20">
+        <!-- TEDENSKI PLAN -->
+        <div id="view-weekly" class="view-section hidden">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">Tedenski plan</h2>
+            <div class="mb-4">
+                <label class="font-bold text-sm">Izberi teden:</label>
+                <input type="week" id="weekly-week-select" class="w-full p-3 border rounded-lg mt-1" onchange="app.renderWeeklyPlan()">
+            </div>
+            <div id="weekly-plan-container" class="bg-white rounded-lg shadow p-4 mb-4">
+                <!-- Generirano preko JS -->
+            </div>
+            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
+        </div>
+
+        <!-- MESEČNI PLAN IN DELO -->
+        <div id="view-monthly" class="view-section hidden">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">Mesečni pregled</h2>
+            <div class="mb-4">
+                <input type="month" id="monthly-month-select" class="w-full p-3 border rounded-lg" onchange="app.renderMonthlyPlan()">
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Opravljene ure</p>
+                    <p id="monthly-done-hours" class="text-2xl font-bold text-green-600">0 h</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Število izmen</p>
+                    <p id="monthly-shifts" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+            </div>
+            <div id="monthly-logs-container" class="bg-white rounded-lg shadow p-4 mb-4 max-h-64 overflow-y-auto">
+                <!-- Generirano preko JS -->
+            </div>
+            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
+        </div>
+
+        <!-- NAPITNINA -->
+        <div id="view-tips" class="view-section hidden">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">Zgodovina napitnin</h2>
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <p class="font-bold mb-2">Skupaj ta mesec: <span id="total-tips-month" class="text-green-600 text-xl">0.00 €</span></p>
+                <div id="tips-container" class="space-y-2 mt-4 max-h-80 overflow-y-auto">
+                    <!-- Generirano -->
+                </div>
+            </div>
+            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
+        </div>
+
+        <!-- NASTAVI PLAN -->
+        <div id="view-set-plan" class="view-section hidden">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">Nastavi plan dela</h2>
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <label class="block font-bold text-sm mb-1">Izberi teden (privzeto tekoči):</label>
+                <input type="week" id="setplan-week" class="w-full p-3 border rounded-lg mb-4" onchange="app.loadPlanForEdit()">
+                
+                <div id="setplan-days" class="space-y-3">
+                    <!-- Generirano v JS, da je krajše -->
+                </div>
+                
+                <button onclick="app.savePlan()" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg mt-4 shadow">Shrani plan</button>
+            </div>
+            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
+        </div>
+
+        <!-- TISKAJ -->
+        <div id="view-print" class="view-section hidden">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">Tiskaj (Mali format)</h2>
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <label class="font-bold text-sm block mb-1">Izberi mesec:</label>
+                <input type="month" id="print-month" class="w-full p-3 border rounded-lg mb-4">
+                
+                <button onclick="app.printReceipt('hours')" class="w-full bg-blue-500 text-white font-bold py-4 rounded-lg mb-3 shadow">Natisni Mesečni Izpis UR</button>
+                <button onclick="app.printReceipt('tips')" class="w-full bg-green-500 text-white font-bold py-4 rounded-lg shadow">Natisni Mesečne NAPITNINE</button>
+            </div>
+            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
+        </div>
+
+        <!-- PLAČA -->
+        <div id="view-salary" class="view-section hidden">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">Plača</h2>
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <label class="font-bold text-sm block mb-1">Izberi mesec:</label>
+                <input type="month" id="salary-month" class="w-full p-3 border rounded-lg mb-4" onchange="app.calculateSalary()">
+                
+                <p class="text-gray-500 mb-2">Skupaj ur: <span id="salary-total-hours" class="font-bold text-black text-xl">0</span> h</p>
+                <hr class="my-3">
+                <div id="salary-calculations" class="space-y-3">
+                    <!-- Generirano -->
+                </div>
+            </div>
+            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
+        </div>
+
+        <!-- NASTAVITVE -->
+        <div id="view-settings" class="view-section hidden">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">Nastavitve</h2>
             
-            <!-- Domov (Nadzorna plošča) -->
-            <div id="view-home">
-                <div class="bg-white p-6 rounded-xl shadow mb-6 text-center border-l-4 border-blue-500">
-                    <h2 class="text-gray-500 text-sm uppercase tracking-wide mb-1">Plan za danes</h2>
-                    <p id="today-plan" class="text-2xl font-bold text-gray-800">14:00 - 22:00</p>
-                </div>
-
-                <button onclick="openLogWorkModal()" class="w-full bg-green-500 text-white font-bold text-xl py-6 rounded-xl shadow-lg hover:bg-green-600 transition mb-6 animate-pulse">
-                    ZABELEŽI DELO
-                </button>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="nav('weekly')" class="bg-white p-4 rounded-lg shadow font-bold text-gray-700 hover:bg-blue-50">Tedenski plan</button>
-                    <button onclick="nav('monthly')" class="bg-white p-4 rounded-lg shadow font-bold text-gray-700 hover:bg-blue-50">Mesečni plan</button>
-                    <button onclick="nav('tips')" class="bg-white p-4 rounded-lg shadow font-bold text-gray-700 hover:bg-blue-50">Napitnina</button>
-                    <button onclick="nav('set-plan')" class="bg-white p-4 rounded-lg shadow font-bold text-gray-700 hover:bg-blue-50">Nastavi plan</button>
-                    <button onclick="nav('print')" class="bg-white p-4 rounded-lg shadow font-bold text-gray-700 hover:bg-blue-50">Tiskaj</button>
-                    <button onclick="nav('salary')" class="bg-white p-4 rounded-lg shadow font-bold text-gray-700 hover:bg-blue-50">Plača</button>
-                    <button onclick="nav('settings')" class="col-span-2 bg-gray-800 text-white p-4 rounded-lg shadow font-bold hover:bg-gray-700">Nastavitve</button>
-                </div>
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <h3 class="font-bold mb-3 border-b pb-2">Podatki za prijavo</h3>
+                <label class="block text-sm mb-1">Uporabniško ime</label>
+                <input type="text" id="set-username" class="w-full p-2 border rounded mb-3 bg-gray-50">
+                <label class="block text-sm mb-1">Geslo</label>
+                <input type="text" id="set-password" class="w-full p-2 border rounded mb-3 bg-gray-50">
+                <label class="block text-sm mb-1">Ime in priimek (za izpis)</label>
+                <input type="text" id="set-fullname" class="w-full p-2 border rounded bg-gray-50">
             </div>
 
-            <!-- Nastavitve -->
-            <div id="view-settings" class="hidden">
-                <h2 class="text-xl font-bold mb-4">Nastavitve urnih postavk</h2>
-                <div class="bg-white p-4 rounded-lg shadow mb-4">
-                    <label class="block text-sm mb-1">Postavka 1 (€/h)</label>
-                    <input type="number" id="rate1" class="w-full p-2 border rounded mb-3" value="6.50">
-                    <label class="block text-sm mb-1">Postavka 2 (€/h)</label>
-                    <input type="number" id="rate2" class="w-full p-2 border rounded mb-3" value="7.00">
-                    <label class="block text-sm mb-1">Postavka 3 (€/h) - Prazniki/Nedelje</label>
-                    <input type="number" id="rate3" class="w-full p-2 border rounded" value="9.00">
-                </div>
-                <button onclick="saveSettings()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg">Shrani nastavitve</button>
-                <button onclick="nav('home')" class="w-full mt-3 bg-gray-300 font-bold py-3 rounded-lg">Nazaj</button>
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <h3 class="font-bold mb-3 border-b pb-2">Urne postavke (€/h)</h3>
+                <label class="block text-sm mb-1">Postavka 1 (npr. Redna)</label>
+                <input type="number" step="0.01" id="set-rate1" class="w-full p-2 border rounded mb-3 bg-gray-50">
+                <label class="block text-sm mb-1">Postavka 2 (npr. Nočna)</label>
+                <input type="number" step="0.01" id="set-rate2" class="w-full p-2 border rounded mb-3 bg-gray-50">
+                <label class="block text-sm mb-1">Postavka 3 (npr. Nedelja/Praznik)</label>
+                <input type="number" step="0.01" id="set-rate3" class="w-full p-2 border rounded bg-gray-50">
             </div>
 
-            <!-- Plača -->
-            <div id="view-salary" class="hidden">
-                <h2 class="text-xl font-bold mb-4">Izračun plače (Tekoci mesec)</h2>
-                <div class="bg-white p-4 rounded-lg shadow mb-4">
-                    <p class="text-gray-500">Skupaj ur v mesecu: <span id="total-hours-salary" class="font-bold text-black">0</span></p>
-                    <hr class="my-3">
-                    <div id="salary-calculations"></div>
-                </div>
-                <button onclick="nav('home')" class="w-full mt-3 bg-gray-300 font-bold py-3 rounded-lg">Nazaj</button>
-            </div>
-
-            <!-- Tiskaj -->
-            <div id="view-print" class="hidden">
-                <h2 class="text-xl font-bold mb-4">Tiskaj izpis (Mali tiskalnik)</h2>
-                <button onclick="printReceipt('hours')" class="w-full bg-blue-500 text-white font-bold py-3 rounded-lg mb-3">Natisni Mesečne Ure</button>
-                <button onclick="printReceipt('tips')" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg">Natisni Napitnine</button>
-                <button onclick="nav('home')" class="w-full mt-3 bg-gray-300 font-bold py-3 rounded-lg">Nazaj</button>
-            </div>
-
-            <!-- Prostor za tisk (skrit na zaslonu) -->
-            <div id="print-area" class="hidden"></div>
-
-            <!-- Druge strani (Tedenski, Mesečni, Napitnina, Nastavi plan) so zgrajene na podoben princip, dodan je samo nazaj gumb zaradi dolžine kode -->
-            <div id="view-weekly" class="hidden"><h2 class="text-xl font-bold mb-4">Tedenski plan</h2><button onclick="nav('home')" class="w-full bg-gray-300 font-bold py-3 rounded-lg">Nazaj</button></div>
-            <div id="view-monthly" class="hidden"><h2 class="text-xl font-bold mb-4">Mesečni plan</h2><button onclick="nav('home')" class="w-full bg-gray-300 font-bold py-3 rounded-lg">Nazaj</button></div>
-            <div id="view-tips" class="hidden"><h2 class="text-xl font-bold mb-4">Zgodovina napitnin</h2><button onclick="nav('home')" class="w-full bg-gray-300 font-bold py-3 rounded-lg">Nazaj</button></div>
-            <div id="view-set-plan" class="hidden"><h2 class="text-xl font-bold mb-4">Nastavi plan</h2><button onclick="nav('home')" class="w-full bg-gray-300 font-bold py-3 rounded-lg">Nazaj</button></div>
-
+            <button onclick="app.saveSettings()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg shadow mb-3">SHRANI NASTAVITVE</button>
+            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
         </div>
+
     </div>
 
     <!-- MODAL: ZABELEŽI DELO -->
-    <div id="log-work-modal" class="modal fixed inset-0 z-50 hidden flex justify-center items-center px-4">
+    <div id="modal-log" class="modal fixed inset-0 z-50 hidden flex justify-center items-center px-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="bg-blue-600 p-4">
-                <h2 class="text-white font-bold text-lg">Beleženje dela</h2>
+            <div class="bg-blue-600 p-4 flex justify-between items-center">
+                <h2 class="text-white font-bold text-xl">Zabeleži delo</h2>
+                <button onclick="app.closeModal('modal-log')" class="text-white text-2xl font-bold leading-none">&times;</button>
             </div>
-            <div class="p-5">
-                <p class="text-sm text-gray-500 mb-4">Predvideno za ta dan: <span class="font-bold text-black" id="modal-expected-plan">14:00 - 22:00</span></p>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4 bg-blue-50 p-2 rounded">Plan po urniku: <span class="font-bold text-blue-800" id="modal-plan-hint">Ni vnosa</span></p>
                 
                 <div class="mb-4">
-                    <label class="block text-sm font-bold mb-1">Datum</label>
-                    <input type="date" id="work-date" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500">
+                    <label class="block font-bold mb-1">Datum dela</label>
+                    <input type="date" id="log-date" class="w-full p-3 border rounded-lg bg-gray-50 font-bold">
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm font-bold mb-1">Začetek</label>
-                        <input type="time" id="time-start" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" onchange="calculateHours()">
+                        <label class="block font-bold mb-1">Začetek (Ura)</label>
+                        <input type="time" id="log-start" class="w-full p-3 border rounded-lg bg-gray-50 font-bold" onchange="app.calcHours()">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold mb-1">Konec</label>
-                        <input type="time" id="time-end" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" onchange="calculateHours()">
+                        <label class="block font-bold mb-1">Konec (Ura)</label>
+                        <input type="time" id="log-end" class="w-full p-3 border rounded-lg bg-gray-50 font-bold" onchange="app.calcHours()">
                     </div>
                 </div>
 
-                <div class="bg-gray-100 p-3 rounded text-center mb-4">
-                    <span class="text-sm text-gray-500">Izračun ur:</span>
-                    <span id="calculated-hours" class="text-xl font-bold ml-2 text-blue-600">0.00</span> h
+                <div class="bg-gray-100 p-4 rounded-lg text-center mb-4 shadow-inner border border-gray-200">
+                    <span class="text-gray-600 font-bold">Izračunano:</span>
+                    <span id="log-calc-hours" class="text-3xl font-black ml-2 text-blue-600">0.00</span> <span class="font-bold text-gray-500">h</span>
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm font-bold mb-1">Napitnina (€)</label>
-                    <input type="number" id="work-tips" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                    <label class="block font-bold mb-1">Napitnina (€)</label>
+                    <input type="number" step="0.01" id="log-tips" class="w-full p-3 border rounded-lg bg-gray-50 text-xl font-bold text-green-600" placeholder="0.00">
                 </div>
 
-                <div class="flex gap-3">
-                    <button onclick="closeLogWorkModal()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg">Prekliči</button>
-                    <button onclick="saveWorkLog()" class="flex-1 bg-green-500 text-white font-bold py-3 rounded-lg">Shrani</button>
-                </div>
+                <button onclick="app.saveLog()" class="w-full bg-green-500 text-white font-black text-xl py-4 rounded-lg shadow-lg hover:bg-green-600">SHRANI DELO</button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL: UREDI NAPITNINO -->
+    <div id="modal-edit-tip" class="modal fixed inset-0 z-50 hidden flex justify-center items-center px-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xs overflow-hidden p-6 text-center">
+            <h2 class="font-bold text-xl mb-4">Uredi napitnino</h2>
+            <input type="hidden" id="edit-tip-id">
+            <p id="edit-tip-date" class="text-sm text-gray-500 mb-2"></p>
+            <input type="number" step="0.01" id="edit-tip-amount" class="w-full p-3 border rounded-lg text-xl font-bold text-green-600 text-center mb-4">
+            <div class="flex gap-2">
+                <button onclick="app.closeModal('modal-edit-tip')" class="flex-1 bg-gray-300 font-bold py-3 rounded-lg">Prekliči</button>
+                <button onclick="app.saveEditedTip()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg">Shrani</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROSTOR ZA TISK -->
+    <div id="print-area" class="hidden"></div>
+
+    <!-- JAVASCRIPT LOGIKA -->
     <script>
         const DB_URL = "https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app";
-        let rates = { rate1: 6.5, rate2: 7.0, rate3: 9.0 };
-        let allLogs = [];
+        
+        const dnevi = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota', 'Nedelja'];
 
-        // 1. ČAS IN DATUM
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('current-time').innerText = now.toLocaleTimeString('sl-SI', { hour12: false });
-            document.getElementById('current-date').innerText = now.toLocaleDateString('sl-SI');
-        }, 1000);
+        const app = {
+            data: { logs: {}, plans: {}, settings: {} },
+            currentUser: null,
 
-        // 2. PRIJAVA
-        function login() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            if((u === 'Jasa' && p === 'j') || (u === 'Jaša' && p === 'j')) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
-                document.getElementById('app-screen').classList.add('flex');
-                loadData(); // Naloži podatke iz baze
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-
-        // 3. NAVIGACIJA
-        const views = ['home', 'settings', 'salary', 'print', 'weekly', 'monthly', 'tips', 'set-plan'];
-        function nav(target) {
-            views.forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
-            document.getElementById(`view-${target}`).classList.remove('hidden');
-            if(target === 'salary') updateSalaryView();
-        }
-
-        // 4. BELEŽENJE DELA (MODAL)
-        function openLogWorkModal() {
-            document.getElementById('log-work-modal').classList.remove('hidden');
-            document.getElementById('work-date').valueAsDate = new Date();
-        }
-        function closeLogWorkModal() {
-            document.getElementById('log-work-modal').classList.add('hidden');
-        }
-
-        function calculateHours() {
-            const start = document.getElementById('time-start').value;
-            const end = document.getElementById('time-end').value;
-            if(start && end) {
-                const [sH, sM] = start.split(':').map(Number);
-                let [eH, eM] = end.split(':').map(Number);
-                
-                let startMin = sH * 60 + sM;
-                let endMin = eH * 60 + eM;
-                
-                // Če se delo zavleče čez polnoč
-                if(endMin < startMin) endMin += 24 * 60; 
-                
-                const diffHours = (endMin - startMin) / 60;
-                document.getElementById('calculated-hours').innerText = diffHours.toFixed(2);
-            }
-        }
-
-        async function saveWorkLog() {
-            const date = document.getElementById('work-date').value;
-            const start = document.getElementById('time-start').value;
-            const end = document.getElementById('time-end').value;
-            const hours = parseFloat(document.getElementById('calculated-hours').innerText);
-            const tips = parseFloat(document.getElementById('work-tips').value) || 0;
-
-            if(!date || !start || !end || hours <= 0) {
-                alert("Prosim izpolni pravilno čase!"); return;
-            }
-
-            const data = { date, start, end, hours, tips, timestamp: Date.now() };
-
-            try {
-                // Pošlji na Firebase REST API
-                await fetch(`${DB_URL}/logs.json`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+            // INICIALIZACIJA IN ČAS
+            init: function() {
+                // Generiraj inpute za Nastavi plan
+                const daysDiv = document.getElementById('setplan-days');
+                dnevi.forEach((dan, i) => {
+                    daysDiv.innerHTML += `
+                        <div class="flex items-center justify-between border-b pb-2">
+                            <span class="font-bold w-24 text-sm">${dan}</span>
+                            <input type="text" id="plan-day-${i}" class="flex-1 p-2 border rounded bg-gray-50 text-sm" placeholder="npr. 14:00 - 22:00 ali PROSTO">
+                        </div>`;
                 });
-                alert("Delo uspešno zabeleženo!");
-                closeLogWorkModal();
-                loadData(); // Osveži
-            } catch(e) {
-                alert("Napaka pri shranjevanju: " + e);
-            }
-        }
 
-        // 5. NALAGANJE PODATKOV IZ BAZE
-        async function loadData() {
-            try {
-                const [logsRes, settingsRes] = await Promise.all([
-                    fetch(`${DB_URL}/logs.json`),
-                    fetch(`${DB_URL}/settings.json`)
-                ]);
+                // Ura
+                setInterval(() => {
+                    const now = new Date();
+                    document.getElementById('current-time').innerText = now.toLocaleTimeString('sl-SI', { hour12: false });
+                    document.getElementById('current-date').innerText = now.toLocaleDateString('sl-SI');
+                }, 1000);
+
+                // Nastavi privzete tedne in mesece v vseh inputih
+                const now = new Date();
+                const weekVal = this.getWeekString(now);
+                const monthVal = now.toISOString().slice(0, 7); // YYYY-MM
                 
-                const logsData = await logsRes.json();
-                if(logsData) {
-                    allLogs = Object.values(logsData);
-                }
+                document.getElementById('weekly-week-select').value = weekVal;
+                document.getElementById('setplan-week').value = weekVal;
+                document.getElementById('monthly-month-select').value = monthVal;
+                document.getElementById('print-month').value = monthVal;
+                document.getElementById('salary-month').value = monthVal;
 
-                const settingsData = await settingsRes.json();
-                if(settingsData) {
-                    rates = settingsData;
-                    document.getElementById('rate1').value = rates.rate1;
-                    document.getElementById('rate2').value = rates.rate2;
-                    document.getElementById('rate3').value = rates.rate3;
-                }
-            } catch(e) { console.error("Napaka pri branju iz baze."); }
-        }
-
-        async function saveSettings() {
-            rates = {
-                rate1: parseFloat(document.getElementById('rate1').value),
-                rate2: parseFloat(document.getElementById('rate2').value),
-                rate3: parseFloat(document.getElementById('rate3').value)
-            };
-            await fetch(`${DB_URL}/settings.json`, {
-                method: 'PUT',
-                body: JSON.stringify(rates)
-            });
-            alert("Nastavitve shranjene!");
-        }
-
-        // 6. PLAČA
-        function updateSalaryView() {
-            let totalHours = allLogs.reduce((sum, log) => sum + log.hours, 0);
-            document.getElementById('total-hours-salary').innerText = totalHours.toFixed(2);
-            
-            const calcDiv = document.getElementById('salary-calculations');
-            calcDiv.innerHTML = `
-                <div class="flex justify-between mb-2"><span>Opcija 1 (${rates.rate1}€):</span> <strong>${(totalHours * rates.rate1).toFixed(2)} €</strong></div>
-                <div class="flex justify-between mb-2"><span>Opcija 2 (${rates.rate2}€):</span> <strong>${(totalHours * rates.rate2).toFixed(2)} €</strong></div>
-                <div class="flex justify-between font-bold text-blue-600"><span>Opcija 3 (${rates.rate3}€):</span> <span>${(totalHours * rates.rate3).toFixed(2)} €</span></div>
-            `;
-        }
-
-        // 7. TISKANJE (Zamenjava šumnikov in mali format)
-        function cleanSumniki(str) {
-            return str.replace(/[čČ]/g, 'c').replace(/[šŠ]/g, 's').replace(/[žŽ]/g, 'z');
-        }
-
-        function printReceipt(type) {
-            const printArea = document.getElementById('print-area');
-            const dateStr = new Date().toLocaleDateString('sl-SI');
-            let content = `
-                <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:5px; margin-bottom:5px;">
-                    <b>Jasa Petrinjak</b><br>
-                    Izpis: ${type === 'hours' ? 'Mesecne ure' : 'Napitnine'}<br>
-                    Datum: ${dateStr}
-                </div>
-            `;
-
-            let total = 0;
-            if(type === 'hours') {
-                allLogs.forEach(l => {
-                    content += `<div style="display:flex; justify-content:space-between;"><span>${l.date}</span><span>${l.hours.toFixed(2)}h</span></div>`;
-                    total += l.hours;
-                });
-                content += `<div style="border-top:1px dashed #000; margin-top:5px; padding-top:5px; font-weight:bold;">SKUPAJ: ${total.toFixed(2)}h</div>`;
-            } else {
-                allLogs.forEach(l => {
-                    if(l.tips > 0) {
-                        content += `<div style="display:flex; justify-content:space-between;"><span>${l.date}</span><span>${l.tips.toFixed(2)}EUR</span></div>`;
-                        total += l.tips;
+                // Naloži nastavitve takoj, da preveri login
+                this.fetchData('settings').then(res => {
+                    if(!res) {
+                        // Privzete nastavitve če je baza prazna
+                        this.data.settings = { username: 'Jasa', password: 'j', fullname: 'Jasa Petrinjak', rate1: 6.5, rate2: 7, rate3: 9 };
+                        this.putData('settings', this.data.settings);
+                    } else {
+                        this.data.settings = res;
                     }
                 });
-                content += `<div style="border-top:1px dashed #000; margin-top:5px; padding-top:5px; font-weight:bold;">SKUPAJ: ${total.toFixed(2)}EUR</div>`;
-            }
+            },
 
-            // Očistimo šumnike
-            printArea.innerHTML = cleanSumniki(content);
-            printArea.classList.remove('hidden');
-            
-            window.print(); // Odpre sistemski dialog za tisk, kjer lahko izbereš "Shrani kot PDF" ali pošlješ na termo tiskalnik.
-            
-            setTimeout(() => { printArea.classList.add('hidden'); }, 1000);
-        }
+            // BAZA HELPERS
+            fetchData: async function(path) {
+                try {
+                    const res = await fetch(`${DB_URL}/${path}.json`);
+                    return await res.json();
+                } catch(e) { console.error("Napaka pri branju:", e); return null; }
+            },
+            postData: async function(path, obj) {
+                await fetch(`${DB_URL}/${path}.json`, { method: 'POST', body: JSON.stringify(obj) });
+            },
+            putData: async function(path, obj) {
+                await fetch(`${DB_URL}/${path}.json`, { method: 'PUT', body: JSON.stringify(obj) });
+            },
+            patchData: async function(path, obj) {
+                await fetch(`${DB_URL}/${path}.json`, { method: 'PATCH', body: JSON.stringify(obj) });
+            },
+
+            // PRIJAVA
+            login: async function() {
+                const u = document.getElementById('login-user').value.trim();
+                const p = document.getElementById('login-pass').value.trim();
+                const s = this.data.settings;
+                
+                // Omogočimo vpis za nastavljenega ali hardcoded backup
+                if((u === s.username && p === s.password) || (u === 'Jasa' && p === 'j') || (u === 'Jaša' && p === 'j')) {
+                    document.getElementById('view-login').classList.add('hidden');
+                    document.getElementById('app-header').classList.remove('hidden');
+                    document.getElementById('app-content').classList.remove('hidden');
+                    document.getElementById('app-content').classList.add('flex');
+                    document.getElementById('header-name').innerText = s.fullname || 'Jaša Petrinjak';
+                    
+                    await this.loadAllData();
+                    this.nav('home');
+                } else {
+                    document.getElementById('login-error').classList.remove('hidden');
+                }
+            },
+
+            // GLAVNO NALAGANJE
+            loadAllData: async function() {
+                const [logs, plans] = await Promise.all([ this.fetchData('logs'), this.fetchData('plans') ]);
+                this.data.logs = logs || {};
+                this.data.plans = plans || {};
+                this.updateHomePlan();
+            },
+
+            // NAVIGACIJA
+            nav: function(target) {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`view-${target}`).classList.remove('hidden');
+                
+                if(target === 'home') this.updateHomePlan();
+                if(target === 'weekly') this.renderWeeklyPlan();
+                if(target === 'monthly') this.renderMonthlyPlan();
+                if(target === 'tips') this.renderTips();
+                if(target === 'set-plan') this.loadPlanForEdit();
+                if(target === 'salary') this.calculateSalary();
+                if(target === 'settings') this.fillSettings();
+            },
+
+            // MODALI
+            openModal: function(id) {
+                if(id === 'modal-log') {
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('log-date').value = today;
+                    document.getElementById('log-start').value = '';
+                    document.getElementById('log-end').value = '';
+                    document.getElementById('log-calc-hours').innerText = '0.00';
+                    document.getElementById('log-tips').value = '';
+                    document.getElementById('modal-plan-hint').innerText = document.getElementById('today-plan-display').innerText;
+                }
+                document.getElementById(id).classList.remove('hidden');
+            },
+            closeModal: function(id) { document.getElementById(id).classList.add('hidden'); },
+
+            // IZRAČUN UR V MODALU
+            calcHours: function() {
+                const s = document.getElementById('log-start').value;
+                const e = document.getElementById('log-end').value;
+                if(s && e) {
+                    let [sH, sM] = s.split(':').map(Number);
+                    let [eH, eM] = e.split(':').map(Number);
+                    let startMin = sH * 60 + sM;
+                    let endMin = eH * 60 + eM;
+                    if(endMin < startMin) endMin += 24 * 60; // Čez polnoč
+                    document.getElementById('log-calc-hours').innerText = ((endMin - startMin) / 60).toFixed(2);
+                }
+            },
+
+            // SHRANJEVANJE DELA
+            saveLog: async function() {
+                const date = document.getElementById('log-date').value;
+                const start = document.getElementById('log-start').value;
+                const end = document.getElementById('log-end').value;
+                const hours = parseFloat(document.getElementById('log-calc-hours').innerText);
+                const tips = parseFloat(document.getElementById('log-tips').value) || 0;
+
+                if(!date || !start || !end || hours <= 0) return alert("Pravilno izpolni čase!");
+
+                const data = { date, start, end, hours, tips, timestamp: Date.now() };
+                await this.postData('logs', data);
+                
+                alert("Delo uspešno zabeleženo!");
+                this.closeModal('modal-log');
+                await this.loadAllData();
+            },
+
+            // POMOŽNE FUNKCIJE ZA DATUME
+            getWeekString: function(d) {
+                const date = new Date(d.getTime());
+                date.setHours(0, 0, 0, 0);
+                date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+                const week1 = new Date(date.getFullYear(), 0, 4);
+                const weekNum = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+                return `${date.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
+            },
+            getDayIndex: function(d) {
+                let day = d.getDay() - 1;
+                return day < 0 ? 6 : day; // 0=Pon, 6=Ned
+            },
+
+            // PRIKAZ NA DOMAČI STRANI
+            updateHomePlan: function() {
+                const now = new Date();
+                const weekStr = this.getWeekString(now);
+                const dayIdx = this.getDayIndex(now);
+                
+                let planStr = "Plan ni nastavljen";
+                if(this.data.plans[weekStr] && this.data.plans[weekStr][dayIdx]) {
+                    planStr = this.data.plans[weekStr][dayIdx];
+                }
+                document.getElementById('today-plan-display').innerText = planStr;
+            },
+
+            // NASTAVI PLAN
+            loadPlanForEdit: function() {
+                const w = document.getElementById('setplan-week').value;
+                const plan = this.data.plans[w] || [];
+                for(let i=0; i<7; i++) {
+                    document.getElementById(`plan-day-${i}`).value = plan[i] || '';
+                }
+            },
+            savePlan: async function() {
+                const w = document.getElementById('setplan-week').value;
+                if(!w) return alert("Izberi teden!");
+                let plan = [];
+                for(let i=0; i<7; i++) {
+                    plan[i] = document.getElementById(`plan-day-${i}`).value.trim();
+                }
+                
+                if(!this.data.plans) this.data.plans = {};
+                this.data.plans[w] = plan;
+                await this.putData(`plans/${w}`, plan);
+                alert("Plan shranjen!");
+                this.updateHomePlan();
+            },
+
+            // TEDENSKI PLAN PREGLED
+            renderWeeklyPlan: function() {
+                const w = document.getElementById('weekly-week-select').value;
+                const plan = this.data.plans[w] || [];
+                const container = document.getElementById('weekly-plan-container');
+                let html = '';
+                dnevi.forEach((dan, i) => {
+                    const text = plan[i] ? plan[i] : '<span class="text-gray-400">Ni vnosa</span>';
+                    html += `<div class="flex justify-between py-2 border-b last:border-0"><span class="font-bold">${dan}</span><span>${text}</span></div>`;
+                });
+                container.innerHTML = html;
+            },
+
+            // MESEČNI PLAN IN DELO PREGLED
+            renderMonthlyPlan: function() {
+                const m = document.getElementById('monthly-month-select').value; // YYYY-MM
+                const container = document.getElementById('monthly-logs-container');
+                let totalH = 0;
+                let shifts = 0;
+                let html = '';
+
+                // Sort logs by date desc
+                const sortedLogs = Object.values(this.data.logs)
+                    .filter(l => l.date.startsWith(m))
+                    .sort((a,b) => b.date.localeCompare(a.date));
+
+                if(sortedLogs.length === 0) {
+                    html = '<p class="text-center text-gray-500">Ni zabeleženega dela v tem mesecu.</p>';
+                } else {
+                    sortedLogs.forEach(l => {
+                        totalH += l.hours;
+                        shifts++;
+                        // Oblika datuma DD.MM.YYYY
+                        const dStr = l.date.split('-').reverse().join('.');
+                        html += `
+                            <div class="flex justify-between items-center py-2 border-b last:border-0">
+                                <div><span class="font-bold block">${dStr}</span><span class="text-xs text-gray-500">${l.start} - ${l.end}</span></div>
+                                <div class="font-black text-blue-600 text-lg">${l.hours.toFixed(2)}h</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('monthly-done-hours').innerText = totalH.toFixed(2) + ' h';
+                document.getElementById('monthly-shifts').innerText = shifts;
+                container.innerHTML = html;
+            },
+
+            // NAPITNINE
+            renderTips: function() {
+                // Prikaz za izbrani mesec (uporabimo kar tistega iz monthly, ali naredimo skupnega)
+                // Da je enostavno in jasno: Prikažemo VSE napitnine tekočega meseca glede na današnji datum
+                const currentMonth = new Date().toISOString().slice(0, 7);
+                const container = document.getElementById('tips-container');
+                let total = 0;
+                let html = '';
+
+                const entries = Object.entries(this.data.logs)
+                    .filter(([k, v]) => v.date.startsWith(currentMonth) && v.tips > 0)
+                    .sort((a,b) => b[1].date.localeCompare(a[1].date));
+
+                if(entries.length === 0) {
+                    html = '<p class="text-center text-gray-500">Ni napitnin za ta mesec.</p>';
+                } else {
+                    entries.forEach(([id, l]) => {
+                        total += l.tips;
+                        const dStr = l.date.split('-').reverse().join('.');
+                        html += `
+                            <div class="flex justify-between items-center bg-green-50 p-3 rounded border border-green-100">
+                                <span class="font-bold">${dStr}</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="font-black text-green-700 text-lg">${l.tips.toFixed(2)} €</span>
+                                    <button onclick="app.editTip('${id}')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">Uredi</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('total-tips-month').innerText = total.toFixed(2) + ' €';
+                container.innerHTML = html;
+            },
+            editTip: function(id) {
+                const l = this.data.logs[id];
+                document.getElementById('edit-tip-id').value = id;
+                document.getElementById('edit-tip-date').innerText = "Za datum: " + l.date.split('-').reverse().join('.');
+                document.getElementById('edit-tip-amount').value = l.tips;
+                this.openModal('modal-edit-tip');
+            },
+            saveEditedTip: async function() {
+                const id = document.getElementById('edit-tip-id').value;
+                const newTip = parseFloat(document.getElementById('edit-tip-amount').value) || 0;
+                await this.patchData(`logs/${id}`, { tips: newTip });
+                this.data.logs[id].tips = newTip;
+                this.closeModal('modal-edit-tip');
+                this.renderTips();
+            },
+
+            // PLAČA
+            calculateSalary: function() {
+                const m = document.getElementById('salary-month').value;
+                let total = 0;
+                Object.values(this.data.logs).forEach(l => {
+                    if(l.date.startsWith(m)) total += l.hours;
+                });
+                
+                document.getElementById('salary-total-hours').innerText = total.toFixed(2);
+                const s = this.data.settings;
+                
+                document.getElementById('salary-calculations').innerHTML = `
+                    <div class="flex justify-between p-3 bg-gray-50 rounded border"><span>Postavka 1 (${s.rate1} €/h):</span> <strong class="text-lg">${(total * s.rate1).toFixed(2)} €</strong></div>
+                    <div class="flex justify-between p-3 bg-gray-50 rounded border"><span>Postavka 2 (${s.rate2} €/h):</span> <strong class="text-lg">${(total * s.rate2).toFixed(2)} €</strong></div>
+                    <div class="flex justify-between p-3 bg-blue-50 rounded border font-bold text-blue-800 border-blue-200"><span>Postavka 3 (${s.rate3} €/h):</span> <span class="text-lg">${(total * s.rate3).toFixed(2)} €</span></div>
+                `;
+            },
+
+            // NASTAVITVE (Branje in Pisanje)
+            fillSettings: function() {
+                const s = this.data.settings;
+                document.getElementById('set-username').value = s.username;
+                document.getElementById('set-password').value = s.password;
+                document.getElementById('set-fullname').value = s.fullname;
+                document.getElementById('set-rate1').value = s.rate1;
+                document.getElementById('set-rate2').value = s.rate2;
+                document.getElementById('set-rate3').value = s.rate3;
+            },
+            saveSettings: async function() {
+                const s = {
+                    username: document.getElementById('set-username').value,
+                    password: document.getElementById('set-password').value,
+                    fullname: document.getElementById('set-fullname').value,
+                    rate1: parseFloat(document.getElementById('set-rate1').value) || 0,
+                    rate2: parseFloat(document.getElementById('set-rate2').value) || 0,
+                    rate3: parseFloat(document.getElementById('set-rate3').value) || 0
+                };
+                await this.putData('settings', s);
+                this.data.settings = s;
+                document.getElementById('header-name').innerText = s.fullname;
+                alert("Nastavitve uspešno shranjene!");
+            },
+
+            // TISKANJE
+            cleanSumniki: function(str) {
+                return str.replace(/[čČ]/g, 'c').replace(/[šŠ]/g, 's').replace(/[žŽ]/g, 'z');
+            },
+            printReceipt: function(type) {
+                const month = document.getElementById('print-month').value;
+                if(!month) return alert("Izberi mesec!");
+
+                const printArea = document.getElementById('print-area');
+                const pDate = new Date().toLocaleDateString('sl-SI');
+                const fullName = this.data.settings.fullname || 'Jasa Petrinjak';
+                
+                let content = `
+                    <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:5px; margin-bottom:5px;">
+                        <b>${fullName}</b><br>
+                        Izpis: ${type === 'hours' ? 'Mesecne ure' : 'Napitnine'}<br>
+                        Mesec: ${month}<br>
+                        Natisnjeno: ${pDate}
+                    </div>
+                `;
+
+                let total = 0;
+                const logsForMonth = Object.values(this.data.logs)
+                    .filter(l => l.date.startsWith(month))
+                    .sort((a,b) => a.date.localeCompare(b.date));
+
+                if(type === 'hours') {
+                    logsForMonth.forEach(l => {
+                        const d = l.date.split('-').reverse().join('.');
+                        content += `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${d}</span><span>${l.hours.toFixed(2)}h</span></div>`;
+                        total += l.hours;
+                    });
+                    content += `<div style="border-top:1px dashed #000; margin-top:5px; padding-top:5px; font-weight:bold; font-size:14px; text-align:right;">SKUPAJ: ${total.toFixed(2)}h</div>`;
+                } else {
+                    logsForMonth.forEach(l => {
+                        if(l.tips > 0) {
+                            const d = l.date.split('-').reverse().join('.');
+                            content += `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${d}</span><span>${l.tips.toFixed(2)} EUR</span></div>`;
+                            total += l.tips;
+                        }
+                    });
+                    content += `<div style="border-top:1px dashed #000; margin-top:5px; padding-top:5px; font-weight:bold; font-size:14px; text-align:right;">SKUPAJ: ${total.toFixed(2)} EUR</div>`;
+                }
+                content += `<div style="text-align:center; margin-top:10px; font-size:10px;">Hvala!</div>`;
+
+                printArea.innerHTML = this.cleanSumniki(content);
+                
+                window.print();
+            }
+        };
+
+        // Zagon
+        window.onload = () => app.init();
     </script>
 </body>
 </html>
