@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Evidenca Dela</title>
-    <!-- Font Awesome za ikone -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js za statistiko -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -259,20 +257,17 @@
 </head>
 <body>
 
-    <!-- Nalaganje -->
     <div id="loader-overlay" class="hidden">
         <div class="spinner"></div>
         <p>Nalaganje podatkov...</p>
     </div>
 
-    <!-- Napaka -->
     <div id="error-overlay" class="hidden">
         <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--warning); margin-bottom: 16px;"></i>
         <p style="margin-bottom: 24px;">Podatkov trenutno ni mogoče naložiti.</p>
         <button class="btn" style="max-width: 200px;" onclick="initApp()">Poskusi znova</button>
     </div>
 
-    <!-- Login Ekran -->
     <div id="login-view">
         <div class="login-box">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 100px; margin-bottom: 24px;">
@@ -293,10 +288,8 @@
         </div>
     </div>
 
-    <!-- Glavna Aplikacija -->
     <div id="app-container" class="hidden">
         
-        <!-- Sidebar (Desktop) -->
         <nav id="sidebar">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 60px; margin: 0 auto 32px auto; display: block;">
                 <circle cx="50" cy="50" r="40" fill="#005f73"/>
@@ -309,10 +302,8 @@
             <a class="nav-item" data-target="view-profile"><i class="fas fa-user"></i> Profil</a>
         </nav>
 
-        <!-- Main Content Area -->
         <main id="main-content">
             
-            <!-- DOMOV -->
             <section id="view-home" class="view active">
                 <div class="header">
                     <div class="header-title">
@@ -324,8 +315,7 @@
 
                 <div class="list-header">DANES</div>
                 <div id="home-today-container">
-                    <!-- Dinamično -->
-                </div>
+                    </div>
 
                 <div class="flex-between list-header">
                     <span>TA TEDEN</span>
@@ -334,8 +324,7 @@
                 
                 <div class="card" style="padding: 0;">
                     <div id="home-week-list" style="padding: 0 24px;">
-                        <!-- Dinamično -->
-                    </div>
+                        </div>
                     <div style="padding: 24px; border-top: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
                         <span>Ta teden skupno</span>
                         <span id="home-week-total">0h / 0h</span>
@@ -343,7 +332,6 @@
                 </div>
             </section>
 
-            <!-- KOLEDAR -->
             <section id="view-calendar" class="view">
                 <div class="header">
                     <div class="header-title">
@@ -359,11 +347,9 @@
                 </div>
 
                 <div id="calendar-list">
-                    <!-- Dinamično -->
-                </div>
+                    </div>
             </section>
 
-            <!-- VPIS DELA -->
             <section id="view-add" class="view">
                 <div class="sub-header">
                     <i class="fas fa-arrow-left" onclick="switchView('view-home')"></i>
@@ -371,7 +357,6 @@
                 </div>
 
                 <div class="card card-primary" id="add-plan-card">
-                    <!-- Dinamično prikazan plan za izbrani datum -->
                     <p style="font-size: 14px;">Izberi datum za vnos</p>
                 </div>
 
@@ -425,7 +410,6 @@
                 </div>
             </section>
 
-            <!-- STATISTIKA -->
             <section id="view-stats" class="view">
                 <div class="header">
                     <div class="header-title">
@@ -471,7 +455,6 @@
                 </div>
             </section>
 
-            <!-- PROFIL -->
             <section id="view-profile" class="view">
                 <div style="text-align: center; margin-top: 40px; margin-bottom: 32px;">
                     <div style="width: 100px; height: 100px; background: var(--primary); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 40px; margin: 0 auto 16px auto; font-weight: bold;" id="profile-avatar">J</div>
@@ -480,7 +463,6 @@
                 </div>
 
                 <div class="profile-menu">
-                    <!-- Nov gumb za tedenski plan -->
                     <div class="profile-menu-item" onclick="initPlanEditor()">
                         <i class="far fa-calendar-check"></i>
                         <span style="flex: 1; margin-left: 16px; font-weight: bold;">Uredi tedenski plan</span>
@@ -510,7 +492,6 @@
                 </div>
             </section>
 
-            <!-- UREJEVALNIK TEDENSKEGA PLANA (Nova funkcionalnost) -->
             <section id="view-plan-editor" class="view">
                 <div class="sub-header">
                     <i class="fas fa-arrow-left" onclick="switchView('view-profile')"></i>
@@ -526,15 +507,13 @@
                 <p style="font-size: 14px; color: var(--text-light); margin-bottom: 16px; text-align: center;">Vklopi drsnik za dneve, ko delaš, in določi ure.</p>
 
                 <div id="editor-days-container">
-                    <!-- Dinamično generirani dnevi -->
-                </div>
+                    </div>
 
                 <button class="btn" style="margin-top: 24px;" onclick="savePlanEditor()">SHRANI PLAN</button>
             </section>
 
         </main>
 
-        <!-- Bottom Navigation (Mobile) -->
         <nav id="bottom-nav">
             <a class="b-nav-item active" data-target="view-home">
                 <i class="fas fa-home"></i> Domov
@@ -555,11 +534,24 @@
     </div>
 
     <script>
-        // --- LOKALNA BAZA (BREZ FIREBASE, UPORABLJA LOCALSTORAGE ZA POPOLNO DELOVANJE) ---
-        function getDB() {
-            const data = localStorage.getItem('evidenca_db');
-            if (data) {
-                return JSON.parse(data);
+        // --- POVEZAVA NA FIREBASE ---
+        const FIREBASE_URL = 'https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app/evidenca_db.json';
+
+        async function getDB() {
+            try {
+                const response = await fetch(FIREBASE_URL);
+                const data = await response.json();
+                if (data) {
+                    // Firebase včasih spremeni prazne ali prekinjene arraye v objekte
+                    if (!data.workEntries) data.workEntries = [];
+                    else if (!Array.isArray(data.workEntries)) data.workEntries = Object.values(data.workEntries);
+                    
+                    if (!data.users) data.users = {};
+                    if (!data.weeklyPlans) data.weeklyPlans = {};
+                    return data;
+                }
+            } catch (e) {
+                console.error("Napaka pri branju iz Firebase:", e);
             }
             return {
                 users: {},
@@ -568,8 +560,18 @@
             };
         }
 
-        function saveDB(db) {
-            localStorage.setItem('evidenca_db', JSON.stringify(db));
+        async function saveDB(db) {
+            try {
+                await fetch(FIREBASE_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(db)
+                });
+            } catch (e) {
+                console.error("Napaka pri shranjevanju v Firebase:", e);
+            }
         }
 
         function generateId() {
@@ -634,16 +636,18 @@
                 currentUser = userIn;
                 sessionStorage.setItem('authUser', userIn);
                 
-                // Nastavimo začetne podatke uporabnika v localStorage
-                const db = getDB();
+                // Nastavimo začetne podatke uporabnika v Firebase, če še ne obstajajo
+                showLoader(true);
+                const db = await getDB();
                 if (!db.users[userIn]) {
                     db.users[userIn] = {
                         name: userIn === 'Jasa' ? 'Jaša Petrinjak' : userIn,
                         username: userIn,
                         role: 'Natakar'
                     };
-                    saveDB(db);
+                    await saveDB(db);
                 }
+                showLoader(false);
 
                 initApp();
             } else {
@@ -683,7 +687,7 @@
         // --- PODATKOVNA LOGIKA ---
 
         async function fetchUserData() {
-            const db = getDB();
+            const db = await getDB();
             const data = db.users[currentUser];
             if (data) {
                 document.getElementById('home-greeting').innerText = `Pozdravljen, ${data.name.split(' ')[0]} 👋`;
@@ -700,7 +704,7 @@
             loadedPlans = [];
             loadedEntries = [];
 
-            const db = getDB();
+            const db = await getDB();
             
             // Pridobi plane za ta teden
             const planKey = `${currentUser}_${startStr}`;
@@ -715,30 +719,34 @@
             const end = new Date(start); 
             end.setDate(end.getDate() + 6);
             
-            db.workEntries.forEach(entry => {
-                if (entry.userId === currentUser) {
-                    const entryDate = new Date(entry.date);
-                    if(entryDate >= start && entryDate <= end) {
-                        loadedEntries.push(entry);
+            if(db.workEntries && Array.isArray(db.workEntries)) {
+                db.workEntries.forEach(entry => {
+                    if (entry && entry.userId === currentUser) {
+                        const entryDate = new Date(entry.date);
+                        if(entryDate >= start && entryDate <= end) {
+                            loadedEntries.push(entry);
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         async function fetchMonthData(dateObj) {
             window.monthEntries = [];
             window.monthPlans = [];
 
-            const db = getDB();
+            const db = await getDB();
             
-            db.workEntries.forEach(entry => {
-                if (entry.userId === currentUser) {
-                    const d = new Date(entry.date);
-                    if(d.getMonth() === dateObj.getMonth() && d.getFullYear() === dateObj.getFullYear()) {
-                        window.monthEntries.push(entry);
+            if(db.workEntries && Array.isArray(db.workEntries)) {
+                db.workEntries.forEach(entry => {
+                    if (entry && entry.userId === currentUser) {
+                        const d = new Date(entry.date);
+                        if(d.getMonth() === dateObj.getMonth() && d.getFullYear() === dateObj.getFullYear()) {
+                            window.monthEntries.push(entry);
+                        }
                     }
-                }
-            });
+                });
+            }
             
             for (let key in db.weeklyPlans) {
                 if (db.weeklyPlans[key].userId === currentUser) {
@@ -1043,10 +1051,10 @@
 
             showLoader(true);
             try {
-                const db = getDB();
+                const db = await getDB();
                 
                 // Remove existing entry for same date if needed
-                db.workEntries = db.workEntries.filter(e => !(e.date === date && e.userId === currentUser));
+                db.workEntries = db.workEntries.filter(e => !(e && e.date === date && e.userId === currentUser));
 
                 db.workEntries.push({
                     id: generateId(),
@@ -1060,7 +1068,7 @@
                     createdAt: new Date().toISOString()
                 });
                 
-                saveDB(db);
+                await saveDB(db);
 
                 await fetchWeekData(currentDate);
                 await fetchMonthData(selectedStatsDate);
@@ -1085,9 +1093,9 @@
 
             showLoader(true);
             try {
-                const db = getDB();
+                const db = await getDB();
                 
-                db.workEntries = db.workEntries.filter(e => !(e.date === date && e.userId === currentUser));
+                db.workEntries = db.workEntries.filter(e => !(e && e.date === date && e.userId === currentUser));
 
                 db.workEntries.push({
                     id: generateId(),
@@ -1097,7 +1105,7 @@
                     createdAt: new Date().toISOString()
                 });
                 
-                saveDB(db);
+                await saveDB(db);
 
                 await fetchWeekData(currentDate);
                 await fetchMonthData(selectedStatsDate);
@@ -1116,9 +1124,9 @@
             if(!confirm('Res želiš izbrisati ta vnos?')) return;
             showLoader(true);
             try {
-                const db = getDB();
-                db.workEntries = db.workEntries.filter(e => e.id !== id);
-                saveDB(db);
+                const db = await getDB();
+                db.workEntries = db.workEntries.filter(e => e && e.id !== id);
+                await saveDB(db);
 
                 await fetchWeekData(selectedCalendarDate);
                 await fetchMonthData(selectedStatsDate);
@@ -1268,7 +1276,7 @@
             const startStr = formatDateForDB(start);
             
             let currentWeekPlan = null;
-            const db = getDB();
+            const db = await getDB();
             const planKey = `${currentUser}_${startStr}`;
 
             if (db.weeklyPlans[planKey]) {
@@ -1354,9 +1362,9 @@
 
             showLoader(true);
             try {
-                const db = getDB();
+                const db = await getDB();
                 db.weeklyPlans[planKey] = payload;
-                saveDB(db);
+                await saveDB(db);
                 
                 await fetchWeekData(currentDate);
                 await fetchMonthData(selectedStatsDate);
