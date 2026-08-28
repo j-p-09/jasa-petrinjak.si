@@ -3,1368 +3,1266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Evidenca Dela - Gostinstvo</title>
-    
+    <title>Evidenca Dela</title>
     <link rel="icon" href="logo.png" type="image/png">
-    
+    <!-- Font Awesome za ikone -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js za statistiko -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- Firebase 8 (Združljivo za enostavno CDN vključitev brez build orodij) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         :root {
-            /* Barvna paleta */
+            /* Barvna paleta po navodilih */
             --bg-color: #f0f4f8;
-            --text-main: #2b2d42;
-            --text-secondary: #6c757d;
-            --primary-color: #005f73; /* Petrol / Temno turkizna */
-            --accent-color: #0a9396;  /* Turkizni poudarek */
-            --success-color: #2a9d8f; /* Zelena za opravljeno */
-            --warning-color: #e76f51; /* Oranžna za odpovedi/opozorila */
-            --overtime-color: #9b5de5;/* Vijolična za nadure */
-            --card-bg: #ffffff;
-            --border-radius: 20px;
-            --border-radius-sm: 12px;
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-            --transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --text-color: #2b2d42;
+            --text-light: #6c757d;
+            --primary: #005f73;
+            --accent: #0a9396;
+            --success: #2a9d8f;
+            --warning: #f4a261;
+            --purple: #9b5de5;
+            --white: #ffffff;
+            --border-radius: 24px;
+            --shadow: 0 8px 24px rgba(0, 95, 115, 0.08);
+            --transition: all 0.3s ease;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Tipografija */
-        h1, h2, h3, h4 { font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
-        p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.4; }
-        .text-primary { color: var(--primary-color); }
-        .text-accent { color: var(--accent-color); }
-        .text-success { color: var(--success-color); }
-        .text-warning { color: var(--warning-color); }
-        .text-overtime { color: var(--overtime-color); }
-        .text-bold { font-weight: 700; }
-        
-        /* Celotna postavitev */
-        .app-container {
+            color: var(--text-color);
             display: flex;
-            min-height: 100vh;
-        }
-
-        /* Stranska navigacija (Desktop) */
-        .sidebar {
-            display: none;
-            width: 260px;
-            background-color: var(--card-bg);
-            box-shadow: var(--shadow);
-            padding: 2rem 1.2rem;
-            flex-direction: column;
-            position: fixed;
             height: 100vh;
-            z-index: 100;
+            overflow: hidden;
         }
 
-        .sidebar-logo {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
+        /* Skrij elemente glede na stanje */
+        .hidden { display: none !important; }
 
-        .sidebar-logo img {
-            max-width: 140px;
-            height: auto;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 0.9rem 1.2rem;
-            margin-bottom: 0.5rem;
-            border-radius: var(--border-radius-sm);
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .nav-item svg {
-            width: 22px;
-            height: 22px;
-            margin-right: 1rem;
-            fill: currentColor;
-        }
-
-        .nav-item.active, .nav-item:hover {
-            background-color: rgba(10, 147, 150, 0.12);
-            color: var(--primary-color);
-        }
-
-        /* Spodnja navigacija (Mobilni telefoni) */
-        .bottom-nav {
-            display: flex;
+        /* Loader in Error State */
+        #loader-overlay, #error-overlay {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: var(--card-bg);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
-            padding: 0.4rem 0.8rem;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 100;
-            padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
-        }
-
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 0.72rem;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 0.4rem;
-            flex: 1;
-            transition: var(--transition);
-        }
-
-        .bottom-nav-item svg {
-            width: 22px;
-            height: 22px;
-            margin-bottom: 3px;
-            fill: currentColor;
-        }
-
-        .bottom-nav-item.active {
-            color: var(--primary-color);
-        }
-
-        .fab-container {
-            position: relative;
-            top: -18px;
-        }
-
-        .fab {
-            width: 54px;
-            height: 54px;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            box-shadow: 0 6px 16px rgba(0, 95, 115, 0.35);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .fab:active { transform: scale(0.92); }
-
-        .fab svg {
-            fill: white;
-            width: 26px;
-            height: 26px;
-        }
-
-        /* Glavno območje vsebine */
-        .main-content {
-            flex: 1;
-            padding: 1.5rem 1.2rem;
-            padding-bottom: 100px; /* Prostor za spodnjo navigacijo */
-            max-width: 100%;
-            overflow-y: auto;
-        }
-
-        /* Strani (Views) - Stran je aktivna samo ena naenkrat! */
-        .view { 
-            display: none; 
-            animation: fadeIn 0.25s ease-in-out; 
-        }
-        .view.active { 
-            display: block !important; 
-        }
-
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(6px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-
-        /* UI Kartice in elementi */
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 1.4rem;
-            box-shadow: var(--shadow);
-            margin-bottom: 1.2rem;
-            border: 1px solid rgba(0,0,0,0.02);
-        }
-        
-        .card-primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            color: white;
-        }
-        .card-primary p { color: rgba(255,255,255,0.85); }
-
-        .btn {
-            display: inline-block;
-            width: 100%;
-            padding: 0.95rem;
-            border-radius: var(--border-radius-sm);
-            border: none;
-            background-color: var(--primary-color);
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 700;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 4px 12px rgba(0, 95, 115, 0.15);
-        }
-        .btn:active { transform: scale(0.98); }
-        .btn-secondary { background-color: rgba(10, 147, 150, 0.12); color: var(--primary-color); box-shadow: none; }
-        .btn-danger { background-color: var(--warning-color); color: white; box-shadow: 0 4px 12px rgba(231, 111, 81, 0.2); }
-        .btn-outline { background-color: transparent; border: 1.5 solid #d1d8e0; color: var(--text-main); box-shadow: none; }
-        
-        /* Obrasci */
-        .form-group { margin-bottom: 1.1rem; }
-        .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem; }
-        .form-control {
-            width: 100%;
-            padding: 0.9rem;
-            border: 1.5px solid #e2e8f0;
-            border-radius: var(--border-radius-sm);
-            font-size: 0.95rem;
-            background-color: #f8fafc;
-            transition: var(--transition);
-        }
-        .form-control:focus { outline: none; border-color: var(--accent-color); background-color: #ffffff; }
-        
-        /* Mreža statistike */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .stat-box {
-            background: var(--card-bg);
-            padding: 1.2rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .stat-value { font-size: 1.4rem; font-weight: 800; margin-top: 0.4rem; }
-
-        /* Prijavni ekran */
-        #login-view {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 2rem;
-            background-color: var(--bg-color);
-        }
-        .login-box { 
-            width: 100%; 
-            max-width: 380px; 
-            background: var(--card-bg);
-            padding: 2.2rem 1.8rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            text-align: center; 
-        }
-        .login-logo { max-width: 130px; margin-bottom: 1.5rem; height: auto; }
-
-        /* Pomožni razredi */
-        .d-flex { display: flex; }
-        .align-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .mt-1 { margin-top: 1rem; }
-        .mt-2 { margin-top: 1.5rem; }
-        .mb-1 { margin-bottom: 1rem; }
-        .text-center { text-align: center; }
-        
-        /* Stanja praznih/nalagalnih podatkov */
-        .empty-state, .loading-state {
-            text-align: center;
-            padding: 2.5rem 1rem;
-            color: var(--text-secondary);
-        }
-
-        /* Navigacija koledarja */
-        .calendar-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.2rem;
-            background: var(--card-bg);
-            padding: 0.8rem 1.2rem;
-            border-radius: var(--border-radius-sm);
-            box-shadow: var(--shadow);
-        }
-        .nav-arrow { background: none; border: none; font-size: 1.3rem; font-weight: bold; cursor: pointer; color: var(--primary-color); padding: 0.2rem 0.6rem; }
-
-        /* Prekritje za nalaganje */
-        #loading-overlay {
-            position: fixed;
-            top:0; left:0; right:0; bottom:0;
-            background: rgba(255,255,255,0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(240, 244, 248, 0.9);
             z-index: 9999;
+            display: flex;
             flex-direction: column;
-            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
         }
         .spinner {
-            border: 4px solid rgba(0,95,115,0.15);
-            width: 42px; height: 42px;
+            border: 4px solid rgba(0, 95, 115, 0.1);
+            border-left-color: var(--primary);
             border-radius: 50%;
-            border-left-color: var(--primary-color);
-            animation: spin 0.8s linear infinite;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .btn {
+            background: var(--primary); color: var(--white);
+            border: none; padding: 16px 24px;
+            border-radius: 16px; font-size: 16px; font-weight: bold;
+            cursor: pointer; width: 100%;
+            transition: var(--transition);
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
 
-        /* Prilagoditev za namizne računalnike (Desktop) */
+        /* Login Ekran */
+        #login-view {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 24px; background: var(--white);
+        }
+        .login-box {
+            width: 100%; max-width: 400px;
+            text-align: center;
+        }
+        .login-box img { width: 100px; margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px;}
+        .form-control {
+            width: 100%; padding: 16px;
+            border: 1px solid #ddd; border-radius: 12px;
+            font-size: 16px; background: var(--bg-color);
+        }
+        
+        /* Glavna Aplikacija */
+        #app-container {
+            display: flex; width: 100%; height: 100%;
+        }
+
+        /* Sidebar (Desktop) */
+        #sidebar {
+            width: 250px; background: var(--white);
+            height: 100%; padding: 24px 0;
+            display: none; flex-direction: column;
+            border-right: 1px solid #e2e8f0;
+        }
+        #sidebar img { width: 60px; margin: 0 auto 32px auto; display: block; }
+        .nav-item {
+            padding: 16px 24px; display: flex; align-items: center;
+            color: var(--text-light); text-decoration: none;
+            cursor: pointer; font-size: 16px; font-weight: 500;
+        }
+        .nav-item i { margin-right: 16px; font-size: 20px; width: 24px; text-align: center; }
+        .nav-item.active { color: var(--primary); border-right: 4px solid var(--primary); background: rgba(0, 95, 115, 0.05); }
+
+        /* Main Content */
+        #main-content {
+            flex: 1; height: 100%; overflow-y: auto;
+            padding: 24px; padding-bottom: 100px; /* prostor za bottom nav */
+            position: relative;
+        }
+
+        /* Views */
+        .view { display: none; max-width: 800px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Headers */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header-title h1 { font-size: 24px; color: var(--text-color); margin-bottom: 4px; }
+        .header-title p { font-size: 14px; color: var(--text-light); }
+        .icon-btn { background: none; border: none; font-size: 24px; color: var(--text-color); cursor: pointer; }
+
+        /* Kartice */
+        .card {
+            background: var(--white); border-radius: var(--border-radius);
+            padding: 24px; margin-bottom: 16px;
+            box-shadow: var(--shadow); position: relative; overflow: hidden;
+        }
+        .card-primary { background: var(--primary); color: var(--white); }
+        .card-primary p, .card-primary .icon { color: rgba(255, 255, 255, 0.8); }
+        
+        .badge {
+            padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;
+            display: inline-block;
+        }
+        .badge-white { background: rgba(255, 255, 255, 0.2); color: var(--white); }
+        .badge-success { background: rgba(42, 157, 143, 0.1); color: var(--success); }
+        .badge-warning { background: rgba(244, 162, 97, 0.1); color: var(--warning); }
+        .badge-purple { background: rgba(155, 93, 229, 0.1); color: var(--purple); }
+
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        .time-huge { font-size: 32px; font-weight: bold; margin: 16px 0; }
+        .info-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 14px; }
+        .info-row i { width: 20px; margin-right: 8px; }
+
+        /* Seznami */
+        .list-header { font-size: 12px; font-weight: bold; text-transform: uppercase; color: var(--text-light); margin: 24px 0 16px 0; letter-spacing: 1px; }
+        
+        .list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 0; border-bottom: 1px solid #edf2f7;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .list-item-date { width: 60px; font-size: 14px; font-weight: bold; }
+        .list-item-date span { display: block; font-size: 12px; font-weight: normal; color: var(--text-light); }
+        .list-item-time { flex: 1; font-weight: bold; font-size: 16px; }
+        .list-item-status { text-align: right; font-size: 14px; font-weight: bold; }
+
+        /* Bottom Nav (Mobile) */
+        #bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--white); box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-around; align-items: center;
+            padding: 12px 0 24px 0; z-index: 100;
+            border-top-left-radius: 24px; border-top-right-radius: 24px;
+        }
+        .b-nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-light); text-decoration: none; cursor: pointer;
+            font-size: 12px; flex: 1;
+        }
+        .b-nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .b-nav-item.active { color: var(--primary); font-weight: bold; }
+        
+        .fab {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--primary); color: var(--white);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; transform: translateY(-20px);
+            box-shadow: 0 8px 16px rgba(0, 95, 115, 0.3);
+            border: 4px solid var(--bg-color); cursor: pointer;
+        }
+
+        /* Forms */
+        .input-group { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-color); border-radius: 16px; margin-bottom: 16px; }
+        .input-group label { font-weight: bold; font-size: 14px; }
+        .input-group input { background: transparent; border: none; text-align: right; font-size: 16px; font-weight: bold; outline: none; color: var(--text-color); width: 100px; }
+        textarea.form-control { resize: none; height: 100px; background: var(--bg-color); border: none; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--white); padding: 16px; border-radius: 16px; box-shadow: var(--shadow); }
+        .stat-card h4 { font-size: 12px; color: var(--text-light); margin-bottom: 8px; font-weight: normal; }
+        .stat-card .val { font-size: 24px; font-weight: bold; color: var(--primary); }
+        .stat-card .val span { font-size: 14px; font-weight: normal; }
+        
+        .chart-container { background: var(--white); padding: 16px; border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 24px; height: 250px; }
+
+        /* Prazno stanje */
+        .empty-state {
+            text-align: center; padding: 40px 20px; color: var(--text-light);
+        }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+
+        /* Koledar controls */
+        .week-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--white); padding: 12px 16px; border-radius: 16px; box-shadow: var(--shadow); }
+        .week-controls button { background: none; border: none; font-size: 18px; color: var(--primary); cursor: pointer; padding: 8px; }
+        .week-controls span { font-weight: bold; }
+
+        /* Profil Meniji */
+        .profile-menu { margin-top: 24px; }
+        .profile-menu-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--white); border-radius: 16px; margin-bottom: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .profile-menu-item i:first-child { width: 24px; color: var(--text-light); }
+        .profile-menu-item.logout { color: #e63946; }
+        .profile-menu-item.logout i { color: #e63946; }
+
+        /* Top navigacija v podstraneh */
+        .sub-header { display: flex; align-items: center; margin-bottom: 24px; }
+        .sub-header i { font-size: 20px; margin-right: 16px; cursor: pointer; padding: 8px; }
+        .sub-header h2 { font-size: 20px; flex: 1; }
+
+        /* TABS v statistiki */
+        .tabs { display: flex; background: var(--white); border-radius: 12px; padding: 4px; margin-bottom: 24px; box-shadow: var(--shadow); }
+        .tab { flex: 1; text-align: center; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--text-light); }
+        .tab.active { background: var(--warning); color: var(--white); }
+
+        /* Media Queries */
         @media (min-width: 1024px) {
-            .bottom-nav { display: none; }
-            .sidebar { display: flex; }
-            .main-content { margin-left: 260px; padding: 3rem 4rem; padding-bottom: 3rem; }
+            #bottom-nav { display: none; }
+            #sidebar { display: flex; }
+            #main-content { padding-bottom: 24px; padding-left: 40px; padding-right: 40px; }
             .stats-grid { grid-template-columns: repeat(4, 1fr); }
-            .header-row { margin-bottom: 2.5rem; }
-            .card { padding: 2rem; }
         }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay">
+    <!-- Nalaganje -->
+    <div id="loader-overlay" class="hidden">
         <div class="spinner"></div>
-        <p class="mt-1" id="loading-text" style="font-weight:600; color:var(--primary-color);">Nalaganje podatkov...</p>
+        <p>Nalaganje podatkov...</p>
     </div>
 
-    <div id="login-view" class="view active">
+    <!-- Napaka -->
+    <div id="error-overlay" class="hidden">
+        <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--warning); margin-bottom: 16px;"></i>
+        <p style="margin-bottom: 24px;">Podatkov trenutno ni mogoče naložiti. Poskusi znova.</p>
+        <button class="btn" style="max-width: 200px;" onclick="initApp()">Poskusi znova</button>
+    </div>
+
+    <!-- Login Ekran -->
+    <div id="login-view">
         <div class="login-box">
-            <img src="logo.png" alt="Logo" class="login-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iIzAwNWY3MyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+T0dPPC90ZXh0Pjwvc3ZnPg=='">
-            <h2>Prijava v aplikacijo</h2>
-            <p class="mb-1" style="font-size:0.85rem;">Vnesite prijavne podatke za dostop</p>
-            <form id="login-form" class="mt-1">
-                <div class="form-group">
-                    <input type="text" id="username" class="form-control" placeholder="Uporabniško ime" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <input type="password" id="password" class="form-control" placeholder="Geslo" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn mt-1">PRIJAVA</button>
-                <p id="login-error" class="text-warning mt-1" style="display:none; font-weight:600; font-size:0.85rem;"></p>
-            </form>
+            <img src="logo.png" alt="Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iIzAwNWY3MyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TE9HTzwvdGV4dD48L3N2Zz4='">
+            <h2 style="margin-bottom: 24px;">Prijava</h2>
+            <div class="form-group">
+                <label>Uporabniško ime</label>
+                <input type="text" id="login-username" class="form-control" placeholder="Vnesi uporabniško ime">
+            </div>
+            <div class="form-group">
+                <label>Geslo</label>
+                <input type="password" id="login-password" class="form-control" placeholder="Vnesi geslo">
+            </div>
+            <p id="login-error" style="color: #e63946; margin-bottom: 16px; display: none; font-size: 14px;">Napačno uporabniško ime ali geslo.</p>
+            <button class="btn" onclick="handleLogin()">Prijavi se</button>
         </div>
     </div>
 
-    <div id="app-layout" class="app-container" style="display: none;">
+    <!-- Glavna Aplikacija -->
+    <div id="app-container" class="hidden">
         
-        <nav class="sidebar">
-            <div class="sidebar-logo">
-                <img src="logo.png" alt="Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iIzAwNWY3MyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+T0dPPC90ZXh0Pjwvc3ZnPg=='">
-            </div>
-            <a class="nav-item active" onclick="navigateTo('home')">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Domov
-            </a>
-            <a class="nav-item" onclick="navigateTo('calendar')">
-                <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg> Koledar
-            </a>
-            <a class="nav-item" onclick="navigateTo('entry', true)">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg> Vpis dela
-            </a>
-            <a class="nav-item" onclick="navigateTo('stats')">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Statistika
-            </a>
-            <a class="nav-item" onclick="navigateTo('profile')">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> Profil
-            </a>
+        <!-- Sidebar (Desktop) -->
+        <nav id="sidebar">
+            <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+            <a class="nav-item active" data-target="view-home"><i class="fas fa-home"></i> Domov</a>
+            <a class="nav-item" data-target="view-calendar"><i class="fas fa-calendar-alt"></i> Koledar</a>
+            <a class="nav-item" data-target="view-add"><i class="fas fa-plus-circle"></i> Vpis dela</a>
+            <a class="nav-item" data-target="view-stats"><i class="fas fa-chart-bar"></i> Statistika</a>
+            <a class="nav-item" data-target="view-profile"><i class="fas fa-user"></i> Profil</a>
         </nav>
 
-        <main class="main-content">
+        <!-- Main Content Area -->
+        <main id="main-content">
             
-            <div id="home-view" class="view">
-                <div class="header-row">
-                    <div>
-                        <h2 id="home-greeting">Pozdravljen 👋</h2>
-                        <p id="home-date"></p>
+            <!-- DOMOV -->
+            <section id="view-home" class="view active">
+                <div class="header">
+                    <div class="header-title">
+                        <h1 id="home-greeting">Pozdravljen, ... 👋</h1>
+                        <p id="home-date">Nalagam datum...</p>
                     </div>
+                    <button class="icon-btn" onclick="checkNotifications()"><i class="far fa-bell"></i></button>
                 </div>
 
-                <h3>DANES</h3>
-                <div id="home-today-container" class="mt-1">
-                    </div>
-
-                <div class="d-flex justify-between align-center mt-2 mb-1">
-                    <h3>TA TEDEN</h3>
-                    <span style="font-size:0.85rem; font-weight:700; cursor:pointer;" class="text-primary" onclick="navigateTo('calendar')">Celoten plan →</span>
+                <div class="list-header">DANES</div>
+                <div id="home-today-container">
+                    <!-- Dinamično -->
                 </div>
-                <div id="home-week-container" class="card">
-                    </div>
-            </div>
 
-            <div id="calendar-view" class="view">
-                <h2>Tedenski razpored</h2>
-                <p class="mb-1">Pregled načrtovanih in opravljenih izmen</p>
-                
-                <div class="calendar-nav">
-                    <button class="nav-arrow" onclick="changeWeek(-1)">←</button>
-                    <span id="calendar-week-range" class="text-bold"></span>
-                    <button class="nav-arrow" onclick="changeWeek(1)">→</button>
+                <div class="flex-between list-header">
+                    <span>TA TEDEN</span>
+                    <a href="#" onclick="switchView('view-calendar')" style="color: var(--accent); text-decoration: none; text-transform: none;">Poglej vse</a>
                 </div>
                 
-                <div id="calendar-days-container">
+                <div class="card" style="padding: 0;">
+                    <div id="home-week-list" style="padding: 0 24px;">
+                        <!-- Dinamično -->
                     </div>
-            </div>
+                    <div style="padding: 24px; border-top: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+                        <span>Ta teden skupno</span>
+                        <span id="home-week-total">0h / 0h</span>
+                    </div>
+                </div>
+            </section>
 
-            <div id="entry-view" class="view">
-                <div class="d-flex align-center mb-1">
-                    <button class="nav-arrow" onclick="navigateTo('home')">←</button>
-                    <h2 style="margin:0; margin-left:0.5rem;">Vpis dela</h2>
+            <!-- KOLEDAR -->
+            <section id="view-calendar" class="view">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>Koledar</h1>
+                    </div>
+                    <button class="icon-btn"><i class="fas fa-filter"></i></button>
                 </div>
 
-                <div class="card card-primary" id="entry-plan-card" style="display:none;">
-                    <p id="entry-plan-date"></p>
-                    <h2 id="entry-plan-time" style="font-size:1.8rem; margin:0.3rem 0;"></h2>
-                    <p id="entry-plan-loc"></p>
+                <div class="week-controls">
+                    <button onclick="changeWeek(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <span id="calendar-week-label">...</span>
+                    <button onclick="changeWeek(1)"><i class="fas fa-chevron-right"></i></button>
                 </div>
 
-                <form id="work-entry-form" class="card">
-                    <input type="hidden" id="entry-date-hidden">
-                    <h3 class="mb-1">Zabeleži opravljeni čas</h3>
+                <div id="calendar-list">
+                    <!-- Dinamično -->
+                </div>
+            </section>
+
+            <!-- VPIS DELA -->
+            <section id="view-add" class="view">
+                <div class="sub-header">
+                    <i class="fas fa-arrow-left" onclick="switchView('view-home')"></i>
+                    <h2>Vpis dela</h2>
+                </div>
+
+                <div class="card card-primary" id="add-plan-card">
+                    <!-- Dinamično prikazan plan za izbrani datum -->
+                    <p style="font-size: 14px;">Izberi datum za vnos</p>
+                </div>
+
+                <div class="card">
+                    <div class="input-group" style="background: transparent; padding: 0; margin-bottom: 24px; border-bottom: 1px solid #edf2f7; border-radius: 0;">
+                        <label>Datum</label>
+                        <input type="date" id="add-date" onchange="loadPlanForDate(this.value)">
+                    </div>
+
+                    <div class="flex-between" style="margin-bottom: 16px;">
+                        <span style="font-weight: bold; font-size: 14px;">Zabeleži svoj čas</span>
+                        <span style="font-size: 12px; color: var(--text-light);" id="add-duration-label">Trajanje: 0h 00m</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Pričetek dela</label>
+                        <input type="time" id="add-start" onchange="calculateAddForm()">
+                    </div>
+                    <div class="input-group">
+                        <label>Konec dela</label>
+                        <input type="time" id="add-end" onchange="calculateAddForm()">
+                    </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">Datum</label>
-                        <input type="date" id="entry-date" class="form-control" required onchange="loadEntryForDate(this.value)">
-                    </div>
-
-                    <div class="d-flex" style="gap:1rem;">
-                        <div class="form-group" style="flex:1;">
-                            <label class="form-label">Dejanski začetek</label>
-                            <input type="time" id="entry-start" class="form-control" required>
+                    <div style="text-align: center; margin: 24px 0;">
+                        <p style="font-size: 12px; color: var(--text-light); text-transform: uppercase;">OPRAVLJENO</p>
+                        <h2 style="font-size: 36px; color: var(--success); margin: 8px 0;" id="add-total-display">0h 00m</h2>
+                        <div style="display: flex; justify-content: space-around; margin-top: 16px; border-top: 1px solid #edf2f7; padding-top: 16px;">
+                            <div style="text-align: left;">
+                                <p style="font-size: 12px; color: var(--text-light);">Redne ure</p>
+                                <p style="font-weight: bold;" id="add-regular-display">0h 00m</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 12px; color: var(--text-light);">Nadure</p>
+                                <p style="font-weight: bold;" id="add-overtime-display">0h 00m</p>
+                            </div>
                         </div>
-                        <div class="form-group" style="flex:1;">
-                            <label class="form-label">Dejanski konec</label>
-                            <input type="time" id="entry-end" class="form-control" required>
-                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Odmor (v minutah)</label>
-                        <input type="number" id="entry-break" class="form-control" value="30" min="0" required>
+                    <div class="input-group">
+                        <label>Odmor (min)</label>
+                        <input type="number" id="add-break" value="30" min="0" onchange="calculateAddForm()">
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Opomba (neobvezno)</label>
-                        <textarea id="entry-note" class="form-control" rows="3" placeholder="Dodatne opombe glede dela..."></textarea>
+                    <div style="margin-bottom: 24px;">
+                        <label style="display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px;">Opomba (neobvezno)</label>
+                        <textarea id="add-note" class="form-control" placeholder="Kako je potekal dan?"></textarea>
                     </div>
 
-                    <button type="submit" class="btn mb-1">SHRANI OPRAVLJENO DELO</button>
-                    <button type="button" class="btn btn-secondary mb-1" onclick="cancelShift()">OZNAČI KOT ODPOVEDANO</button>
-                    <button type="button" class="btn btn-danger" onclick="deleteEntry()" id="btn-delete-entry" style="display:none;">IZBRIŠI VNOS</button>
-                </form>
-            </div>
+                    <button class="btn" onclick="submitWorkEntry()">SHRANI</button>
+                    <button class="btn btn-outline" style="margin-top: 16px;" onclick="cancelWorkEntry()">ODPOVEJ IZMENO</button>
+                </div>
+            </section>
 
-            <div id="stats-view" class="view">
-                <h2>Statistika in analitika</h2>
-                <p class="mb-1">Pregled opravljenih ur in nadur</p>
-                
-                <div style="display:flex; justify-content:center; gap:0.5rem; margin-bottom: 1.2rem;">
-                    <button class="btn btn-outline" id="btn-stat-week" style="width:auto; padding:0.5rem 1rem;" onclick="setStatsPeriod('week')">Teden</button>
-                    <button class="btn btn-primary" id="btn-stat-month" style="width:auto; padding:0.5rem 1rem;" onclick="setStatsPeriod('month')">Mesec</button>
-                    <button class="btn btn-outline" id="btn-stat-year" style="width:auto; padding:0.5rem 1rem;" onclick="setStatsPeriod('year')">Leto</button>
+            <!-- STATISTIKA -->
+            <section id="view-stats" class="view">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>Statistika</h1>
+                    </div>
+                    <button class="icon-btn"><i class="fas fa-filter"></i></button>
                 </div>
 
-                <div class="calendar-nav">
-                    <button class="nav-arrow" onclick="changeStatsOffset(-1)">←</button>
-                    <span id="stats-range-label" class="text-bold"></span>
-                    <button class="nav-arrow" onclick="changeStatsOffset(1)">→</button>
+                <div class="tabs">
+                    <div class="tab active">Mesec</div>
+                    <div class="tab">Teden</div>
+                    <div class="tab">Leto</div>
+                </div>
+
+                <div class="week-controls">
+                    <button onclick="changeStatsMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <span id="stats-period-label">...</span>
+                    <button onclick="changeStatsMonth(1)"><i class="fas fa-chevron-right"></i></button>
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-box">
-                        <p>Opravljeno</p>
-                        <div class="stat-value text-success" id="stat-actual">0h 00m</div>
+                    <div class="stat-card">
+                        <h4>Opravljene ure</h4>
+                        <div class="val" id="stat-done" style="color: var(--success);">0<span>h</span> 00<span>m</span></div>
                     </div>
-                    <div class="stat-box">
-                        <p>Predvideno</p>
-                        <div class="stat-value" id="stat-planned">0h 00m</div>
+                    <div class="stat-card">
+                        <h4>Predvidene ure</h4>
+                        <div class="val" id="stat-planned" style="color: var(--text-color);">0<span>h</span> 00<span>m</span></div>
                     </div>
-                    <div class="stat-box">
-                        <p>Nadure</p>
-                        <div class="stat-value text-overtime" id="stat-overtime">0h 00m</div>
+                    <div class="stat-card">
+                        <h4>Nadure</h4>
+                        <div class="val" id="stat-overtime" style="color: var(--purple);">0<span>h</span> 00<span>m</span></div>
                     </div>
-                    <div class="stat-box">
-                        <p>Odpovedano</p>
-                        <div class="stat-value text-warning" id="stat-cancelled">0h 00m</div>
+                    <div class="stat-card">
+                        <h4>Odpovedane ure</h4>
+                        <div class="val" id="stat-cancelled" style="color: var(--warning);">0<span>h</span> 00<span>m</span></div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <h3>Grafični pregled ur</h3>
-                    <div class="mt-1" style="position: relative; width:100%; min-height:220px;">
-                        <canvas id="statsChart"></canvas>
+                <h4 style="margin-bottom: 16px;">Pregled po dnevih</h4>
+                <div class="chart-container">
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </section>
+
+            <!-- PROFIL -->
+            <section id="view-profile" class="view">
+                <div style="text-align: center; margin-top: 40px; margin-bottom: 32px;">
+                    <div style="width: 100px; height: 100px; background: var(--primary); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 40px; margin: 0 auto 16px auto; font-weight: bold;" id="profile-avatar">J</div>
+                    <h2 id="profile-name">...</h2>
+                    <p id="profile-role" style="color: var(--text-light);">...</p>
+                </div>
+
+                <div class="profile-menu">
+                    <div class="profile-menu-item">
+                        <i class="far fa-user"></i>
+                        <span style="flex: 1; margin-left: 16px; font-weight: bold;">Osebni podatki</span>
+                        <i class="fas fa-chevron-right" style="color: #ccc;"></i>
                     </div>
-                    <div id="stats-empty-chart" class="empty-state" style="display:none;">Za izbrano obdobje ni podatkov.</div>
-                </div>
-            </div>
-
-            <div id="profile-view" class="view">
-                <h2>Uporabniški profil</h2>
-                <div class="card text-center mt-1">
-                    <div style="width:70px; height:70px; background:linear-gradient(135deg, var(--primary-color), var(--accent-color)); color:white; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:1.8rem; font-weight:bold; margin: 0 auto 0.8rem auto;" id="profile-initial">
-                        J
+                    <div class="profile-menu-item">
+                        <i class="far fa-building"></i>
+                        <span style="flex: 1; margin-left: 16px; font-weight: bold;">Delovna mesta</span>
+                        <i class="fas fa-chevron-right" style="color: #ccc;"></i>
                     </div>
-                    <h3 id="profile-name">Jaša Petrinjak</h3>
-                    <p id="profile-role">Uporabnik</p>
+                    <div class="profile-menu-item" onclick="checkNotifications()">
+                        <i class="far fa-bell"></i>
+                        <span style="flex: 1; margin-left: 16px; font-weight: bold;">Nastavitve obvestil</span>
+                        <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                    </div>
+                    <div class="profile-menu-item logout" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span style="flex: 1; margin-left: 16px; font-weight: bold;">Odjava</span>
+                        <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                    </div>
                 </div>
-
-                <div class="card">
-                    <h3>Urejanje tedenskega plana</h3>
-                    <p class="mb-1" style="font-size:0.85rem;">Dodajte ali spremenite načrtovane izmene za uporabnika (shranjeno v Firebase).</p>
-                    
-                    <form id="plan-editor-form">
-                        <div class="form-group">
-                            <label class="form-label">Datum izmene</label>
-                            <input type="date" id="plan-edit-date" class="form-control" required onchange="loadPlanForEditing(this.value)">
-                        </div>
-
-                        <div class="d-flex" style="gap:1rem;">
-                            <div class="form-group" style="flex:1;">
-                                <label class="form-label">Predviden začetek</label>
-                                <input type="time" id="plan-edit-start" class="form-control" required>
-                            </div>
-                            <div class="form-group" style="flex:1;">
-                                <label class="form-label">Predviden konec</label>
-                                <input type="time" id="plan-edit-end" class="form-control" required>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Lokacija</label>
-                            <input type="text" id="plan-edit-loc" class="form-control" placeholder="Npr. Restavracija Center">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Delovno mesto</label>
-                            <input type="text" id="plan-edit-role" class="form-control" placeholder="Npr. Natakar / Šank">
-                        </div>
-
-                        <button type="submit" class="btn mb-1">SHRANI PLAN V BAZO</button>
-                        <button type="button" class="btn btn-danger" id="btn-delete-plan" style="display:none;" onclick="deletePlan()">IZBRIŠI TA PLAN</button>
-                    </form>
-                </div>
-
-                <button class="btn btn-outline" style="color:var(--warning-color); border-color:var(--warning-color); margin-top:1rem;" onclick="logout()">ODJAVA</button>
-            </div>
+            </section>
 
         </main>
 
-        <nav class="bottom-nav">
-            <div class="bottom-nav-item active" onclick="navigateTo('home')" data-target="home">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Domov
+        <!-- Bottom Navigation (Mobile) -->
+        <nav id="bottom-nav">
+            <a class="b-nav-item active" data-target="view-home">
+                <i class="fas fa-home"></i> Domov
+            </a>
+            <a class="b-nav-item" data-target="view-calendar">
+                <i class="fas fa-calendar-alt"></i> Koledar
+            </a>
+            <div class="fab" onclick="switchView('view-add')">
+                <i class="fas fa-plus"></i>
             </div>
-            <div class="bottom-nav-item" onclick="navigateTo('calendar')" data-target="calendar">
-                <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg> Koledar
-            </div>
-            <div class="fab-container">
-                <div class="fab" onclick="navigateTo('entry', true)">
-                    <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                </div>
-            </div>
-            <div class="bottom-nav-item" onclick="navigateTo('stats')" data-target="stats">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Statistika
-            </div>
-            <div class="bottom-nav-item" onclick="navigateTo('profile')" data-target="profile">
-                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> Profil
-            </div>
+            <a class="b-nav-item" data-target="view-stats">
+                <i class="fas fa-chart-bar"></i> Statistika
+            </a>
+            <a class="b-nav-item" data-target="view-profile">
+                <i class="far fa-user"></i> Profil
+            </a>
         </nav>
     </div>
 
-    <div id="alert-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.45); z-index:10000; justify-content:center; align-items:center;">
-        <div class="card" style="width: 90%; max-width: 360px; text-align:center;">
-            <h3 id="alert-title">Obvestilo</h3>
-            <p id="alert-msg" class="mt-1 mb-1"></p>
-            <div class="d-flex" style="gap:0.8rem; margin-top:1.2rem;">
-                <button class="btn btn-outline" id="alert-cancel" onclick="closeAlert()" style="display:none; flex:1;">Prekliči</button>
-                <button class="btn" id="alert-confirm" onclick="closeAlert()" style="flex:1;">Potrdi</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // ----------------------------------------------------
-        // INICIALIZACIJA FIREBASE REALTIME DATABASE
-        // ----------------------------------------------------
+        // FIREBASE SETUP - PO NAVODILIH
         const firebaseConfig = {
             databaseURL: "https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.database();
 
-        // STANJE APLIKACIJE
+        // Global State
         let currentUser = null;
-        let viewedWeekStart = getStartOfWeek(new Date());
-        
-        let dbPlans = {};
-        let dbEntries = {};
-        
-        let statsPeriod = 'month'; // 'week', 'month', 'year'
-        let statsDate = new Date();
-        let chartInstance = null;
+        let currentDate = new Date();
+        let selectedCalendarDate = new Date();
+        let selectedStatsDate = new Date();
+        let myChart = null;
+        let loadedPlans = [];
+        let loadedEntries = [];
 
-        // POMOŽNE FUNKCIJE
-        function showLoading(text="Nalaganje...") {
-            document.getElementById('loading-text').innerText = text;
-            document.getElementById('loading-overlay').style.display = 'flex';
-        }
-        function hideLoading() {
-            document.getElementById('loading-overlay').style.display = 'none';
-        }
+        // DOM Elements
+        const elLoader = document.getElementById('loader-overlay');
+        const elError = document.getElementById('error-overlay');
+        const elLogin = document.getElementById('login-view');
+        const elApp = document.getElementById('app-container');
 
-        function showAlert(title, msg, onConfirm=null, showCancel=false) {
-            document.getElementById('alert-title').innerText = title;
-            document.getElementById('alert-msg').innerText = msg;
-            document.getElementById('alert-modal').style.display = 'flex';
-            
-            const confirmBtn = document.getElementById('alert-confirm');
-            confirmBtn.onclick = () => {
-                closeAlert();
-                if(onConfirm) onConfirm();
-            };
-            
-            const cancelBtn = document.getElementById('alert-cancel');
-            cancelBtn.style.display = showCancel ? 'block' : 'none';
-        }
-        function closeAlert() { document.getElementById('alert-modal').style.display = 'none'; }
-
-        function formatDateYYYYMMDD(date) {
-            const d = new Date(date);
-            let month = '' + (d.getMonth() + 1);
-            let day = '' + d.getDate();
-            const year = d.getFullYear();
-            if (month.length < 2) month = '0' + month;
-            if (day.length < 2) day = '0' + day;
-            return [year, month, day].join('-');
-        }
-
-        function formatDateDisplay(dateStr) {
-            const date = new Date(dateStr);
-            const days = ['Nedelja', 'Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota'];
-            const months = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'avg', 'sep', 'okt', 'nov', 'dec'];
-            return `${days[date.getDay()]}, ${date.getDate()}. ${months[date.getMonth()]} ${date.getFullYear()}`;
-        }
-
-        function getStartOfWeek(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Prilagoditev za ponedeljek kot prvi dan
-            return new Date(d.setDate(diff));
-        }
-
-        function addDays(date, days) {
-            const result = new Date(date);
-            result.setDate(result.getDate() + days);
-            return result;
-        }
-
-        function timeToMinutes(timeStr) {
-            if(!timeStr) return 0;
-            const [h, m] = timeStr.split(':').map(Number);
-            return h * 60 + m;
-        }
-        
-        function minutesToDisplay(mins) {
-            if(mins < 0) mins = 0;
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            return `${h}h ${m < 10 ? '0'+m : m}m`;
-        }
-
-        // ----------------------------------------------------
-        // PRIJAVA IN AVTENTIKACIJA
-        // ----------------------------------------------------
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const u = document.getElementById('username').value.trim();
-            const p = document.getElementById('password').value.trim();
-            const err = document.getElementById('login-error');
-            
-            showLoading("Preverjanje podatkov...");
-            
-            if (u === 'Jasa' && p === 'j') {
-                try {
-                    const userRef = db.ref('users/Jasa');
-                    const snapshot = await userRef.once('value');
-                    
-                    if (!snapshot.exists()) {
-                        await userRef.set({
-                            name: "Jaša Petrinjak",
-                            username: "Jasa",
-                            role: "Natakar"
-                        });
-                        currentUser = { id: 'Jasa', name: "Jaša Petrinjak", role: "Natakar" };
-                    } else {
-                        currentUser = { id: 'Jasa', ...snapshot.val() };
-                    }
-                    
-                    // Skrij login in prikaži glavno aplikacijo
-                    document.getElementById('login-view').classList.remove('active');
-                    document.getElementById('app-layout').style.display = 'flex';
-                    
-                    await loadAppData();
-                    navigateTo('home');
-                    
-                } catch (error) {
-                    err.innerText = "Podatkov trenutno ni mogoče naložiti. Poskusi znova.";
-                    err.style.display = 'block';
-                }
+        // Initializer
+        window.onload = () => {
+            const savedUser = sessionStorage.getItem('authUser');
+            if (savedUser) {
+                currentUser = savedUser;
+                initApp();
             } else {
-                err.innerText = "Napačno uporabniško ime ali geslo.";
-                err.style.display = 'block';
+                showLogin();
             }
-            hideLoading();
-        });
+            setupNavigation();
+            
+            // Nastavi današnji datum v add form
+            document.getElementById('add-date').value = formatDateForInput(new Date());
+        };
 
-        function logout() {
-            currentUser = null;
-            document.getElementById('app-layout').style.display = 'none';
-            document.getElementById('login-view').classList.add('active');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
+        function showLoader(show) {
+            elLoader.className = show ? '' : 'hidden';
         }
 
-        // ----------------------------------------------------
-        // PREKLAPLANJE STRANI (SPA NAVIGACIJA)
-        // ----------------------------------------------------
-        function navigateTo(viewId, isEntryDirect = false) {
-            // Skrij vse strani
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            
-            // Prikaži samo izbrano stran
-            const targetView = document.getElementById(`${viewId}-view`);
-            if(targetView) {
-                targetView.classList.add('active');
-            }
-            
-            // Posodobi izbiro v stranski navigaciji (Desktop)
-            document.querySelectorAll('.sidebar .nav-item').forEach(i => i.classList.remove('active'));
-            const sideNavs = document.querySelectorAll('.sidebar .nav-item');
-            if(viewId==='home') sideNavs[0]?.classList.add('active');
-            if(viewId==='calendar') sideNavs[1]?.classList.add('active');
-            if(viewId==='entry') sideNavs[2]?.classList.add('active');
-            if(viewId==='stats') sideNavs[3]?.classList.add('active');
-            if(viewId==='profile') sideNavs[4]?.classList.add('active');
-
-            // Posodobi izbiro v spodnji navigaciji (Mobile)
-            document.querySelectorAll('.bottom-nav-item').forEach(i => i.classList.remove('active'));
-            const bNav = document.querySelector(`.bottom-nav-item[data-target="${viewId}"]`);
-            if(bNav) bNav.classList.add('active');
-
-            // Izvedi ustrezno osveževanje podatkov za izbrano stran
-            if (viewId === 'home') renderHome();
-            if (viewId === 'calendar') renderCalendar();
-            if (viewId === 'entry' && isEntryDirect) {
-                const todayStr = formatDateYYYYMMDD(new Date());
-                document.getElementById('entry-date').value = todayStr;
-                loadEntryForDate(todayStr);
-            }
-            if (viewId === 'stats') {
-                statsDate = new Date();
-                renderStats();
-            }
-            if (viewId === 'profile') {
-                renderProfile();
-            }
-            
-            window.scrollTo(0,0);
+        function showError(show) {
+            elError.className = show ? '' : 'hidden';
+            if(show) showLoader(false);
         }
 
-        // ----------------------------------------------------
-        // NALAGANJE PODATKOV IZ FIREBASE
-        // ----------------------------------------------------
-        async function loadAppData() {
-            showLoading("Pridobivanje podatkov iz Firebase...");
+        function showLogin() {
+            elLogin.className = '';
+            elApp.className = 'hidden';
+        }
+
+        async function handleLogin() {
+            const userIn = document.getElementById('login-username').value.trim();
+            const passIn = document.getElementById('login-password').value.trim();
+            const errEl = document.getElementById('login-error');
+            
+            if(!userIn || !passIn) {
+                errEl.style.display = 'block';
+                return;
+            }
+
+            showLoader(true);
             try {
-                const planSnap = await db.ref(`weeklyPlans/${currentUser.id}`).once('value');
-                dbPlans = planSnap.exists() ? planSnap.val() : {};
-
-                const entrySnap = await db.ref(`workEntries/${currentUser.id}`).once('value');
-                dbEntries = entrySnap.exists() ? entrySnap.val() : {};
-
-            } catch(e) {
-                showAlert("Napaka", "Podatkov trenutno ni mogoče naložiti z baze. Poskusite znova.", loadAppData);
+                // Preveri uporabnika v bazi
+                const snapshot = await db.ref('users/' + userIn).once('value');
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    if (userData.password === passIn) {
+                        // Uspešen login
+                        currentUser = userIn;
+                        sessionStorage.setItem('authUser', userIn);
+                        errEl.style.display = 'none';
+                        document.getElementById('login-password').value = '';
+                        initApp();
+                    } else {
+                        errEl.style.display = 'block';
+                        showLoader(false);
+                    }
+                } else {
+                    // Ustvari začetnega uporabnika, če še ne obstaja in so podatki "Jasa" / "j" kot v navodilih
+                    if(userIn === 'Jasa' && passIn === 'j') {
+                        await db.ref('users/Jasa').set({
+                            name: 'Jaša Petrinjak',
+                            username: 'Jasa',
+                            password: 'j',
+                            role: 'Natakar'
+                        });
+                        currentUser = userIn;
+                        sessionStorage.setItem('authUser', userIn);
+                        errEl.style.display = 'none';
+                        initApp();
+                    } else {
+                        errEl.style.display = 'block';
+                        showLoader(false);
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                showError(true);
             }
-            hideLoading();
         }
 
-        // ----------------------------------------------------
-        // PRIKAZ: DOMOV
-        // ----------------------------------------------------
-        function renderHome() {
-            document.getElementById('home-greeting').innerText = `Pozdravljen, ${currentUser.name.split(' ')[0]} 👋`;
-            document.getElementById('home-date').innerText = formatDateDisplay(new Date());
+        function handleLogout() {
+            sessionStorage.removeItem('authUser');
+            currentUser = null;
+            showLogin();
+        }
 
-            const todayStr = formatDateYYYYMMDD(new Date());
-            const todayPlan = getPlanForDate(todayStr);
-            const todayEntry = dbEntries[todayStr];
+        async function initApp() {
+            showError(false);
+            showLoader(true);
+            elLogin.className = 'hidden';
+            elApp.className = '';
+            
+            try {
+                await fetchUserData();
+                await fetchWeekData(currentDate);
+                await fetchMonthData(currentDate);
+                
+                updateHomeView();
+                updateCalendarView();
+                updateStatsView();
+                
+                showLoader(false);
+            } catch (error) {
+                console.error(error);
+                showError(true);
+            }
+        }
 
-            const todayContainer = document.getElementById('home-today-container');
-            if (todayEntry && todayEntry.status === 'cancelled') {
-                 todayContainer.innerHTML = `
-                    <div class="card" style="border-left: 5px solid var(--warning-color);">
-                        <p class="text-warning text-bold">Izmena odpovedana</p>
-                        <h3>${todayPlan ? todayPlan.start + ' - ' + todayPlan.end : ''}</h3>
-                    </div>`;
-            } else if (todayPlan) {
-                const planDurationMins = timeToMinutes(todayPlan.end) - timeToMinutes(todayPlan.start);
-                todayContainer.innerHTML = `
-                    <div class="card card-primary" style="cursor:pointer;" onclick="document.getElementById('entry-date').value='${todayStr}'; loadEntryForDate('${todayStr}'); navigateTo('entry');">
-                        <div class="d-flex justify-between align-center">
-                            <p>Danes delaš</p>
-                            <span style="background:rgba(255,255,255,0.25); padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:bold;">${minutesToDisplay(planDurationMins)}</span>
-                        </div>
-                        <h1 style="font-size: 2.3rem; margin: 0.6rem 0;">${todayPlan.start} – ${todayPlan.end}</h1>
-                        <p>📍 ${todayPlan.location || 'Lokacija ni določena'}</p>
-                        <p>👨‍🍳 ${todayPlan.role || currentUser.role}</p>
-                        <div class="mt-1">
-                            <button class="btn" style="background:white; color:var(--primary-color);">VPIS OPRAVLJENEGA DELA ▶</button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                todayContainer.innerHTML = `<div class="empty-state card">Danes nimaš načrtovane izmene.</div>`;
+        // --- PODATKOVNA LOGIKA ---
+
+        async function fetchUserData() {
+            const snap = await db.ref('users/' + currentUser).once('value');
+            if(snap.exists()) {
+                const data = snap.val();
+                document.getElementById('home-greeting').innerText = `Pozdravljen, ${data.name.split(' ')[0]} 👋`;
+                document.getElementById('profile-name').innerText = data.name;
+                document.getElementById('profile-role').innerText = data.role || 'Zaposleni';
+                document.getElementById('profile-avatar').innerText = data.name.charAt(0);
+            }
+        }
+
+        async function fetchWeekData(dateObj) {
+            const start = getStartOfWeek(dateObj);
+            const startStr = formatDateForDB(start);
+            
+            // Pridobi plane za ta teden
+            const pSnap = await db.ref('weeklyPlans').orderByChild('userId_weekStart').equalTo(`${currentUser}_${startStr}`).once('value');
+            loadedPlans = [];
+            if(pSnap.exists()) {
+                pSnap.forEach(child => {
+                    const days = child.val().days || {};
+                    for(let d in days) {
+                        loadedPlans.push({ date: d, ...days[d] });
+                    }
+                });
             }
 
-            // Tedenski pregled
-            const weekContainer = document.getElementById('home-week-container');
-            weekContainer.innerHTML = '';
+            // Pridobi vnose za ta teden (za izračun skupnih ur in statusov)
+            const eSnap = await db.ref('workEntries').orderByChild('userId').equalTo(currentUser).once('value');
+            loadedEntries = [];
+            if(eSnap.exists()) {
+                eSnap.forEach(child => {
+                    const val = child.val();
+                    // Preprosto filtriranje na klientu za demo hitrost
+                    const entryDate = new Date(val.date);
+                    const end = new Date(start); end.setDate(end.getDate() + 6);
+                    if(entryDate >= start && entryDate <= end) {
+                        loadedEntries.push({ id: child.key, ...val });
+                    }
+                });
+            }
+        }
+
+        async function fetchMonthData(dateObj) {
+            // Zaradi preprostosti baze bomo prenesli vse in filtrirali za trenutni mesec
+            const eSnap = await db.ref('workEntries').orderByChild('userId').equalTo(currentUser).once('value');
+            window.monthEntries = [];
+            if(eSnap.exists()) {
+                eSnap.forEach(child => {
+                    const val = child.val();
+                    const d = new Date(val.date);
+                    if(d.getMonth() === dateObj.getMonth() && d.getFullYear() === dateObj.getFullYear()) {
+                        window.monthEntries.push(val);
+                    }
+                });
+            }
             
-            const startOfWk = getStartOfWeek(new Date());
-            let weekTotalMins = 0;
-            let weekPlanMins = 0;
-            let hasPlans = false;
+            const pSnap = await db.ref('weeklyPlans').once('value');
+            window.monthPlans = [];
+            if(pSnap.exists()) {
+                pSnap.forEach(child => {
+                    if(child.val().userId === currentUser) {
+                        const days = child.val().days || {};
+                        for(let d in days) {
+                            const dObj = new Date(d);
+                            if(dObj.getMonth() === dateObj.getMonth() && dObj.getFullYear() === dateObj.getFullYear()) {
+                                window.monthPlans.push({date: d, ...days[d]});
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- UI POSODOBITVE ---
+
+        function updateHomeView() {
+            const todayStr = formatDateForDB(new Date());
+            const displayDate = new Date().toLocaleDateString('sl-SI', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('home-date').innerText = displayDate.charAt(0).toUpperCase() + displayDate.slice(1);
+
+            const todayPlan = loadedPlans.find(p => p.date === todayStr);
+            const todayEntry = loadedEntries.find(e => e.date === todayStr);
+
+            const container = document.getElementById('home-today-container');
+            container.innerHTML = '';
+
+            if (todayEntry && todayEntry.status === 'completed') {
+                container.innerHTML = `
+                    <div class="card card-primary" style="background: var(--success);">
+                        <div class="badge badge-white" style="margin-bottom: 16px;">Opravljeno</div>
+                        <h2 class="time-huge">${todayEntry.actualStart} - ${todayEntry.actualEnd}</h2>
+                        <div class="info-row"><i class="fas fa-check-circle"></i> Vpisano opravljeno delo</div>
+                    </div>`;
+            } else if (todayEntry && todayEntry.status === 'cancelled') {
+                container.innerHTML = `
+                    <div class="card card-primary" style="background: var(--warning);">
+                        <div class="badge badge-white" style="margin-bottom: 16px;">Odpovedano</div>
+                        <h2 class="time-huge">Izmena odpovedana</h2>
+                    </div>`;
+            } else if (todayPlan && todayPlan.status !== 'prosto') {
+                const planDur = calcDuration(todayPlan.start, todayPlan.end, 0);
+                container.innerHTML = `
+                    <div class="card card-primary">
+                        <div class="flex-between">
+                            <span style="font-size: 14px; opacity: 0.9;">Danes delaš</span>
+                            <div class="badge badge-white">${formatDurationShort(planDur)}</div>
+                        </div>
+                        <h2 class="time-huge">${todayPlan.start} - ${todayPlan.end}</h2>
+                        <div class="info-row"><i class="fas fa-map-marker-alt"></i> ${todayPlan.location || 'Ni lokacije'}</div>
+                        <div class="info-row"><i class="fas fa-user-tag"></i> ${todayPlan.role || 'Ni določeno'}</div>
+                        <button class="btn" style="background: var(--white); color: var(--primary); margin-top: 16px;" onclick="document.getElementById('add-date').value='${todayStr}'; switchView('view-add'); loadPlanForDate('${todayStr}');">VPIŠI OPRAVLJENO DELO <i class="fas fa-play" style="margin-left:8px;"></i></button>
+                    </div>`;
+            } else {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-mug-hot"></i>
+                        <p>Danes nimaš načrtovane izmene.</p>
+                    </div>`;
+            }
+
+            // Teden List
+            const weekList = document.getElementById('home-week-list');
+            weekList.innerHTML = '';
+            let totalPlanMins = 0;
+            let totalDoneMins = 0;
+
+            const startOfWeek = getStartOfWeek(currentDate);
+            let hasAnyPlan = false;
 
             for(let i=0; i<7; i++) {
-                const d = addDays(startOfWk, i);
-                const dStr = formatDateYYYYMMDD(d);
-                const plan = getPlanForDate(dStr);
-                const entry = dbEntries[dStr];
-                
-                if (plan || entry) hasPlans = true;
+                const d = new Date(startOfWeek);
+                d.setDate(d.getDate() + i);
+                const dStr = formatDateForDB(d);
+                const plan = loadedPlans.find(p => p.date === dStr);
+                const entry = loadedEntries.find(e => e.date === dStr);
 
-                const dayName = ['Ned', 'Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob'][d.getDay()];
+                const dayName = d.toLocaleDateString('sl-SI', { weekday: 'short' });
                 const dayDate = `${d.getDate()}. ${d.getMonth()+1}.`;
-                
-                let timeText = "Prosto";
-                let durText = "—";
-                let statusIcon = "";
 
-                if (entry && entry.status === 'cancelled') {
-                    timeText = "<span class='text-warning'>Odpovedano</span>";
-                    durText = "—";
-                    statusIcon = "🟠";
-                } else if (entry) {
-                    timeText = `${entry.actualStart} - ${entry.actualEnd}`;
-                    const dur = timeToMinutes(entry.actualEnd) - timeToMinutes(entry.actualStart) - (entry.breakMinutes || 0);
-                    durText = minutesToDisplay(dur);
-                    weekTotalMins += dur;
-                    statusIcon = "✅";
+                let timeStr = '—';
+                let durStr = '—';
+                let statusIcon = '';
+
+                if (entry) {
+                    hasAnyPlan = true;
+                    if(entry.status === 'completed') {
+                        timeStr = `${entry.actualStart} - ${entry.actualEnd}`;
+                        const done = calcDuration(entry.actualStart, entry.actualEnd, entry.breakMinutes);
+                        totalDoneMins += done;
+                        durStr = formatDurationShort(done);
+                        statusIcon = `<i class="fas fa-check-circle" style="color: var(--success);"></i>`;
+                    } else if (entry.status === 'cancelled') {
+                        timeStr = 'Odpovedano';
+                        statusIcon = `<i class="fas fa-times-circle" style="color: var(--warning);"></i>`;
+                    }
                 } else if (plan) {
-                    timeText = `${plan.start} - ${plan.end}`;
-                    const dur = timeToMinutes(plan.end) - timeToMinutes(plan.start);
-                    durText = minutesToDisplay(dur);
-                    weekPlanMins += dur;
+                    hasAnyPlan = true;
+                    if(plan.status === 'prosto') {
+                        timeStr = 'Prosto';
+                    } else {
+                        timeStr = `${plan.start} - ${plan.end}`;
+                        const planMin = calcDuration(plan.start, plan.end, 0);
+                        totalPlanMins += planMin;
+                        durStr = formatDurationShort(planMin);
+                        statusIcon = `<span style="color: var(--text-light); font-size: 10px;"><i class="fas fa-circle"></i></span>`;
+                    }
                 }
 
-                weekContainer.innerHTML += `
-                    <div class="d-flex justify-between align-center" style="padding:0.6rem 0; border-bottom: 1px solid #f0f4f8;">
-                        <div style="width: 55px;">
-                            <div class="text-bold">${dayName}</div>
-                            <div style="font-size:0.75rem; color:var(--text-secondary);">${dayDate}</div>
-                        </div>
-                        <div style="flex:1; text-align:center; font-weight:600;">${timeText}</div>
-                        <div style="width: 80px; text-align:right; font-size:0.85rem;">
-                            ${durText} ${statusIcon}
+                weekList.innerHTML += `
+                    <div class="list-item">
+                        <div class="list-item-date">${dayName}<span>${dayDate}</span></div>
+                        <div class="list-item-time" style="color: ${timeStr==='Prosto'?'var(--text-light)':'inherit'}">${timeStr}</div>
+                        <div class="list-item-status">
+                            <span style="margin-right: 8px; color: var(--warning);">${durStr}</span>
+                            ${statusIcon}
                         </div>
                     </div>
                 `;
             }
+
+            if(!hasAnyPlan) {
+                weekList.innerHTML = `<div class="empty-state" style="padding: 24px 0;"><p>Za ta teden še nimaš razporejenih izmen.</p></div>`;
+            }
+
+            document.getElementById('home-week-total').innerText = `${formatDurationShort(totalDoneMins)} / ${formatDurationShort(totalPlanMins)}`;
+        }
+
+        function updateCalendarView() {
+            const start = getStartOfWeek(selectedCalendarDate);
+            const end = new Date(start); end.setDate(end.getDate() + 6);
             
-            if(!hasPlans) {
-                weekContainer.innerHTML = `<div class="empty-state">Za ta teden še nimaš razporejenih izmen.</div>`;
-            } else {
-                weekContainer.innerHTML += `
-                    <div class="d-flex justify-between align-center mt-1 pt-1" style="font-size:0.9rem;">
-                        <b>Skupaj ta teden</b>
-                        <b>${minutesToDisplay(weekTotalMins)} / <span style="color:var(--text-secondary);">${minutesToDisplay(weekPlanMins)}</span></b>
-                    </div>
-                `;
-            }
-        }
+            document.getElementById('calendar-week-label').innerText = 
+                `${start.getDate()}. ${start.getMonth()+1}. - ${end.getDate()}. ${end.getMonth()+1}. ${end.getFullYear()}`;
 
-        // ----------------------------------------------------
-        // PRIKAZ: KOLEDAR
-        // ----------------------------------------------------
-        function changeWeek(offset) {
-            viewedWeekStart = addDays(viewedWeekStart, offset * 7);
-            renderCalendar();
-        }
-
-        function renderCalendar() {
-            const endOfWeek = addDays(viewedWeekStart, 6);
-            document.getElementById('calendar-week-range').innerText = 
-                `${viewedWeekStart.getDate()}. ${viewedWeekStart.getMonth()+1}. – ${endOfWeek.getDate()}. ${endOfWeek.getMonth()+1}. ${endOfWeek.getFullYear()}`;
-
-            const container = document.getElementById('calendar-days-container');
-            container.innerHTML = '';
+            const list = document.getElementById('calendar-list');
+            list.innerHTML = '';
             
             let hasData = false;
 
             for(let i=0; i<7; i++) {
-                const d = addDays(viewedWeekStart, i);
-                const dStr = formatDateYYYYMMDD(d);
-                const plan = getPlanForDate(dStr);
-                const entry = dbEntries[dStr];
+                const d = new Date(start);
+                d.setDate(d.getDate() + i);
+                const dStr = formatDateForDB(d);
+                const plan = loadedPlans.find(p => p.date === dStr);
+                const entry = loadedEntries.find(e => e.date === dStr);
 
-                if (plan || entry) hasData = true;
+                if (plan || entry) {
+                    hasData = true;
+                    const dateDisplay = d.toLocaleDateString('sl-SI', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                    
+                    let content = '';
+                    if (entry && entry.status === 'completed') {
+                        const dur = formatDurationShort(calcDuration(entry.actualStart, entry.actualEnd, entry.breakMinutes));
+                        content = `
+                            <div class="card" style="border-left: 4px solid var(--success);">
+                                <div class="flex-between">
+                                    <h3 style="font-size: 18px;">${entry.actualStart} - ${entry.actualEnd}</h3>
+                                    <span class="badge badge-success">Opravljeno</span>
+                                </div>
+                                <div class="flex-between" style="margin-top:16px;">
+                                    <span style="color:var(--text-light); font-size:14px;"><i class="fas fa-clock"></i> ${dur}</span>
+                                    <button class="btn btn-outline" style="padding: 4px 12px; font-size: 12px; width: auto;" onclick="deleteEntry('${entry.id}')">Izbriši vnos</button>
+                                </div>
+                            </div>`;
+                    } else if (entry && entry.status === 'cancelled') {
+                        content = `
+                            <div class="card" style="border-left: 4px solid var(--warning); background: #fffcf8;">
+                                <div class="flex-between">
+                                    <h3 style="font-size: 18px; color: var(--warning);">Odpovedano</h3>
+                                    <span class="badge badge-warning">Odpoved</span>
+                                </div>
+                            </div>`;
+                    } else if (plan && plan.status !== 'prosto') {
+                        const dur = formatDurationShort(calcDuration(plan.start, plan.end, 0));
+                        content = `
+                            <div class="card" style="border-left: 4px solid var(--primary);">
+                                <div class="flex-between" style="margin-bottom: 12px;">
+                                    <h3 style="font-size: 18px;">${plan.start} - ${plan.end}</h3>
+                                    <span style="color: var(--text-light); font-weight:bold;">${dur}</span>
+                                </div>
+                                <div class="info-row"><i class="fas fa-map-marker-alt"></i> ${plan.location || '/'}</div>
+                                <div class="info-row"><i class="fas fa-user-tag"></i> ${plan.role || '/'}</div>
+                            </div>`;
+                    } else {
+                        content = `
+                            <div class="card" style="background: transparent; box-shadow: none; border: 1px dashed #ccc;">
+                                <p style="text-align: center; color: var(--text-light);">Prosto</p>
+                            </div>`;
+                    }
 
-                if (!plan && !entry) continue;
-
-                let cardHtml = `<div class="card" style="cursor:pointer;" onclick="document.getElementById('entry-date').value='${dStr}'; loadEntryForDate('${dStr}'); navigateTo('entry');">`;
-                cardHtml += `<p class="text-bold mb-1" style="color:var(--primary-color);">${formatDateDisplay(dStr)}</p>`;
-
-                if (entry && entry.status === 'cancelled') {
-                    cardHtml += `<h3 class="text-warning">Odpovedana izmena</h3>`;
-                } else if (entry) {
-                    const dur = timeToMinutes(entry.actualEnd) - timeToMinutes(entry.actualStart) - (entry.breakMinutes||0);
-                    cardHtml += `
-                        <div class="d-flex justify-between align-center">
-                            <h3>${entry.actualStart} – ${entry.actualEnd}</h3>
-                            <span class="text-success text-bold" style="font-size:0.85rem;">Opravljeno ✅</span>
-                        </div>
-                        <p style="margin-top:0.3rem;">Dejanski čas: ${minutesToDisplay(dur)} (odmor ${entry.breakMinutes||0} min)</p>
-                    `;
-                } else if (plan) {
-                    const dur = timeToMinutes(plan.end) - timeToMinutes(plan.start);
-                    cardHtml += `
-                        <div class="d-flex justify-between align-center">
-                            <h3>${plan.start} – ${plan.end}</h3>
-                            <span style="color:var(--text-secondary); background:#eef2f5; padding:3px 8px; border-radius:10px; font-size:0.8rem;">${minutesToDisplay(dur)}</span>
-                        </div>
-                        <p style="margin-top:0.3rem;">📍 ${plan.location || 'Ni določeno'} | 👨‍🍳 ${plan.role || ''}</p>
+                    list.innerHTML += `
+                        <h4 style="font-size: 14px; margin-bottom: 8px; margin-top: 16px;">${dateDisplay.charAt(0).toUpperCase() + dateDisplay.slice(1)}</h4>
+                        ${content}
                     `;
                 }
-                cardHtml += `</div>`;
-                container.innerHTML += cardHtml;
             }
 
             if (!hasData) {
-                container.innerHTML = `<div class="empty-state card">Za ta teden še ni izdelanega plana.</div>`;
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="far fa-calendar-times"></i>
+                        <p>Za ta teden še ni izdelanega plana.</p>
+                    </div>`;
             }
         }
 
-        // ----------------------------------------------------
-        // PRIKAZ: VPIS OPRAVLJENEGA DELA
-        // ----------------------------------------------------
-        function loadEntryForDate(dateStr) {
-            const plan = getPlanForDate(dateStr);
-            const entry = dbEntries[dateStr];
-
-            const planCard = document.getElementById('entry-plan-card');
-            if (plan) {
-                planCard.style.display = 'block';
-                document.getElementById('entry-plan-date').innerText = formatDateDisplay(dateStr);
-                document.getElementById('entry-plan-time').innerText = `${plan.start} – ${plan.end}`;
-                document.getElementById('entry-plan-loc').innerText = `📍 ${plan.location || 'Restavracija'} | 👨‍🍳 ${plan.role || currentUser.role}`;
-            } else {
-                planCard.style.display = 'none';
-            }
-
-            document.getElementById('entry-date-hidden').value = dateStr;
-            const btnDelete = document.getElementById('btn-delete-entry');
-
-            if (entry) {
-                if(entry.status === 'cancelled') {
-                    document.getElementById('entry-start').value = '';
-                    document.getElementById('entry-end').value = '';
-                    document.getElementById('entry-break').value = '0';
-                    document.getElementById('entry-note').value = 'Odpovedano';
-                } else {
-                    document.getElementById('entry-start').value = entry.actualStart || '';
-                    document.getElementById('entry-end').value = entry.actualEnd || '';
-                    document.getElementById('entry-break').value = entry.breakMinutes !== undefined ? entry.breakMinutes : 30;
-                    document.getElementById('entry-note').value = entry.note || '';
-                }
-                btnDelete.style.display = 'block';
-            } else {
-                document.getElementById('entry-start').value = plan ? plan.start : '';
-                document.getElementById('entry-end').value = plan ? plan.end : '';
-                document.getElementById('entry-break').value = 30;
-                document.getElementById('entry-note').value = '';
-                btnDelete.style.display = 'none';
-            }
+        async function changeWeek(dir) {
+            selectedCalendarDate.setDate(selectedCalendarDate.getDate() + (dir * 7));
+            showLoader(true);
+            await fetchWeekData(selectedCalendarDate);
+            updateCalendarView();
+            showLoader(false);
         }
 
-        document.getElementById('work-entry-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const dateStr = document.getElementById('entry-date').value;
-            if(!dateStr) { showAlert('Opozorilo', 'Izberite datum.'); return; }
+        // --- VPIS DELA LOGIKA ---
+        function loadPlanForDate(dateStr) {
+            if(!dateStr) return;
+            const dbDate = dateStr; // is YYYY-MM-DD from input
+            const plan = loadedPlans.find(p => p.date === dbDate);
+            const card = document.getElementById('add-plan-card');
             
-            const start = document.getElementById('entry-start').value;
-            const end = document.getElementById('entry-end').value;
-            const breakMins = parseInt(document.getElementById('entry-break').value) || 0;
-            const note = document.getElementById('entry-note').value;
+            if(plan && plan.status !== 'prosto') {
+                const dur = formatDurationShort(calcDuration(plan.start, plan.end, 0));
+                card.innerHTML = `
+                    <div class="flex-between" style="margin-bottom: 12px;">
+                        <span style="font-size: 14px; opacity: 0.9;">Planirano za ta dan</span>
+                        <div class="badge badge-white">${dur}</div>
+                    </div>
+                    <h2 class="time-huge" style="margin: 8px 0;">${plan.start} - ${plan.end}</h2>
+                    <div class="info-row"><i class="fas fa-map-marker-alt"></i> ${plan.location || '/'}</div>
+                `;
+                document.getElementById('add-start').value = plan.start;
+                document.getElementById('add-end').value = plan.end;
+            } else {
+                card.innerHTML = `<p>Za ta dan ni plana v sistemu. Vseeno lahko vpišeš opravljeno delo.</p>`;
+                document.getElementById('add-start').value = '';
+                document.getElementById('add-end').value = '';
+            }
+            calculateAddForm();
+        }
 
-            if(timeToMinutes(end) <= timeToMinutes(start)) {
-                showAlert('Napaka', 'Konec dela mora biti kasnejši od začetka.');
+        function calculateAddForm() {
+            const start = document.getElementById('add-start').value;
+            const end = document.getElementById('add-end').value;
+            const brk = parseInt(document.getElementById('add-break').value) || 0;
+            
+            if(!start || !end) return;
+
+            if(end < start) {
+                alert('Konec dela ne sme biti pred začetkom!');
+                document.getElementById('add-end').value = '';
                 return;
             }
-            if(breakMins < 0) {
-                showAlert('Napaka', 'Čas odmora ne more biti negativen.');
+
+            const totalMins = calcDuration(start, end, brk);
+            if(totalMins < 0) {
+                alert('Odmor je daljši od delovnega časa!');
                 return;
             }
 
-            const plan = getPlanForDate(dateStr);
-            
-            const entryData = {
-                date: dateStr,
-                plannedStart: plan ? plan.start : null,
-                plannedEnd: plan ? plan.end : null,
-                actualStart: start,
-                actualEnd: end,
-                breakMinutes: breakMins,
-                note: note,
-                status: 'completed',
-                updatedAt: new Date().toISOString()
-            };
+            document.getElementById('add-duration-label').innerText = `Trajanje: ${formatDurationFull(totalMins)}`;
+            document.getElementById('add-total-display').innerText = formatDurationFull(totalMins);
 
-            showLoading("Shranjevanje...");
+            // Preveri plan za nadure
+            const dateStr = document.getElementById('add-date').value;
+            const plan = loadedPlans.find(p => p.date === dateStr);
+            let planMins = 0;
+            if(plan && plan.status !== 'prosto') {
+                planMins = calcDuration(plan.start, plan.end, 0);
+            }
+
+            let overMins = 0;
+            let regMins = totalMins;
+            if(planMins > 0 && totalMins > planMins) {
+                overMins = totalMins - planMins;
+                regMins = planMins;
+            }
+
+            document.getElementById('add-regular-display').innerText = formatDurationFull(regMins);
+            document.getElementById('add-overtime-display').innerText = formatDurationFull(overMins);
+        }
+
+        async function submitWorkEntry() {
+            const date = document.getElementById('add-date').value;
+            const start = document.getElementById('add-start').value;
+            const end = document.getElementById('add-end').value;
+            const brk = parseInt(document.getElementById('add-break').value) || 0;
+            const note = document.getElementById('add-note').value.trim();
+
+            if(!date || !start || !end) {
+                alert('Izpolni obvezna polja (Datum, Pričetek, Konec).');
+                return;
+            }
+
+            showLoader(true);
             try {
-                await db.ref(`workEntries/${currentUser.id}/${dateStr}`).set(entryData);
-                dbEntries[dateStr] = entryData;
-                hideLoading();
-                showAlert('Uspešno', 'Vnos dela je shranjen v bazo.', () => navigateTo('home'));
-            } catch(e) {
-                hideLoading();
-                showAlert('Napaka', 'Napaka pri shranjevanju v bazo.');
-            }
-        });
-
-        async function cancelShift() {
-            const dateStr = document.getElementById('entry-date').value;
-            if(!dateStr) return;
-            
-            showAlert('Potrditev', 'Ali res želite označiti izmeno kot odpovedano?', async () => {
-                showLoading("Shranjevanje statusa...");
-                try {
-                    const entryData = {
-                        date: dateStr,
-                        status: 'cancelled',
-                        updatedAt: new Date().toISOString()
-                    };
-                    await db.ref(`workEntries/${currentUser.id}/${dateStr}`).set(entryData);
-                    dbEntries[dateStr] = entryData;
-                    hideLoading();
-                    navigateTo('home');
-                } catch(e) {
-                    hideLoading();
-                    showAlert('Napaka', 'Prišlo je do napake pri shranjevanju.');
-                }
-            }, true);
-        }
-
-        async function deleteEntry() {
-            const dateStr = document.getElementById('entry-date').value;
-            if(!dateStr) return;
-
-            showAlert('Brisanje', 'Ali res želite izbrisati ta vnos dela?', async () => {
-                showLoading("Brisanje...");
-                try {
-                    await db.ref(`workEntries/${currentUser.id}/${dateStr}`).remove();
-                    delete dbEntries[dateStr];
-                    hideLoading();
-                    navigateTo('home');
-                } catch(e) {
-                    hideLoading();
-                    showAlert('Napaka', 'Prišlo je do napake pri brisanju.');
-                }
-            }, true);
-        }
-
-        // ----------------------------------------------------
-        // PRIKAZ: STATISTIKA
-        // ----------------------------------------------------
-        function setStatsPeriod(period) {
-            statsPeriod = period;
-            document.getElementById('btn-stat-week').className = period === 'week' ? 'btn btn-primary' : 'btn btn-outline';
-            document.getElementById('btn-stat-month').className = period === 'month' ? 'btn btn-primary' : 'btn btn-outline';
-            document.getElementById('btn-stat-year').className = period === 'year' ? 'btn btn-primary' : 'btn btn-outline';
-            renderStats();
-        }
-
-        function changeStatsOffset(dir) {
-            if (statsPeriod === 'week') statsDate = addDays(statsDate, dir * 7);
-            if (statsPeriod === 'month') statsDate.setMonth(statsDate.getMonth() + dir);
-            if (statsPeriod === 'year') statsDate.setFullYear(statsDate.getFullYear() + dir);
-            renderStats();
-        }
-
-        function renderStats() {
-            let startD, endD;
-            let label = "";
-            const y = statsDate.getFullYear();
-            const m = statsDate.getMonth();
-
-            if (statsPeriod === 'week') {
-                startD = getStartOfWeek(statsDate);
-                endD = addDays(startD, 6);
-                label = `${startD.getDate()}.${startD.getMonth()+1}. – ${endD.getDate()}.${endD.getMonth()+1}. ${y}`;
-            } else if (statsPeriod === 'month') {
-                startD = new Date(y, m, 1);
-                endD = new Date(y, m + 1, 0);
-                const months = ['Januar','Februar','Marec','April','Maj','Junij','Julij','Avgust','September','Oktober','November','December'];
-                label = `${months[m]} ${y}`;
-            } else {
-                startD = new Date(y, 0, 1);
-                endD = new Date(y, 11, 31);
-                label = `Leto ${y}`;
-            }
-            
-            document.getElementById('stats-range-label').innerText = label;
-
-            let actualMins = 0;
-            let plannedMins = 0;
-            let overtimeMins = 0;
-            let cancelledMins = 0;
-
-            let chartLabels = [];
-            let chartDataActual = [];
-            let chartDataPlanned = [];
-
-            for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
-                const dStr = formatDateYYYYMMDD(d);
-                const plan = getPlanForDate(dStr);
-                const entry = dbEntries[dStr];
+                const newRef = db.ref('workEntries').push();
+                await newRef.set({
+                    userId: currentUser,
+                    date: date,
+                    actualStart: start,
+                    actualEnd: end,
+                    breakMinutes: brk,
+                    status: 'completed',
+                    note: note,
+                    createdAt: new Date().toISOString()
+                });
                 
-                let pMins = 0;
-                if (plan) pMins = timeToMinutes(plan.end) - timeToMinutes(plan.start);
+                // Refresh data
+                await fetchWeekData(currentDate);
+                await fetchMonthData(selectedStatsDate);
+                updateHomeView();
+                updateCalendarView();
+                updateStatsView();
+                
+                document.getElementById('add-note').value = '';
+                switchView('view-home');
+            } catch (e) {
+                console.error(e);
+                alert('Napaka pri shranjevanju.');
+            }
+            showLoader(false);
+        }
 
-                let aMins = 0;
-                let cMins = 0;
-                let otMins = 0;
+        async function cancelWorkEntry() {
+            const date = document.getElementById('add-date').value;
+            if(!date) return;
+            
+            if(!confirm('Res želiš označiti izmeno kot odpovedano?')) return;
 
-                if (entry) {
-                    if (entry.status === 'cancelled') {
-                        cMins = pMins;
-                    } else {
-                        aMins = timeToMinutes(entry.actualEnd) - timeToMinutes(entry.actualStart) - (entry.breakMinutes||0);
-                        if(aMins < 0) aMins = 0;
-                        if(aMins > pMins && pMins > 0) {
-                            otMins = aMins - pMins;
-                        } else if (!plan && aMins > 0) {
-                            otMins = aMins;
+            showLoader(true);
+            try {
+                const newRef = db.ref('workEntries').push();
+                await newRef.set({
+                    userId: currentUser,
+                    date: date,
+                    status: 'cancelled',
+                    createdAt: new Date().toISOString()
+                });
+                
+                await fetchWeekData(currentDate);
+                await fetchMonthData(selectedStatsDate);
+                updateHomeView();
+                updateCalendarView();
+                updateStatsView();
+                switchView('view-home');
+            } catch (e) {
+                console.error(e);
+                alert('Napaka pri odpovedi.');
+            }
+            showLoader(false);
+        }
+
+        async function deleteEntry(id) {
+            if(!confirm('Res želiš izbrisati ta vnos?')) return;
+            showLoader(true);
+            try {
+                await db.ref('workEntries/' + id).remove();
+                await fetchWeekData(selectedCalendarDate);
+                await fetchMonthData(selectedStatsDate);
+                updateCalendarView();
+                updateHomeView();
+                updateStatsView();
+            } catch (e) {
+                alert('Napaka pri brisanju.');
+            }
+            showLoader(false);
+        }
+
+        // --- STATISTIKA LOGIKA ---
+        function updateStatsView() {
+            const monthNames = ["Januar", "Februar", "Marec", "April", "Maj", "Junij", "Julij", "Avgust", "September", "Oktober", "November", "December"];
+            document.getElementById('stats-period-label').innerText = `${monthNames[selectedStatsDate.getMonth()]} ${selectedStatsDate.getFullYear()}`;
+
+            let totalDone = 0, totalPlan = 0, totalOver = 0, totalCancel = 0;
+            const chartLabels = [];
+            const chartDataDone = [];
+            const chartDataPlan = [];
+            
+            const daysInMonth = new Date(selectedStatsDate.getFullYear(), selectedStatsDate.getMonth() + 1, 0).getDate();
+
+            for(let i=1; i<=daysInMonth; i++) {
+                const d = new Date(selectedStatsDate.getFullYear(), selectedStatsDate.getMonth(), i);
+                const dStr = formatDateForDB(d);
+                
+                let dayDone = 0;
+                let dayPlan = 0;
+
+                const p = window.monthPlans.find(x => x.date === dStr);
+                if(p && p.status !== 'prosto') {
+                    dayPlan = calcDuration(p.start, p.end, 0);
+                    totalPlan += dayPlan;
+                }
+
+                const e = window.monthEntries.find(x => x.date === dStr);
+                if(e) {
+                    if(e.status === 'completed') {
+                        dayDone = calcDuration(e.actualStart, e.actualEnd, e.breakMinutes);
+                        totalDone += dayDone;
+                        if(dayPlan > 0 && dayDone > dayPlan) {
+                            totalOver += (dayDone - dayPlan);
+                        } else if (dayPlan === 0) { // delo na prost dan
+                            totalOver += dayDone;
                         }
+                    } else if (e.status === 'cancelled') {
+                        if (dayPlan > 0) totalCancel += dayPlan;
                     }
                 }
 
-                plannedMins += pMins;
-                actualMins += aMins;
-                overtimeMins += otMins;
-                cancelledMins += cMins;
-
-                if (statsPeriod !== 'year') {
-                    chartLabels.push(`${d.getDate()}.`);
-                    chartDataActual.push((aMins / 60).toFixed(1));
-                    chartDataPlanned.push((pMins / 60).toFixed(1));
+                // Za graf samo vsak 3. dan da ni preveč natrpano
+                if (i % 3 === 1 || i === daysInMonth) {
+                    chartLabels.push(`${i}.`);
+                    chartDataDone.push((dayDone / 60).toFixed(1));
+                    chartDataPlan.push((dayPlan / 60).toFixed(1));
                 }
             }
 
-            if (statsPeriod === 'year') {
-                chartLabels = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Avg','Sep','Okt','Nov','Dec'];
-                chartDataActual = new Array(12).fill(0);
-                chartDataPlanned = new Array(12).fill(0);
-                
-                for(let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
-                    const dStr = formatDateYYYYMMDD(d);
-                    const plan = getPlanForDate(dStr);
-                    const entry = dbEntries[dStr];
-                    const monthIdx = d.getMonth();
-                    
-                    if (plan) chartDataPlanned[monthIdx] += (timeToMinutes(plan.end) - timeToMinutes(plan.start))/60;
-                    if (entry && entry.status !== 'cancelled') {
-                         let a = timeToMinutes(entry.actualEnd) - timeToMinutes(entry.actualStart) - (entry.breakMinutes||0);
-                         if(a>0) chartDataActual[monthIdx] += a/60;
-                    }
-                }
+            function setStatHTML(id, mins) {
+                const h = Math.floor(mins / 60);
+                const m = mins % 60;
+                document.getElementById(id).innerHTML = `${h}<span>h</span> ${m.toString().padStart(2, '0')}<span>m</span>`;
             }
 
-            document.getElementById('stat-actual').innerText = minutesToDisplay(actualMins);
-            document.getElementById('stat-planned').innerText = minutesToDisplay(plannedMins);
-            document.getElementById('stat-overtime').innerText = minutesToDisplay(overtimeMins);
-            document.getElementById('stat-cancelled').innerText = minutesToDisplay(cancelledMins);
+            setStatHTML('stat-done', totalDone);
+            setStatHTML('stat-planned', totalPlan);
+            setStatHTML('stat-overtime', totalOver);
+            setStatHTML('stat-cancelled', totalCancel);
 
-            renderChart(chartLabels, chartDataActual, chartDataPlanned);
+            updateChart(chartLabels, chartDataDone, chartDataPlan);
         }
 
-        function renderChart(labels, actual, planned) {
-            const ctx = document.getElementById('statsChart');
+        async function changeStatsMonth(dir) {
+            selectedStatsDate.setMonth(selectedStatsDate.getMonth() + dir);
+            showLoader(true);
+            await fetchMonthData(selectedStatsDate);
+            updateStatsView();
+            showLoader(false);
+        }
+
+        function updateChart(labels, done, plan) {
+            const ctx = document.getElementById('statsChart').getContext('2d');
             
-            const totalVal = actual.reduce((a,b)=>Number(a)+Number(b),0) + planned.reduce((a,b)=>Number(a)+Number(b),0);
-            if(totalVal === 0) {
-                ctx.style.display = 'none';
-                document.getElementById('stats-empty-chart').style.display = 'block';
+            if(myChart) { myChart.destroy(); }
+            
+            // Check if all zero
+            const hasData = done.some(v => v > 0) || plan.some(v => v > 0);
+
+            if (!hasData) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = "14px Arial";
+                ctx.fillStyle = "#6c757d";
+                ctx.textAlign = "center";
+                ctx.fillText("Ni dovolj podatkov za prikaz.", ctx.canvas.width/2, ctx.canvas.height/2);
                 return;
-            } else {
-                ctx.style.display = 'block';
-                document.getElementById('stats-empty-chart').style.display = 'none';
             }
 
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
+            myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Opravljene ure',
-                            data: actual,
+                            label: 'Opravljene',
+                            data: done,
                             backgroundColor: '#2a9d8f',
                             borderRadius: 4
                         },
                         {
-                            label: 'Predvidene ure',
-                            data: planned,
-                            backgroundColor: '#cbd5e1',
+                            label: 'Predvidene',
+                            data: plan,
+                            backgroundColor: 'rgba(0, 95, 115, 0.2)',
                             borderRadius: 4
                         }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true }
-                    },
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4] } }, x: { grid: { display: false } } },
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } }
                 }
             });
         }
 
-        // ----------------------------------------------------
-        // PRIKAZ: PROFIL IN DODAJANJE / UREJANJE PLANA
-        // ----------------------------------------------------
-        function renderProfile() {
-            document.getElementById('profile-initial').innerText = currentUser.name.charAt(0);
-            document.getElementById('profile-name').innerText = currentUser.name;
-            document.getElementById('profile-role').innerText = currentUser.role || 'Uporabnik';
-            
-            // Nastavi danes za urejanje plana
-            const todayStr = formatDateYYYYMMDD(new Date());
-            document.getElementById('plan-edit-date').value = todayStr;
-            loadPlanForEditing(todayStr);
-        }
+        // --- POMOŽNE FUNKCIJE IN NAVIGACIJA ---
 
-        function loadPlanForEditing(dateStr) {
-            const plan = getPlanForDate(dateStr);
-            const btnDel = document.getElementById('btn-delete-plan');
-            if (plan) {
-                document.getElementById('plan-edit-start').value = plan.start || '';
-                document.getElementById('plan-edit-end').value = plan.end || '';
-                document.getElementById('plan-edit-loc').value = plan.location || '';
-                document.getElementById('plan-edit-role').value = plan.role || '';
-                btnDel.style.display = 'block';
-            } else {
-                document.getElementById('plan-edit-start').value = '10:00';
-                document.getElementById('plan-edit-end').value = '18:00';
-                document.getElementById('plan-edit-loc').value = '';
-                document.getElementById('plan-edit-role').value = currentUser.role || '';
-                btnDel.style.display = 'none';
-            }
-        }
-
-        document.getElementById('plan-editor-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const dateStr = document.getElementById('plan-edit-date').value;
-            const start = document.getElementById('plan-edit-start').value;
-            const end = document.getElementById('plan-edit-end').value;
-            const loc = document.getElementById('plan-edit-loc').value;
-            const role = document.getElementById('plan-edit-role').value;
-
-            if(!dateStr) { showAlert('Opozorilo', 'Izberite datum.'); return; }
-
-            const planData = {
-                date: dateStr,
-                start: start,
-                end: end,
-                location: loc,
-                role: role,
-                updatedAt: new Date().toISOString()
-            };
-
-            showLoading("Shranjevanje plana...");
-            try {
-                await db.ref(`weeklyPlans/${currentUser.id}/${dateStr}`).set(planData);
-                dbPlans[dateStr] = planData;
-                hideLoading();
-                showAlert('Uspešno', `Plan za ${formatDateDisplay(dateStr)} je shranjen.`, () => {
-                    loadPlanForEditing(dateStr);
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item, .b-nav-item').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    const target = e.currentTarget.getAttribute('data-target');
+                    if(target) switchView(target);
                 });
-            } catch(err) {
-                hideLoading();
-                showAlert('Napaka', 'Napaka pri shranjevanju plana.');
-            }
-        });
-
-        async function deletePlan() {
-            const dateStr = document.getElementById('plan-edit-date').value;
-            if(!dateStr) return;
-
-            showAlert('Potrditev', `Ali res želite izbrisati plan za ${dateStr}?`, async () => {
-                showLoading("Brisanje plana...");
-                try {
-                    await db.ref(`weeklyPlans/${currentUser.id}/${dateStr}`).remove();
-                    delete dbPlans[dateStr];
-                    hideLoading();
-                    showAlert('Izbrisano', 'Plan je izbrisan.');
-                    loadPlanForEditing(dateStr);
-                } catch(e) {
-                    hideLoading();
-                    showAlert('Napaka', 'Napaka pri brisanju plana.');
-                }
-            }, true);
+            });
         }
 
-        function getPlanForDate(dateStr) {
-            if(dbPlans && dbPlans[dateStr]) {
-                return dbPlans[dateStr];
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+
+            document.querySelectorAll('.nav-item, .b-nav-item').forEach(el => {
+                if(el.getAttribute('data-target') === viewId) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+
+            if(viewId === 'view-add') {
+                const today = formatDateForDB(new Date());
+                document.getElementById('add-date').value = today;
+                loadPlanForDate(today);
             }
-            return null;
+        }
+
+        function getStartOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        function formatDateForDB(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1), day = '' + d.getDate(), year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+        }
+
+        function formatDateForInput(date) { return formatDateForDB(date); }
+
+        function calcDuration(start, end, breakMins) {
+            if(!start || !end) return 0;
+            const [sH, sM] = start.split(':').map(Number);
+            const [eH, eM] = end.split(':').map(Number);
+            let diff = (eH*60 + eM) - (sH*60 + sM);
+            if (diff < 0) diff += 24*60; // prehod čez polnoč
+            return Math.max(0, diff - (breakMins||0));
+        }
+
+        function formatDurationShort(mins) {
+            if(mins === 0) return '0h';
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            if (m === 0) return `${h}h`;
+            return `${h}h ${m}m`;
+        }
+        
+        function formatDurationFull(mins) {
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return `${h}h ${m.toString().padStart(2, '0')}m`;
+        }
+
+        function checkNotifications() {
+            alert("Trenutno nimaš novih obvestil.");
         }
 
     </script>
