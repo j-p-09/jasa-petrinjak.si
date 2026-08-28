@@ -264,7 +264,7 @@
     <!-- Napaka -->
     <div id="error-overlay" class="hidden">
         <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--warning); margin-bottom: 16px;"></i>
-        <p style="margin-bottom: 24px;">Podatkov trenutno ni mogoče naložiti. Poskusi znova.</p>
+        <p style="margin-bottom: 24px;">Podatkov trenutno ni mogoče naložiti. Preveri Firebase pravila.</p>
         <button class="btn" style="max-width: 200px;" onclick="initApp()">Poskusi znova</button>
     </div>
 
@@ -465,8 +465,8 @@
             <section id="view-profile" class="view">
                 <div style="text-align: center; margin-top: 40px; margin-bottom: 32px;">
                     <div style="width: 100px; height: 100px; background: var(--primary); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 40px; margin: 0 auto 16px auto; font-weight: bold;" id="profile-avatar">J</div>
-                    <h2 id="profile-name">...</h2>
-                    <p id="profile-role" style="color: var(--text-light);">...</p>
+                    <h2 id="profile-name">Jaša Petrinjak</h2>
+                    <p id="profile-role" style="color: var(--text-light);">Natakar</p>
                 </div>
 
                 <div class="profile-menu">
@@ -575,49 +575,32 @@
             const passIn = document.getElementById('login-password').value.trim();
             const errEl = document.getElementById('login-error');
             
-            if(!userIn || !passIn) {
-                errEl.style.display = 'block';
-                return;
-            }
-
-            showLoader(true);
-            try {
-                // Preveri uporabnika v bazi
-                const snapshot = await db.ref('users/' + userIn).once('value');
-                if (snapshot.exists()) {
-                    const userData = snapshot.val();
-                    if (userData.password === passIn) {
-                        // Uspešen login
-                        currentUser = userIn;
-                        sessionStorage.setItem('authUser', userIn);
-                        errEl.style.display = 'none';
-                        document.getElementById('login-password').value = '';
-                        initApp();
-                    } else {
-                        errEl.style.display = 'block';
-                        showLoader(false);
-                    }
-                } else {
-                    // Ustvari začetnega uporabnika, če še ne obstaja in so podatki "Jasa" / "j" kot v navodilih
-                    if(userIn === 'Jasa' && passIn === 'j') {
-                        await db.ref('users/Jasa').set({
-                            name: 'Jaša Petrinjak',
-                            username: 'Jasa',
-                            password: 'j',
-                            role: 'Natakar'
-                        });
-                        currentUser = userIn;
-                        sessionStorage.setItem('authUser', userIn);
-                        errEl.style.display = 'none';
-                        initApp();
-                    } else {
-                        errEl.style.display = 'block';
-                        showLoader(false);
-                    }
+            // Strogo preverjanje - edini dovoljen uporabnik je Jasa
+            if (userIn === 'Jasa' && passIn === 'j') {
+                errEl.style.display = 'none';
+                document.getElementById('login-password').value = '';
+                
+                // Nastavimo uporabnika
+                currentUser = 'Jasa';
+                sessionStorage.setItem('authUser', 'Jasa');
+                
+                // Poskusimo zapisati njegove osnovne podatke v Firebase za profil, 
+                // vendar ne blokiramo prijave, če Firebase pravila tega še ne dovoljujejo.
+                try {
+                    await db.ref('users/Jasa').update({
+                        name: 'Jaša Petrinjak',
+                        username: 'Jasa',
+                        role: 'Natakar'
+                    });
+                } catch (e) {
+                    console.warn("Opomba: Firebase pravila morda blokirajo zapisovanje profila, prijava se nadaljuje.");
                 }
-            } catch (error) {
-                console.error(error);
-                showError(true);
+
+                // Zaženi aplikacijo
+                initApp();
+            } else {
+                errEl.style.display = 'block';
+                errEl.innerText = 'Napačni podatki. Dovoljen je samo uporabnik Jasa (geslo: j).';
             }
         }
 
@@ -652,13 +635,20 @@
         // --- PODATKOVNA LOGIKA ---
 
         async function fetchUserData() {
-            const snap = await db.ref('users/' + currentUser).once('value');
-            if(snap.exists()) {
-                const data = snap.val();
-                document.getElementById('home-greeting').innerText = `Pozdravljen, ${data.name.split(' ')[0]} 👋`;
-                document.getElementById('profile-name').innerText = data.name;
-                document.getElementById('profile-role').innerText = data.role || 'Zaposleni';
-                document.getElementById('profile-avatar').innerText = data.name.charAt(0);
+            try {
+                const snap = await db.ref('users/' + currentUser).once('value');
+                if(snap.exists()) {
+                    const data = snap.val();
+                    document.getElementById('home-greeting').innerText = `Pozdravljen, ${data.name.split(' ')[0]} 👋`;
+                    document.getElementById('profile-name').innerText = data.name;
+                    document.getElementById('profile-role').innerText = data.role || 'Zaposleni';
+                    document.getElementById('profile-avatar').innerText = data.name.charAt(0);
+                } else {
+                    document.getElementById('home-greeting').innerText = `Pozdravljen, Jaša 👋`;
+                }
+            } catch (e) {
+                // Če pravila blokirajo branje profila, uporabi default
+                document.getElementById('home-greeting').innerText = `Pozdravljen, Jaša 👋`;
             }
         }
 
@@ -666,62 +656,73 @@
             const start = getStartOfWeek(dateObj);
             const startStr = formatDateForDB(start);
             
-            // Pridobi plane za ta teden
-            const pSnap = await db.ref('weeklyPlans').orderByChild('userId_weekStart').equalTo(`${currentUser}_${startStr}`).once('value');
             loadedPlans = [];
-            if(pSnap.exists()) {
-                pSnap.forEach(child => {
-                    const days = child.val().days || {};
-                    for(let d in days) {
-                        loadedPlans.push({ date: d, ...days[d] });
-                    }
-                });
-            }
-
-            // Pridobi vnose za ta teden (za izračun skupnih ur in statusov)
-            const eSnap = await db.ref('workEntries').orderByChild('userId').equalTo(currentUser).once('value');
             loadedEntries = [];
-            if(eSnap.exists()) {
-                eSnap.forEach(child => {
-                    const val = child.val();
-                    // Preprosto filtriranje na klientu za demo hitrost
-                    const entryDate = new Date(val.date);
-                    const end = new Date(start); end.setDate(end.getDate() + 6);
-                    if(entryDate >= start && entryDate <= end) {
-                        loadedEntries.push({ id: child.key, ...val });
-                    }
-                });
+
+            try {
+                // Pridobi plane za ta teden
+                const pSnap = await db.ref('weeklyPlans').orderByChild('userId_weekStart').equalTo(`${currentUser}_${startStr}`).once('value');
+                if(pSnap.exists()) {
+                    pSnap.forEach(child => {
+                        const days = child.val().days || {};
+                        for(let d in days) {
+                            loadedPlans.push({ date: d, ...days[d] });
+                        }
+                    });
+                }
+
+                // Pridobi vnose za ta teden (za izračun skupnih ur in statusov)
+                const eSnap = await db.ref('workEntries').orderByChild('userId').equalTo(currentUser).once('value');
+                if(eSnap.exists()) {
+                    eSnap.forEach(child => {
+                        const val = child.val();
+                        // Preprosto filtriranje na klientu za demo hitrost
+                        const entryDate = new Date(val.date);
+                        const end = new Date(start); end.setDate(end.getDate() + 6);
+                        if(entryDate >= start && entryDate <= end) {
+                            loadedEntries.push({ id: child.key, ...val });
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn("Brisanje/branje podatkov trenutno blokirano v Firebase.");
+                throw e; // Sproži prikaz napake
             }
         }
 
         async function fetchMonthData(dateObj) {
-            // Zaradi preprostosti baze bomo prenesli vse in filtrirali za trenutni mesec
-            const eSnap = await db.ref('workEntries').orderByChild('userId').equalTo(currentUser).once('value');
             window.monthEntries = [];
-            if(eSnap.exists()) {
-                eSnap.forEach(child => {
-                    const val = child.val();
-                    const d = new Date(val.date);
-                    if(d.getMonth() === dateObj.getMonth() && d.getFullYear() === dateObj.getFullYear()) {
-                        window.monthEntries.push(val);
-                    }
-                });
-            }
-            
-            const pSnap = await db.ref('weeklyPlans').once('value');
             window.monthPlans = [];
-            if(pSnap.exists()) {
-                pSnap.forEach(child => {
-                    if(child.val().userId === currentUser) {
-                        const days = child.val().days || {};
-                        for(let d in days) {
-                            const dObj = new Date(d);
-                            if(dObj.getMonth() === dateObj.getMonth() && dObj.getFullYear() === dateObj.getFullYear()) {
-                                window.monthPlans.push({date: d, ...days[d]});
+
+            try {
+                // Zaradi preprostosti baze bomo prenesli vse in filtrirali za trenutni mesec
+                const eSnap = await db.ref('workEntries').orderByChild('userId').equalTo(currentUser).once('value');
+                if(eSnap.exists()) {
+                    eSnap.forEach(child => {
+                        const val = child.val();
+                        const d = new Date(val.date);
+                        if(d.getMonth() === dateObj.getMonth() && d.getFullYear() === dateObj.getFullYear()) {
+                            window.monthEntries.push(val);
+                        }
+                    });
+                }
+                
+                const pSnap = await db.ref('weeklyPlans').once('value');
+                if(pSnap.exists()) {
+                    pSnap.forEach(child => {
+                        if(child.val().userId === currentUser) {
+                            const days = child.val().days || {};
+                            for(let d in days) {
+                                const dObj = new Date(d);
+                                if(dObj.getMonth() === dateObj.getMonth() && dObj.getFullYear() === dateObj.getFullYear()) {
+                                    window.monthPlans.push({date: d, ...days[d]});
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
+            } catch(e) {
+                console.warn("Branje mesečnih podatkov blokirano.");
             }
         }
 
@@ -921,8 +922,12 @@
         async function changeWeek(dir) {
             selectedCalendarDate.setDate(selectedCalendarDate.getDate() + (dir * 7));
             showLoader(true);
-            await fetchWeekData(selectedCalendarDate);
-            updateCalendarView();
+            try {
+                await fetchWeekData(selectedCalendarDate);
+                updateCalendarView();
+            } catch(e) {
+                showError(true);
+            }
             showLoader(false);
         }
 
@@ -1031,7 +1036,7 @@
                 switchView('view-home');
             } catch (e) {
                 console.error(e);
-                alert('Napaka pri shranjevanju.');
+                alert('Napaka pri shranjevanju. Preveri Firebase Rules (.write = true).');
             }
             showLoader(false);
         }
@@ -1060,7 +1065,7 @@
                 switchView('view-home');
             } catch (e) {
                 console.error(e);
-                alert('Napaka pri odpovedi.');
+                alert('Napaka pri odpovedi. Preveri Firebase Rules.');
             }
             showLoader(false);
         }
@@ -1076,7 +1081,7 @@
                 updateHomeView();
                 updateStatsView();
             } catch (e) {
-                alert('Napaka pri brisanju.');
+                alert('Napaka pri brisanju. Preveri Firebase Rules.');
             }
             showLoader(false);
         }
@@ -1146,8 +1151,12 @@
         async function changeStatsMonth(dir) {
             selectedStatsDate.setMonth(selectedStatsDate.getMonth() + dir);
             showLoader(true);
-            await fetchMonthData(selectedStatsDate);
-            updateStatsView();
+            try {
+                await fetchMonthData(selectedStatsDate);
+                updateStatsView();
+            } catch(e) {
+                // error ignored to keep UI functional
+            }
             showLoader(false);
         }
 
