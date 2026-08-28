@@ -3,665 +3,1015 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Delovni Plan - Jaša</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Evidenca Dela - Gostinstvo</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK (v8 compat for easy CDN usage in single file) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
-        /* Prilagoditev za mali termo tiskalnik in PDF (58mm) */
-        @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area {
-                position: absolute;
-                left: 0; top: 0;
-                width: 58mm;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 12px;
-                padding: 0; margin: 0; color: black;
-            }
-            @page { margin: 0; }
+        :root {
+            /* Elegant Palette */
+            --bg-color: #f4f7f6;
+            --bg-card: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            
+            /* Brand Colors */
+            --primary: #006D77;      /* Petrol/Dark Turquoise */
+            --primary-light: #83C5BE; /* Light Turquoise */
+            --primary-bg: #E2ECEC;
+            
+            /* Status Colors */
+            --success: #2A9D8F;      /* Green for done */
+            --success-light: #E9F5F4;
+            --warning: #E76F51;      /* Orange for canceled */
+            --warning-light: #FCECE8;
+            --purple: #9D4EDD;       /* Purple for overtime */
+            --purple-light: #F5EEFC;
+            
+            /* UI Elements */
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 8px;
+            
+            --nav-height: 80px;
+            --sidebar-width: 250px;
         }
-        .modal { background: rgba(0,0,0,0.6); }
-        .tab-btn { transition: all 0.2s ease; }
-        .tab-btn:hover { transform: translateY(-2px); }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ----- LAYOUT ----- */
+        #sidebar {
+            display: none;
+            width: var(--sidebar-width);
+            background: var(--bg-card);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: var(--shadow-sm);
+            padding: 2rem 1rem;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .logo-container {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .logo-container img {
+            max-width: 120px;
+            height: auto;
+        }
+
+        #main-content {
+            flex: 1;
+            padding-bottom: calc(var(--nav-height) + 20px);
+            width: 100%;
+        }
+
+        .container {
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ----- VIEWS ----- */
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ----- TYPOGRAPHY ----- */
+        h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-main); }
+        p { font-size: 0.95rem; line-height: 1.5; color: var(--text-muted); }
+        .text-primary { color: var(--primary); }
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-purple { color: var(--purple); }
+
+        /* ----- COMPONENTS ----- */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .card-primary p {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-start { display: flex; align-items: center; gap: 0.75rem; }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--bg-card); color: var(--primary); }
+        .btn-solid { background: var(--primary); color: white; }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-planned { background: var(--primary-bg); color: var(--primary); }
+        .badge-done { background: var(--success-light); color: var(--success); }
+        .badge-canceled { background: var(--warning-light); color: var(--warning); }
+
+        /* List Items (Weekly plan) */
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .list-date { width: 40px; text-align: left; }
+        .list-date span { display: block; font-size: 0.75rem; color: var(--text-muted); }
+        .list-date strong { display: block; font-size: 1rem; color: var(--text-main); }
+        .list-time { flex: 1; padding-left: 1rem; font-weight: 500; }
+        .list-hours { font-weight: 600; text-align: right; margin-right: 10px; }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+        .stat-card span { font-size: 0.85rem; color: var(--text-muted); }
+        .stat-card h3 { font-size: 1.25rem; margin-top: 0.5rem; font-weight: 700; }
+        .stat-card h3 small { font-size: 0.9rem; font-weight: 500; }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+        }
+        .form-group label { font-weight: 500; font-size: 0.95rem; }
+        .form-group input {
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: right;
+            outline: none;
+            width: 100px;
+            color: var(--text-main);
+        }
+        textarea {
+            width: 100%;
+            background: #f8fafc;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            min-height: 100px;
+            font-size: 0.95rem;
+            outline: none;
+            resize: none;
+        }
+
+        /* ----- NAVIGATION ----- */
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: var(--bg-card);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 1rem;
+            z-index: 1000;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            gap: 0.25rem;
+            cursor: pointer;
+            width: 60px;
+        }
+
+        .nav-item.active { color: var(--primary); font-weight: 600; }
+        .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
+
+        .nav-fab {
+            background: var(--primary);
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: translateY(-20px);
+            box-shadow: 0 4px 12px rgba(0, 109, 119, 0.4);
+            cursor: pointer;
+            border: 4px solid var(--bg-color);
+        }
+        .nav-fab svg { fill: white; width: 24px; height: 24px; }
+
+        /* Desktop Sidebar Items */
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .sidebar-item svg { width: 20px; height: 20px; margin-right: 1rem; fill: currentColor; }
+        .sidebar-item.active { background: var(--primary-bg); color: var(--primary); }
+
+        /* Top Bar Info */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .date-display { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Profile List */
+        .profile-list { margin-top: 2rem; }
+        .profile-list-item { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #edf2f7; cursor: pointer; }
+        .profile-list-item.danger { color: var(--warning); }
+
+        /* Responsive Breakpoints */
+        @media (min-width: 600px) {
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .desktop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        }
+
+        @media (min-width: 1024px) {
+            #sidebar { display: flex; }
+            .mobile-nav { display: none; }
+            #main-content { margin-left: var(--sidebar-width); padding-bottom: 20px; }
+            .container { padding: 3rem; }
+            .desktop-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+            .nav-fab { transform: none; box-shadow: none; width: auto; height: auto; border-radius: var(--radius-md); padding: 1rem; border: none; }
+            .nav-fab span { display: block; margin-left: 0.5rem; font-weight: 600; }
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
+<body>
 
-    <!-- 1. PRIJAVNA STRAN -->
-    <div id="view-login" class="flex flex-col items-center justify-center h-full px-4 bg-gray-200 absolute inset-0 z-50">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
-            <h1 class="text-3xl font-extrabold text-center mb-6 text-blue-600">Prijava</h1>
-            <div class="mb-4">
-                <label class="block text-sm font-bold mb-2 text-gray-700">Uporabniško ime</label>
-                <input type="text" id="login-user" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Vpiši ime">
-            </div>
-            <div class="mb-6">
-                <label class="block text-sm font-bold mb-2 text-gray-700">Geslo</label>
-                <input type="password" id="login-pass" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Vpiši geslo">
-            </div>
-            <button onclick="app.login()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg">VSTOP</button>
-            <p id="login-error" class="text-red-500 text-sm mt-4 hidden text-center font-bold">Napačni podatki!</p>
+    <!-- DESKTOP SIDEBAR -->
+    <nav id="sidebar">
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMzAiPjx0ZXh0IHg9IjEwIiB5PSIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiMwMDZENzciPkxPR088L3RleHQ+PC9zdmc+'">
         </div>
-    </div>
+        <a class="sidebar-item active" onclick="navigateTo('home')">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Domov
+        </a>
+        <a class="sidebar-item" onclick="navigateTo('calendar')">
+            <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg> Koledar
+        </a>
+        <a class="sidebar-item" onclick="navigateTo('vpis')">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Vpis dela
+        </a>
+        <a class="sidebar-item" onclick="navigateTo('stats')">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> Statistika
+        </a>
+        <a class="sidebar-item" onclick="navigateTo('profile')">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> Profil
+        </a>
+    </nav>
 
-    <!-- GLAVNA APLIKACIJA (Glava) -->
-    <div id="app-header" class="hidden bg-blue-600 text-white p-4 shadow-md flex justify-between items-center z-10">
-        <div>
-            <p id="header-name" class="text-lg font-bold">Jaša Petrinjak</p>
-        </div>
-        <div class="text-right">
-            <p id="current-time" class="text-2xl font-bold tracking-wider">00:00:00</p>
-            <p id="current-date" class="text-sm font-medium">01.01.2024</p>
-        </div>
-    </div>
-
-    <!-- VSEBINA (Preklapljanje strani) -->
-    <div id="app-content" class="hidden flex-1 overflow-y-auto p-4 pb-10">
-
-        <!-- DOMAČA STRAN -->
-        <div id="view-home" class="view-section">
-            <div class="bg-white p-6 rounded-xl shadow-lg mb-6 text-center border-l-8 border-blue-500">
-                <h2 class="text-gray-500 text-sm uppercase tracking-wider mb-2 font-bold">Plan dela za danes</h2>
-                <p id="today-plan-display" class="text-3xl font-extrabold text-gray-800">Nalaganje...</p>
-            </div>
-
-            <button onclick="app.openModal('modal-log')" class="w-full bg-green-500 text-white font-black text-2xl py-6 rounded-xl shadow-xl hover:bg-green-600 mb-8 transform transition hover:scale-105">
-                ZABELEŽI DELO
-            </button>
-
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="app.nav('weekly')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Tedenski plan</button>
-                <button onclick="app.nav('monthly')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Mesečni plan</button>
-                <button onclick="app.nav('tips')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Napitnina</button>
-                <button onclick="app.nav('set-plan')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Nastavi plan</button>
-                <button onclick="app.nav('print')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Tiskaj</button>
-                <button onclick="app.nav('salary')" class="tab-btn bg-white p-5 rounded-xl shadow-md font-bold text-gray-700 text-lg border border-gray-100">Plača</button>
-                <button onclick="app.nav('settings')" class="tab-btn col-span-2 bg-gray-800 text-white p-5 rounded-xl shadow-md font-bold text-lg">Nastavitve</button>
-            </div>
-        </div>
-
-        <!-- TEDENSKI PLAN -->
-        <div id="view-weekly" class="view-section hidden">
-            <h2 class="text-2xl font-bold mb-4 text-blue-600">Tedenski plan</h2>
-            <div class="mb-4">
-                <label class="font-bold text-sm">Izberi teden:</label>
-                <input type="week" id="weekly-week-select" class="w-full p-3 border rounded-lg mt-1" onchange="app.renderWeeklyPlan()">
-            </div>
-            <div id="weekly-plan-container" class="bg-white rounded-lg shadow p-4 mb-4">
-                <!-- Generirano preko JS -->
-            </div>
-            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
-        </div>
-
-        <!-- MESEČNI PLAN IN DELO -->
-        <div id="view-monthly" class="view-section hidden">
-            <h2 class="text-2xl font-bold mb-4 text-blue-600">Mesečni pregled</h2>
-            <div class="mb-4">
-                <input type="month" id="monthly-month-select" class="w-full p-3 border rounded-lg" onchange="app.renderMonthlyPlan()">
-            </div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div class="bg-white p-4 rounded-lg shadow text-center">
-                    <p class="text-xs font-bold text-gray-500 uppercase">Opravljene ure</p>
-                    <p id="monthly-done-hours" class="text-2xl font-bold text-green-600">0 h</p>
-                </div>
-                <div class="bg-white p-4 rounded-lg shadow text-center">
-                    <p class="text-xs font-bold text-gray-500 uppercase">Število izmen</p>
-                    <p id="monthly-shifts" class="text-2xl font-bold text-blue-600">0</p>
-                </div>
-            </div>
-            <div id="monthly-logs-container" class="bg-white rounded-lg shadow p-4 mb-4 max-h-64 overflow-y-auto">
-                <!-- Generirano preko JS -->
-            </div>
-            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
-        </div>
-
-        <!-- NAPITNINA -->
-        <div id="view-tips" class="view-section hidden">
-            <h2 class="text-2xl font-bold mb-4 text-blue-600">Zgodovina napitnin</h2>
-            <div class="bg-white rounded-lg shadow p-4 mb-4">
-                <p class="font-bold mb-2">Skupaj ta mesec: <span id="total-tips-month" class="text-green-600 text-xl">0.00 €</span></p>
-                <div id="tips-container" class="space-y-2 mt-4 max-h-80 overflow-y-auto">
-                    <!-- Generirano -->
-                </div>
-            </div>
-            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
-        </div>
-
-        <!-- NASTAVI PLAN -->
-        <div id="view-set-plan" class="view-section hidden">
-            <h2 class="text-2xl font-bold mb-4 text-blue-600">Nastavi plan dela</h2>
-            <div class="bg-white p-4 rounded-lg shadow mb-4">
-                <label class="block font-bold text-sm mb-1">Izberi teden (privzeto tekoči):</label>
-                <input type="week" id="setplan-week" class="w-full p-3 border rounded-lg mb-4" onchange="app.loadPlanForEdit()">
-                
-                <div id="setplan-days" class="space-y-3">
-                    <!-- Generirano v JS, da je krajše -->
-                </div>
-                
-                <button onclick="app.savePlan()" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg mt-4 shadow">Shrani plan</button>
-            </div>
-            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
-        </div>
-
-        <!-- TISKAJ -->
-        <div id="view-print" class="view-section hidden">
-            <h2 class="text-2xl font-bold mb-4 text-blue-600">Tiskaj (Mali format)</h2>
-            <div class="bg-white p-4 rounded-lg shadow mb-4">
-                <label class="font-bold text-sm block mb-1">Izberi mesec:</label>
-                <input type="month" id="print-month" class="w-full p-3 border rounded-lg mb-4">
-                
-                <button onclick="app.printReceipt('hours')" class="w-full bg-blue-500 text-white font-bold py-4 rounded-lg mb-3 shadow">Natisni Mesečni Izpis UR</button>
-                <button onclick="app.printReceipt('tips')" class="w-full bg-green-500 text-white font-bold py-4 rounded-lg shadow">Natisni Mesečne NAPITNINE</button>
-            </div>
-            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
-        </div>
-
-        <!-- PLAČA -->
-        <div id="view-salary" class="view-section hidden">
-            <h2 class="text-2xl font-bold mb-4 text-blue-600">Plača</h2>
-            <div class="bg-white p-4 rounded-lg shadow mb-4">
-                <label class="font-bold text-sm block mb-1">Izberi mesec:</label>
-                <input type="month" id="salary-month" class="w-full p-3 border rounded-lg mb-4" onchange="app.calculateSalary()">
-                
-                <p class="text-gray-500 mb-2">Skupaj ur: <span id="salary-total-hours" class="font-bold text-black text-xl">0</span> h</p>
-                <hr class="my-3">
-                <div id="salary-calculations" class="space-y-3">
-                    <!-- Generirano -->
-                </div>
-            </div>
-            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
-        </div>
-
-        <!-- NASTAVITVE -->
-        <div id="view-settings" class="view-section hidden">
-            <h2 class="text-2xl font-bold mb-4 text-blue-600">Nastavitve</h2>
+    <!-- MAIN CONTENT -->
+    <main id="main-content">
+        <div class="container">
             
-            <div class="bg-white p-4 rounded-lg shadow mb-4">
-                <h3 class="font-bold mb-3 border-b pb-2">Podatki za prijavo</h3>
-                <label class="block text-sm mb-1">Uporabniško ime</label>
-                <input type="text" id="set-username" class="w-full p-2 border rounded mb-3 bg-gray-50">
-                <label class="block text-sm mb-1">Geslo</label>
-                <input type="text" id="set-password" class="w-full p-2 border rounded mb-3 bg-gray-50">
-                <label class="block text-sm mb-1">Ime in priimek (za izpis)</label>
-                <input type="text" id="set-fullname" class="w-full p-2 border rounded bg-gray-50">
-            </div>
-
-            <div class="bg-white p-4 rounded-lg shadow mb-4">
-                <h3 class="font-bold mb-3 border-b pb-2">Urne postavke (€/h)</h3>
-                <label class="block text-sm mb-1">Postavka 1 (npr. Redna)</label>
-                <input type="number" step="0.01" id="set-rate1" class="w-full p-2 border rounded mb-3 bg-gray-50">
-                <label class="block text-sm mb-1">Postavka 2 (npr. Nočna)</label>
-                <input type="number" step="0.01" id="set-rate2" class="w-full p-2 border rounded mb-3 bg-gray-50">
-                <label class="block text-sm mb-1">Postavka 3 (npr. Nedelja/Praznik)</label>
-                <input type="number" step="0.01" id="set-rate3" class="w-full p-2 border rounded bg-gray-50">
-            </div>
-
-            <button onclick="app.saveSettings()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg shadow mb-3">SHRANI NASTAVITVE</button>
-            <button onclick="app.nav('home')" class="w-full bg-gray-300 font-bold py-4 rounded-lg shadow">NAZAJ NA DOMAČO STRAN</button>
-        </div>
-
-    </div>
-
-    <!-- MODAL: ZABELEŽI DELO -->
-    <div id="modal-log" class="modal fixed inset-0 z-50 hidden flex justify-center items-center px-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="bg-blue-600 p-4 flex justify-between items-center">
-                <h2 class="text-white font-bold text-xl">Zabeleži delo</h2>
-                <button onclick="app.closeModal('modal-log')" class="text-white text-2xl font-bold leading-none">&times;</button>
-            </div>
-            <div class="p-6">
-                <p class="text-sm text-gray-600 mb-4 bg-blue-50 p-2 rounded">Plan po urniku: <span class="font-bold text-blue-800" id="modal-plan-hint">Ni vnosa</span></p>
-                
-                <div class="mb-4">
-                    <label class="block font-bold mb-1">Datum dela</label>
-                    <input type="date" id="log-date" class="w-full p-3 border rounded-lg bg-gray-50 font-bold">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- VIEW: HOME -->
+            <div id="home" class="view active">
+                <div class="top-bar">
                     <div>
-                        <label class="block font-bold mb-1">Začetek (Ura)</label>
-                        <input type="time" id="log-start" class="w-full p-3 border rounded-lg bg-gray-50 font-bold" onchange="app.calcHours()">
-                    </div>
-                    <div>
-                        <label class="block font-bold mb-1">Konec (Ura)</label>
-                        <input type="time" id="log-end" class="w-full p-3 border rounded-lg bg-gray-50 font-bold" onchange="app.calcHours()">
+                        <h1 id="greetingText">Pozdravljena, Maja 👋</h1>
+                        <p>Tukaj je pregled tvojega dela.</p>
                     </div>
                 </div>
 
-                <div class="bg-gray-100 p-4 rounded-lg text-center mb-4 shadow-inner border border-gray-200">
-                    <span class="text-gray-600 font-bold">Izračunano:</span>
-                    <span id="log-calc-hours" class="text-3xl font-black ml-2 text-blue-600">0.00</span> <span class="font-bold text-gray-500">h</span>
+                <div class="desktop-grid">
+                    <div>
+                        <p class="date-display">DANES</p>
+                        <h2 id="homeTodayDate">Torek, 21. avgust</h2>
+
+                        <div class="card card-primary" id="homeTodayCard">
+                            <!-- Injected by JS -->
+                            <p>Nalagam...</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex-between" style="margin-bottom: 1rem; margin-top: 2rem;">
+                            <p class="date-display">TA TEDEN</p>
+                            <a href="#" onclick="navigateTo('calendar')" style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 600;">Poglej vse</a>
+                        </div>
+                        
+                        <div class="card" id="homeWeekList">
+                            <!-- Injected by JS -->
+                        </div>
+                        <div class="flex-between" style="padding: 0 1rem;">
+                            <strong>Ta teden skupaj</strong>
+                            <strong id="homeWeekTotal">0 h</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: CALENDAR -->
+            <div id="calendar" class="view">
+                <div class="top-bar">
+                    <h1>Koledar</h1>
+                </div>
+                
+                <div class="flex-between card" style="padding: 1rem;">
+                    <button onclick="changeWeek(-1)" style="border:none; background:transparent; font-size:1.5rem; cursor:pointer;">←</button>
+                    <strong id="calendarWeekLabel">18. – 24. avgust</strong>
+                    <button onclick="changeWeek(1)" style="border:none; background:transparent; font-size:1.5rem; cursor:pointer;">→</button>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block font-bold mb-1">Napitnina (€)</label>
-                    <input type="number" step="0.01" id="log-tips" class="w-full p-3 border rounded-lg bg-gray-50 text-xl font-bold text-green-600" placeholder="0.00">
+                <div id="calendarDaysContainer" class="desktop-grid">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+            <!-- VIEW: VPIS DELA -->
+            <div id="vpis" class="view">
+                <div class="top-bar">
+                    <h1>Vpis dela</h1>
                 </div>
 
-                <button onclick="app.saveLog()" class="w-full bg-green-500 text-white font-black text-xl py-4 rounded-lg shadow-lg hover:bg-green-600">SHRANI DELO</button>
+                <div class="card card-primary" id="vpisPlanCard">
+                    <!-- Injected -->
+                </div>
+
+                <h2 style="margin-top: 2rem;">Zabeleži svoj čas</h2>
+                
+                <div class="card">
+                    <div class="form-group">
+                        <label>Pričetek dela</label>
+                        <input type="time" id="inputStart" value="10:00" onchange="updateLiveCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Konec dela</label>
+                        <input type="time" id="inputEnd" value="18:00" onchange="updateLiveCalculation()">
+                    </div>
+
+                    <div style="text-align: center; margin: 2rem 0;">
+                        <p style="text-transform: uppercase; font-size: 0.75rem; font-weight: 600;">OPRAVLJENO</p>
+                        <h1 id="liveOpravljeno" class="text-success" style="font-size: 3rem;">0h 00m</h1>
+                        
+                        <div class="flex-between" style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
+                            <div>
+                                <p style="font-size: 0.75rem;">Redne ure</p>
+                                <strong id="liveRedne">0h 00m</strong>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 0.75rem;">Nadure</p>
+                                <strong id="liveNadure" class="text-purple">0h 00m</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Odmor (minute)</label>
+                        <input type="number" id="inputBreak" value="30" min="0" oninput="updateLiveCalculation()">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display:block; margin-bottom:0.5rem; font-weight:500; font-size:0.95rem;">Opomba <span style="color:var(--text-muted);">(neobvezno)</span></label>
+                        <textarea id="inputNote" placeholder="Kako je potekal dan?"></textarea>
+                    </div>
+
+                    <button class="btn btn-solid" onclick="saveWorkEntry()">SHRANI</button>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- MODAL: UREDI NAPITNINO -->
-    <div id="modal-edit-tip" class="modal fixed inset-0 z-50 hidden flex justify-center items-center px-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xs overflow-hidden p-6 text-center">
-            <h2 class="font-bold text-xl mb-4">Uredi napitnino</h2>
-            <input type="hidden" id="edit-tip-id">
-            <p id="edit-tip-date" class="text-sm text-gray-500 mb-2"></p>
-            <input type="number" step="0.01" id="edit-tip-amount" class="w-full p-3 border rounded-lg text-xl font-bold text-green-600 text-center mb-4">
-            <div class="flex gap-2">
-                <button onclick="app.closeModal('modal-edit-tip')" class="flex-1 bg-gray-300 font-bold py-3 rounded-lg">Prekliči</button>
-                <button onclick="app.saveEditedTip()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg">Shrani</button>
+            <!-- VIEW: STATS -->
+            <div id="stats" class="view">
+                <div class="top-bar">
+                    <h1>Statistika</h1>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-card); padding: 0.5rem; border-radius: var(--radius-md);">
+                    <button style="flex: 1; padding: 0.5rem; border: none; border-radius: var(--radius-sm); background: var(--primary); color: white; cursor: pointer;">Mesec</button>
+                    <button style="flex: 1; padding: 0.5rem; border: none; background: transparent; cursor: pointer;">Teden</button>
+                    <button style="flex: 1; padding: 0.5rem; border: none; background: transparent; cursor: pointer;">Leto</button>
+                </div>
+                
+                <h2 style="text-align: center; margin-bottom: 1.5rem;" id="statsMonthLabel">Avgust 2026</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span>Opravljene ure</span>
+                        <h3 id="statDone" class="text-success">0h <small>00m</small></h3>
+                    </div>
+                    <div class="stat-card">
+                        <span>Predvidene ure</span>
+                        <h3 id="statPlan">0h <small>00m</small></h3>
+                    </div>
+                    <div class="stat-card">
+                        <span>Nadure</span>
+                        <h3 id="statOvertime" class="text-purple">0h <small>00m</small></h3>
+                    </div>
+                    <div class="stat-card">
+                        <span>Odpovedane ure</span>
+                        <h3 id="statCanceled" class="text-warning">0h <small>00m</small></h3>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size: 1rem; margin-bottom: 1rem;">Pregled po dnevih</h2>
+                    <canvas id="statsChart" style="width:100%; height:250px;"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size: 1rem; margin-bottom: 1rem;">Podrobnosti</h2>
+                    <div class="profile-list-item">
+                        <span>Povprečno na dan</span>
+                        <strong id="statAvg">0h 00m</strong>
+                    </div>
+                    <div class="profile-list-item" style="border: none;">
+                        <span>Razlika do plana</span>
+                        <strong id="statDiff">0h 00m</strong>
+                    </div>
+                </div>
             </div>
+
+            <!-- VIEW: PROFILE -->
+            <div id="profile" class="view">
+                <div class="top-bar">
+                    <h1>Profil</h1>
+                </div>
+
+                <div class="card flex-start" style="padding: 2rem 1.5rem;">
+                    <div style="width: 70px; height: 70px; background: var(--primary-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: var(--primary);">
+                        MN
+                    </div>
+                    <div>
+                        <h2 style="margin: 0;">Maja Novak</h2>
+                        <p>Natakar</p>
+                    </div>
+                </div>
+
+                <div class="card profile-list" style="margin-top: 0;">
+                    <div class="profile-list-item">
+                        <span>Osebni podatki</span>
+                        <span class="text-muted">›</span>
+                    </div>
+                    <div class="profile-list-item">
+                        <span>Delovna mesta</span>
+                        <span class="text-muted">›</span>
+                    </div>
+                    <div class="profile-list-item">
+                        <span>Nastavitve obvestil</span>
+                        <span class="text-muted">›</span>
+                    </div>
+                    <div class="profile-list-item">
+                        <span>Izvoz podatkov</span>
+                        <span class="text-muted">›</span>
+                    </div>
+                    <div class="profile-list-item">
+                        <span>Pomoč in podpora</span>
+                        <span class="text-muted">›</span>
+                    </div>
+                    <div class="profile-list-item danger">
+                        <span>Odjava</span>
+                        <span>›</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </div>
+    </main>
 
-    <!-- PROSTOR ZA TISK -->
-    <div id="print-area" class="hidden"></div>
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="mobile-nav">
+        <a class="nav-item active" onclick="navigateTo('home')" data-target="home">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Domov
+        </a>
+        <a class="nav-item" onclick="navigateTo('calendar')" data-target="calendar">
+            <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg>
+            Koledar
+        </a>
+        <div class="nav-fab" onclick="navigateTo('vpis')">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </div>
+        <a class="nav-item" onclick="navigateTo('stats')" data-target="stats">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Statistika
+        </a>
+        <a class="nav-item" onclick="navigateTo('profile')" data-target="profile">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Profil
+        </a>
+    </nav>
 
-    <!-- JAVASCRIPT LOGIKA -->
     <script>
-        const DB_URL = "https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app";
-        
-        const dnevi = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota', 'Nedelja'];
+        // ----------------------------------------------------------------------
+        // 1. FIREBASE SETUP & CONFIG
+        // ----------------------------------------------------------------------
+        const firebaseConfig = {
+            databaseURL: "https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        const app = {
-            data: { logs: {}, plans: {}, settings: {} },
-            currentUser: null,
-
-            // INICIALIZACIJA IN ČAS
-            init: function() {
-                // Generiraj inpute za Nastavi plan
-                const daysDiv = document.getElementById('setplan-days');
-                dnevi.forEach((dan, i) => {
-                    daysDiv.innerHTML += `
-                        <div class="flex items-center justify-between border-b pb-2">
-                            <span class="font-bold w-24 text-sm">${dan}</span>
-                            <input type="text" id="plan-day-${i}" class="flex-1 p-2 border rounded bg-gray-50 text-sm" placeholder="npr. 14:00 - 22:00 ali PROSTO">
-                        </div>`;
-                });
-
-                // Ura
-                setInterval(() => {
-                    const now = new Date();
-                    document.getElementById('current-time').innerText = now.toLocaleTimeString('sl-SI', { hour12: false });
-                    document.getElementById('current-date').innerText = now.toLocaleDateString('sl-SI');
-                }, 1000);
-
-                // Nastavi privzete tedne in mesece v vseh inputih
-                const now = new Date();
-                const weekVal = this.getWeekString(now);
-                const monthVal = now.toISOString().slice(0, 7); // YYYY-MM
-                
-                document.getElementById('weekly-week-select').value = weekVal;
-                document.getElementById('setplan-week').value = weekVal;
-                document.getElementById('monthly-month-select').value = monthVal;
-                document.getElementById('print-month').value = monthVal;
-                document.getElementById('salary-month').value = monthVal;
-
-                // Naloži nastavitve takoj, da preveri login
-                this.fetchData('settings').then(res => {
-                    if(!res) {
-                        // Privzete nastavitve če je baza prazna
-                        this.data.settings = { username: 'Jasa', password: 'j', fullname: 'Jasa Petrinjak', rate1: 6.5, rate2: 7, rate3: 9 };
-                        this.putData('settings', this.data.settings);
-                    } else {
-                        this.data.settings = res;
-                    }
-                });
-            },
-
-            // BAZA HELPERS
-            fetchData: async function(path) {
-                try {
-                    const res = await fetch(`${DB_URL}/${path}.json`);
-                    return await res.json();
-                } catch(e) { console.error("Napaka pri branju:", e); return null; }
-            },
-            postData: async function(path, obj) {
-                await fetch(`${DB_URL}/${path}.json`, { method: 'POST', body: JSON.stringify(obj) });
-            },
-            putData: async function(path, obj) {
-                await fetch(`${DB_URL}/${path}.json`, { method: 'PUT', body: JSON.stringify(obj) });
-            },
-            patchData: async function(path, obj) {
-                await fetch(`${DB_URL}/${path}.json`, { method: 'PATCH', body: JSON.stringify(obj) });
-            },
-
-            // PRIJAVA
-            login: async function() {
-                const u = document.getElementById('login-user').value.trim();
-                const p = document.getElementById('login-pass').value.trim();
-                const s = this.data.settings;
-                
-                // Omogočimo vpis za nastavljenega ali hardcoded backup
-                if((u === s.username && p === s.password) || (u === 'Jasa' && p === 'j') || (u === 'Jaša' && p === 'j')) {
-                    document.getElementById('view-login').classList.add('hidden');
-                    document.getElementById('app-header').classList.remove('hidden');
-                    document.getElementById('app-content').classList.remove('hidden');
-                    document.getElementById('app-content').classList.add('flex');
-                    document.getElementById('header-name').innerText = s.fullname || 'Jaša Petrinjak';
-                    
-                    await this.loadAllData();
-                    this.nav('home');
-                } else {
-                    document.getElementById('login-error').classList.remove('hidden');
-                }
-            },
-
-            // GLAVNO NALAGANJE
-            loadAllData: async function() {
-                const [logs, plans] = await Promise.all([ this.fetchData('logs'), this.fetchData('plans') ]);
-                this.data.logs = logs || {};
-                this.data.plans = plans || {};
-                this.updateHomePlan();
-            },
-
-            // NAVIGACIJA
-            nav: function(target) {
-                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-                document.getElementById(`view-${target}`).classList.remove('hidden');
-                
-                if(target === 'home') this.updateHomePlan();
-                if(target === 'weekly') this.renderWeeklyPlan();
-                if(target === 'monthly') this.renderMonthlyPlan();
-                if(target === 'tips') this.renderTips();
-                if(target === 'set-plan') this.loadPlanForEdit();
-                if(target === 'salary') this.calculateSalary();
-                if(target === 'settings') this.fillSettings();
-            },
-
-            // MODALI
-            openModal: function(id) {
-                if(id === 'modal-log') {
-                    const today = new Date().toISOString().split('T')[0];
-                    document.getElementById('log-date').value = today;
-                    document.getElementById('log-start').value = '';
-                    document.getElementById('log-end').value = '';
-                    document.getElementById('log-calc-hours').innerText = '0.00';
-                    document.getElementById('log-tips').value = '';
-                    document.getElementById('modal-plan-hint').innerText = document.getElementById('today-plan-display').innerText;
-                }
-                document.getElementById(id).classList.remove('hidden');
-            },
-            closeModal: function(id) { document.getElementById(id).classList.add('hidden'); },
-
-            // IZRAČUN UR V MODALU
-            calcHours: function() {
-                const s = document.getElementById('log-start').value;
-                const e = document.getElementById('log-end').value;
-                if(s && e) {
-                    let [sH, sM] = s.split(':').map(Number);
-                    let [eH, eM] = e.split(':').map(Number);
-                    let startMin = sH * 60 + sM;
-                    let endMin = eH * 60 + eM;
-                    if(endMin < startMin) endMin += 24 * 60; // Čez polnoč
-                    document.getElementById('log-calc-hours').innerText = ((endMin - startMin) / 60).toFixed(2);
-                }
-            },
-
-            // SHRANJEVANJE DELA
-            saveLog: async function() {
-                const date = document.getElementById('log-date').value;
-                const start = document.getElementById('log-start').value;
-                const end = document.getElementById('log-end').value;
-                const hours = parseFloat(document.getElementById('log-calc-hours').innerText);
-                const tips = parseFloat(document.getElementById('log-tips').value) || 0;
-
-                if(!date || !start || !end || hours <= 0) return alert("Pravilno izpolni čase!");
-
-                const data = { date, start, end, hours, tips, timestamp: Date.now() };
-                await this.postData('logs', data);
-                
-                alert("Delo uspešno zabeleženo!");
-                this.closeModal('modal-log');
-                await this.loadAllData();
-            },
-
-            // POMOŽNE FUNKCIJE ZA DATUME
-            getWeekString: function(d) {
-                const date = new Date(d.getTime());
-                date.setHours(0, 0, 0, 0);
-                date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-                const week1 = new Date(date.getFullYear(), 0, 4);
-                const weekNum = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-                return `${date.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
-            },
-            getDayIndex: function(d) {
-                let day = d.getDay() - 1;
-                return day < 0 ? 6 : day; // 0=Pon, 6=Ned
-            },
-
-            // PRIKAZ NA DOMAČI STRANI
-            updateHomePlan: function() {
-                const now = new Date();
-                const weekStr = this.getWeekString(now);
-                const dayIdx = this.getDayIndex(now);
-                
-                let planStr = "Plan ni nastavljen";
-                if(this.data.plans[weekStr] && this.data.plans[weekStr][dayIdx]) {
-                    planStr = this.data.plans[weekStr][dayIdx];
-                }
-                document.getElementById('today-plan-display').innerText = planStr;
-            },
-
-            // NASTAVI PLAN
-            loadPlanForEdit: function() {
-                const w = document.getElementById('setplan-week').value;
-                const plan = this.data.plans[w] || [];
-                for(let i=0; i<7; i++) {
-                    document.getElementById(`plan-day-${i}`).value = plan[i] || '';
-                }
-            },
-            savePlan: async function() {
-                const w = document.getElementById('setplan-week').value;
-                if(!w) return alert("Izberi teden!");
-                let plan = [];
-                for(let i=0; i<7; i++) {
-                    plan[i] = document.getElementById(`plan-day-${i}`).value.trim();
-                }
-                
-                if(!this.data.plans) this.data.plans = {};
-                this.data.plans[w] = plan;
-                await this.putData(`plans/${w}`, plan);
-                alert("Plan shranjen!");
-                this.updateHomePlan();
-            },
-
-            // TEDENSKI PLAN PREGLED
-            renderWeeklyPlan: function() {
-                const w = document.getElementById('weekly-week-select').value;
-                const plan = this.data.plans[w] || [];
-                const container = document.getElementById('weekly-plan-container');
-                let html = '';
-                dnevi.forEach((dan, i) => {
-                    const text = plan[i] ? plan[i] : '<span class="text-gray-400">Ni vnosa</span>';
-                    html += `<div class="flex justify-between py-2 border-b last:border-0"><span class="font-bold">${dan}</span><span>${text}</span></div>`;
-                });
-                container.innerHTML = html;
-            },
-
-            // MESEČNI PLAN IN DELO PREGLED
-            renderMonthlyPlan: function() {
-                const m = document.getElementById('monthly-month-select').value; // YYYY-MM
-                const container = document.getElementById('monthly-logs-container');
-                let totalH = 0;
-                let shifts = 0;
-                let html = '';
-
-                // Sort logs by date desc
-                const sortedLogs = Object.values(this.data.logs)
-                    .filter(l => l.date.startsWith(m))
-                    .sort((a,b) => b.date.localeCompare(a.date));
-
-                if(sortedLogs.length === 0) {
-                    html = '<p class="text-center text-gray-500">Ni zabeleženega dela v tem mesecu.</p>';
-                } else {
-                    sortedLogs.forEach(l => {
-                        totalH += l.hours;
-                        shifts++;
-                        // Oblika datuma DD.MM.YYYY
-                        const dStr = l.date.split('-').reverse().join('.');
-                        html += `
-                            <div class="flex justify-between items-center py-2 border-b last:border-0">
-                                <div><span class="font-bold block">${dStr}</span><span class="text-xs text-gray-500">${l.start} - ${l.end}</span></div>
-                                <div class="font-black text-blue-600 text-lg">${l.hours.toFixed(2)}h</div>
-                            </div>
-                        `;
-                    });
-                }
-                
-                document.getElementById('monthly-done-hours').innerText = totalH.toFixed(2) + ' h';
-                document.getElementById('monthly-shifts').innerText = shifts;
-                container.innerHTML = html;
-            },
-
-            // NAPITNINE
-            renderTips: function() {
-                // Prikaz za izbrani mesec (uporabimo kar tistega iz monthly, ali naredimo skupnega)
-                // Da je enostavno in jasno: Prikažemo VSE napitnine tekočega meseca glede na današnji datum
-                const currentMonth = new Date().toISOString().slice(0, 7);
-                const container = document.getElementById('tips-container');
-                let total = 0;
-                let html = '';
-
-                const entries = Object.entries(this.data.logs)
-                    .filter(([k, v]) => v.date.startsWith(currentMonth) && v.tips > 0)
-                    .sort((a,b) => b[1].date.localeCompare(a[1].date));
-
-                if(entries.length === 0) {
-                    html = '<p class="text-center text-gray-500">Ni napitnin za ta mesec.</p>';
-                } else {
-                    entries.forEach(([id, l]) => {
-                        total += l.tips;
-                        const dStr = l.date.split('-').reverse().join('.');
-                        html += `
-                            <div class="flex justify-between items-center bg-green-50 p-3 rounded border border-green-100">
-                                <span class="font-bold">${dStr}</span>
-                                <div class="flex items-center gap-3">
-                                    <span class="font-black text-green-700 text-lg">${l.tips.toFixed(2)} €</span>
-                                    <button onclick="app.editTip('${id}')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">Uredi</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-                document.getElementById('total-tips-month').innerText = total.toFixed(2) + ' €';
-                container.innerHTML = html;
-            },
-            editTip: function(id) {
-                const l = this.data.logs[id];
-                document.getElementById('edit-tip-id').value = id;
-                document.getElementById('edit-tip-date').innerText = "Za datum: " + l.date.split('-').reverse().join('.');
-                document.getElementById('edit-tip-amount').value = l.tips;
-                this.openModal('modal-edit-tip');
-            },
-            saveEditedTip: async function() {
-                const id = document.getElementById('edit-tip-id').value;
-                const newTip = parseFloat(document.getElementById('edit-tip-amount').value) || 0;
-                await this.patchData(`logs/${id}`, { tips: newTip });
-                this.data.logs[id].tips = newTip;
-                this.closeModal('modal-edit-tip');
-                this.renderTips();
-            },
-
-            // PLAČA
-            calculateSalary: function() {
-                const m = document.getElementById('salary-month').value;
-                let total = 0;
-                Object.values(this.data.logs).forEach(l => {
-                    if(l.date.startsWith(m)) total += l.hours;
-                });
-                
-                document.getElementById('salary-total-hours').innerText = total.toFixed(2);
-                const s = this.data.settings;
-                
-                document.getElementById('salary-calculations').innerHTML = `
-                    <div class="flex justify-between p-3 bg-gray-50 rounded border"><span>Postavka 1 (${s.rate1} €/h):</span> <strong class="text-lg">${(total * s.rate1).toFixed(2)} €</strong></div>
-                    <div class="flex justify-between p-3 bg-gray-50 rounded border"><span>Postavka 2 (${s.rate2} €/h):</span> <strong class="text-lg">${(total * s.rate2).toFixed(2)} €</strong></div>
-                    <div class="flex justify-between p-3 bg-blue-50 rounded border font-bold text-blue-800 border-blue-200"><span>Postavka 3 (${s.rate3} €/h):</span> <span class="text-lg">${(total * s.rate3).toFixed(2)} €</span></div>
-                `;
-            },
-
-            // NASTAVITVE (Branje in Pisanje)
-            fillSettings: function() {
-                const s = this.data.settings;
-                document.getElementById('set-username').value = s.username;
-                document.getElementById('set-password').value = s.password;
-                document.getElementById('set-fullname').value = s.fullname;
-                document.getElementById('set-rate1').value = s.rate1;
-                document.getElementById('set-rate2').value = s.rate2;
-                document.getElementById('set-rate3').value = s.rate3;
-            },
-            saveSettings: async function() {
-                const s = {
-                    username: document.getElementById('set-username').value,
-                    password: document.getElementById('set-password').value,
-                    fullname: document.getElementById('set-fullname').value,
-                    rate1: parseFloat(document.getElementById('set-rate1').value) || 0,
-                    rate2: parseFloat(document.getElementById('set-rate2').value) || 0,
-                    rate3: parseFloat(document.getElementById('set-rate3').value) || 0
-                };
-                await this.putData('settings', s);
-                this.data.settings = s;
-                document.getElementById('header-name').innerText = s.fullname;
-                alert("Nastavitve uspešno shranjene!");
-            },
-
-            // TISKANJE
-            cleanSumniki: function(str) {
-                return str.replace(/[čČ]/g, 'c').replace(/[šŠ]/g, 's').replace(/[žŽ]/g, 'z');
-            },
-            printReceipt: function(type) {
-                const month = document.getElementById('print-month').value;
-                if(!month) return alert("Izberi mesec!");
-
-                const printArea = document.getElementById('print-area');
-                const pDate = new Date().toLocaleDateString('sl-SI');
-                const fullName = this.data.settings.fullname || 'Jasa Petrinjak';
-                
-                let content = `
-                    <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:5px; margin-bottom:5px;">
-                        <b>${fullName}</b><br>
-                        Izpis: ${type === 'hours' ? 'Mesecne ure' : 'Napitnine'}<br>
-                        Mesec: ${month}<br>
-                        Natisnjeno: ${pDate}
-                    </div>
-                `;
-
-                let total = 0;
-                const logsForMonth = Object.values(this.data.logs)
-                    .filter(l => l.date.startsWith(month))
-                    .sort((a,b) => a.date.localeCompare(b.date));
-
-                if(type === 'hours') {
-                    logsForMonth.forEach(l => {
-                        const d = l.date.split('-').reverse().join('.');
-                        content += `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${d}</span><span>${l.hours.toFixed(2)}h</span></div>`;
-                        total += l.hours;
-                    });
-                    content += `<div style="border-top:1px dashed #000; margin-top:5px; padding-top:5px; font-weight:bold; font-size:14px; text-align:right;">SKUPAJ: ${total.toFixed(2)}h</div>`;
-                } else {
-                    logsForMonth.forEach(l => {
-                        if(l.tips > 0) {
-                            const d = l.date.split('-').reverse().join('.');
-                            content += `<div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>${d}</span><span>${l.tips.toFixed(2)} EUR</span></div>`;
-                            total += l.tips;
-                        }
-                    });
-                    content += `<div style="border-top:1px dashed #000; margin-top:5px; padding-top:5px; font-weight:bold; font-size:14px; text-align:right;">SKUPAJ: ${total.toFixed(2)} EUR</div>`;
-                }
-                content += `<div style="text-align:center; margin-top:10px; font-size:10px;">Hvala!</div>`;
-
-                printArea.innerHTML = this.cleanSumniki(content);
-                
-                window.print();
-            }
+        // ----------------------------------------------------------------------
+        // 2. STATE MANAGEMENT & UTILS
+        // ----------------------------------------------------------------------
+        const currentUserId = "user_maja_demo"; // Demo user
+        let state = {
+            profile: null,
+            workEntries: {}, // key: date YYYY-MM-DD
+            currentDate: new Date('2026-08-21'), // Mocking today based on prompt examples
+            selectedDateForVpis: '2026-08-21',
+            calendarWeekOffset: 0
         };
 
-        // Zagon
-        window.onload = () => app.init();
+        const daysSLO = ['Nedelja', 'Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota'];
+        const daysShort = ['Ned', 'Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob'];
+        const monthsSLO = ['januar', 'februar', 'marec', 'april', 'maj', 'junij', 'julij', 'avgust', 'september', 'oktober', 'november', 'december'];
+
+        function formatDateSlo(dateObj) {
+            const dayName = daysSLO[dateObj.getDay()];
+            return `${dayName}, ${dateObj.getDate()}. ${monthsSLO[dateObj.getMonth()]}`;
+        }
+
+        function formatYMD(dateObj) {
+            return `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
+        }
+
+        function timeToMins(timeStr) {
+            if(!timeStr) return 0;
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function minsToTimeStr(mins) {
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return `${h}h ${m}m`;
+        }
+        
+        function calculateDuration(start, end, breakMins = 0) {
+            if(!start || !end) return 0;
+            let startMins = timeToMins(start);
+            let endMins = timeToMins(end);
+            if(endMins < startMins) endMins += 24 * 60; // crossover midnight
+            let duration = endMins - startMins - breakMins;
+            return duration > 0 ? duration : 0;
+        }
+
+        function getStartOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        let chartInstance = null;
+
+        // ----------------------------------------------------------------------
+        // 3. UI NAVIGATION
+        // ----------------------------------------------------------------------
+        function navigateTo(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            // Update Mobile Nav
+            document.querySelectorAll('.mobile-nav .nav-item').forEach(n => n.classList.remove('active'));
+            const mobileTarget = document.querySelector(`.mobile-nav .nav-item[data-target="${viewId}"]`);
+            if(mobileTarget) mobileTarget.classList.add('active');
+
+            // Update Desktop Nav
+            document.querySelectorAll('.sidebar-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(n => {
+                if(n.getAttribute('onclick') === `navigateTo('${viewId}')`) n.classList.add('active');
+            });
+
+            // Trigger view-specific renders
+            if(viewId === 'home') renderHome();
+            if(viewId === 'calendar') renderCalendar();
+            if(viewId === 'vpis') renderVpis();
+            if(viewId === 'stats') renderStats();
+        }
+
+        // ----------------------------------------------------------------------
+        // 4. DATA FETCHING & SEEDING
+        // ----------------------------------------------------------------------
+        function initApp() {
+            const userRef = db.ref('users/' + currentUserId);
+            
+            userRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) {
+                    seedDemoData();
+                } else {
+                    state.profile = data.profile;
+                    state.workEntries = data.workEntries || {};
+                    refreshActiveView();
+                }
+            });
+        }
+
+        function refreshActiveView() {
+            const activeView = document.querySelector('.view.active').id;
+            if(activeView === 'home') renderHome();
+            if(activeView === 'calendar') renderCalendar();
+            if(activeView === 'vpis') renderVpis();
+            if(activeView === 'stats') renderStats();
+        }
+
+        function seedDemoData() {
+            const demoData = {
+                profile: { name: "Maja Novak", role: "Natakar", location: "Restavracija Center" },
+                workEntries: {
+                    "2026-08-19": { plannedStart: "10:00", plannedEnd: "18:00", actualStart: "10:00", actualEnd: "18:00", breakMins: 30, status: "done", location: "Restavracija Center", position: "Natakar" },
+                    "2026-08-20": { plannedStart: "10:00", plannedEnd: "18:00", actualStart: "09:55", actualEnd: "18:30", breakMins: 30, status: "done", location: "Restavracija Center", position: "Natakar" },
+                    "2026-08-21": { plannedStart: "10:00", plannedEnd: "18:00", status: "planned", location: "Restavracija Center", position: "Natakar" },
+                    "2026-08-22": { plannedStart: "16:00", plannedEnd: "22:00", status: "planned", location: "Restavracija Center", position: "Natakar" },
+                    "2026-08-23": { status: "off" },
+                    "2026-08-24": { plannedStart: "10:00", plannedEnd: "18:00", status: "planned", location: "Restavracija Center", position: "Natakar" },
+                    "2026-08-25": { plannedStart: "16:00", plannedEnd: "23:00", status: "canceled", location: "Restavracija Center", position: "Natakar" }
+                }
+            };
+            db.ref('users/' + currentUserId).set(demoData);
+        }
+
+        // ----------------------------------------------------------------------
+        // 5. VIEW RENDERERS
+        // ----------------------------------------------------------------------
+        
+        // --- HOME ---
+        function renderHome() {
+            document.getElementById('homeTodayDate').innerText = formatDateSlo(state.currentDate);
+            const todayStr = formatYMD(state.currentDate);
+            const entry = state.workEntries[todayStr];
+
+            const todayCard = document.getElementById('homeTodayCard');
+            if(entry && entry.status !== 'off') {
+                const planMins = calculateDuration(entry.plannedStart, entry.plannedEnd);
+                const h = Math.floor(planMins/60);
+                
+                let statusBadge = `<span class="badge badge-planned">Načrtovano</span>`;
+                if(entry.status === 'done') statusBadge = `<span class="badge badge-done">Opravljeno</span>`;
+                if(entry.status === 'canceled') statusBadge = `<span class="badge badge-canceled">Odpovedano</span>`;
+
+                todayCard.innerHTML = `
+                    <div class="flex-between" style="margin-bottom: 0.5rem;">
+                        <p>Danes delaš</p>
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700;">${h}h</div>
+                    </div>
+                    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">${entry.plannedStart} – ${entry.plannedEnd}</h1>
+                    <div style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div class="flex-start"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> <p style="color:white; margin:0;">${entry.location}</p></div>
+                        <div class="flex-start"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> <p style="color:white; margin:0;">${entry.position}</p></div>
+                    </div>
+                    <div class="flex-between" style="margin-bottom: 1rem;">
+                        <p style="color: white; font-weight:600;">Status:</p>
+                        ${statusBadge}
+                    </div>
+                    ${entry.status !== 'done' ? `<button class="btn btn-primary" onclick="state.selectedDateForVpis='${todayStr}'; navigateTo('vpis');">VPIŠI OPRAVLJENO DELO</button>` : `<button class="btn btn-primary" style="opacity:0.8;" onclick="state.selectedDateForVpis='${todayStr}'; navigateTo('vpis');">UREDI VNOS</button>`}
+                `;
+            } else {
+                todayCard.innerHTML = `<h2 style="color:white; text-align:center;">Danes si prost/a! 🎉</h2>`;
+            }
+
+            // Render Week
+            const weekStart = getStartOfWeek(state.currentDate);
+            let weekHTML = '';
+            let totalMins = 0;
+
+            for(let i=0; i<7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + i);
+                const dStr = formatYMD(d);
+                const e = state.workEntries[dStr];
+
+                let timeStr = 'Prosto';
+                let hoursStr = '–';
+                let icon = '';
+
+                if(e && e.status !== 'off') {
+                    timeStr = `${e.plannedStart} - ${e.plannedEnd}`;
+                    let mins = calculateDuration(e.plannedStart, e.plannedEnd);
+                    totalMins += mins;
+                    hoursStr = `${Math.floor(mins/60)}h`;
+                    
+                    if(e.status === 'done') icon = '<svg width="16" height="16" fill="var(--success)" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>';
+                    if(e.status === 'canceled') icon = '<span style="color:var(--warning); font-size:1.2rem;">•</span>';
+                }
+
+                weekHTML += `
+                    <div class="list-item">
+                        <div class="list-date">
+                            <span>${daysShort[d.getDay()]}</span>
+                            <strong>${d.getDate()}. ${d.getMonth()+1}.</strong>
+                        </div>
+                        <div class="list-time">${timeStr}</div>
+                        <div class="list-hours text-primary">${hoursStr}</div>
+                        <div style="width:20px; text-align:right;">${icon}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('homeWeekList').innerHTML = weekHTML;
+            document.getElementById('homeWeekTotal').innerText = `${Math.floor(totalMins/60)} h`;
+        }
+
+        // --- CALENDAR ---
+        function changeWeek(dir) {
+            state.calendarWeekOffset += dir;
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const baseDate = new Date(state.currentDate);
+            baseDate.setDate(baseDate.getDate() + (state.calendarWeekOffset * 7));
+            const weekStart = getStartOfWeek(baseDate);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+
+            document.getElementById('calendarWeekLabel').innerText = `${weekStart.getDate()}. – ${weekEnd.getDate()}. ${monthsSLO[weekEnd.getMonth()]}`;
+
+            let html = '';
+            for(let i=0; i<7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + i);
+                const dStr = formatYMD(d);
+                const e = state.workEntries[dStr];
+
+                if(e && e.status !== 'off') {
+                    let statusLabel = `<span class="text-primary">🟢 Načrtovano</span>`;
+                    if(e.status === 'done') statusLabel = `<span class="text-success">🟢 Opravljeno</span>`;
+                    if(e.status === 'canceled') statusLabel = `<span class="text-warning">🔴 Odpovedano</span>`;
+                    
+                    const hours = Math.floor(calculateDuration(e.plannedStart, e.plannedEnd)/60);
+
+                    html += `
+                        <div class="card" style="margin-bottom:1rem; cursor:pointer;" onclick="state.selectedDateForVpis='${dStr}'; navigateTo('vpis');">
+                            <p class="date-display">${daysSLO[d.getDay()]}, ${d.getDate()}. ${monthsSLO[d.getMonth()]}</p>
+                            <div class="flex-between" style="margin: 0.5rem 0;">
+                                <h2>${e.plannedStart} - ${e.plannedEnd}</h2>
+                                <h2 style="color: var(--text-muted);">${hours}h</h2>
+                            </div>
+                            <div class="flex-start" style="margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> <span>${e.location}</span>
+                            </div>
+                            <div class="flex-between">
+                                <div class="flex-start" style="color: var(--text-muted); font-size: 0.9rem;">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> <span>${e.position}</span>
+                                </div>
+                                <div style="font-size:0.85rem; font-weight:600;">Status: ${statusLabel}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="card" style="margin-bottom:1rem; opacity:0.6;">
+                            <p class="date-display">${daysSLO[d.getDay()]}, ${d.getDate()}. ${monthsSLO[d.getMonth()]}</p>
+                            <h3 style="margin-top:0.5rem;">Prosto</h3>
+                        </div>
+                    `;
+                }
+            }
+            document.getElementById('calendarDaysContainer').innerHTML = html;
+        }
+
+        // --- VPIS DELA ---
+        function renderVpis() {
+            const dStr = state.selectedDateForVpis;
+            const entry = state.workEntries[dStr];
+            
+            const dateObj = new Date(dStr);
+            const planCard = document.getElementById('vpisPlanCard');
+            
+            if(!entry || entry.status === 'off') {
+                planCard.innerHTML = `<h2 style="color:white; margin:0;">Za ta dan ni načrtovane izmene.</h2>`;
+                document.getElementById('inputStart').value = "10:00";
+                document.getElementById('inputEnd').value = "18:00";
+            } else {
+                const planMins = calculateDuration(entry.plannedStart, entry.plannedEnd);
+                planCard.innerHTML = `
+                    <p style="color:rgba(255,255,255,0.8); margin-bottom:0.5rem;">${formatDateSlo(dateObj)}</p>
+                    <div class="flex-between">
+                        <h1 style="margin:0;">${entry.plannedStart} - ${entry.plannedEnd}</h1>
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700;">${Math.floor(planMins/60)}h</div>
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; color: white; font-size: 0.85rem;">
+                        <span>📍 ${entry.location}</span> <span>👤 ${entry.position}</span>
+                    </div>
+                `;
+                document.getElementById('inputStart').value = entry.actualStart || entry.plannedStart;
+                document.getElementById('inputEnd').value = entry.actualEnd || entry.plannedEnd;
+                document.getElementById('inputBreak').value = entry.breakMins !== undefined ? entry.breakMins : 30;
+                document.getElementById('inputNote').value = entry.note || "";
+            }
+            
+            updateLiveCalculation();
+        }
+
+        function updateLiveCalculation() {
+            const start = document.getElementById('inputStart').value;
+            const end = document.getElementById('inputEnd').value;
+            const brk = parseInt(document.getElementById('inputBreak').value) || 0;
+            
+            const dStr = state.selectedDateForVpis;
+            const entry = state.workEntries[dStr];
+            let planMins = entry && entry.status !== 'off' ? calculateDuration(entry.plannedStart, entry.plannedEnd) : 0;
+
+            const actualMins = calculateDuration(start, end, brk);
+            let overtime = actualMins > planMins ? actualMins - planMins : 0;
+            let redne = actualMins > planMins ? planMins : actualMins;
+
+            document.getElementById('liveOpravljeno').innerText = minsToTimeStr(actualMins);
+            document.getElementById('liveRedne').innerText = minsToTimeStr(redne);
+            document.getElementById('liveNadure').innerText = overtime > 0 ? minsToTimeStr(overtime) : "0h 00m";
+        }
+
+        function saveWorkEntry() {
+            const dStr = state.selectedDateForVpis;
+            const entry = state.workEntries[dStr] || { plannedStart:"00:00", plannedEnd:"00:00", location:"-", position:"-" };
+            
+            const payload = {
+                ...entry,
+                actualStart: document.getElementById('inputStart').value,
+                actualEnd: document.getElementById('inputEnd').value,
+                breakMins: parseInt(document.getElementById('inputBreak').value) || 0,
+                note: document.getElementById('inputNote').value,
+                status: 'done'
+            };
+
+            db.ref(`users/${currentUserId}/workEntries/${dStr}`).update(payload).then(() => {
+                navigateTo('home');
+            });
+        }
+
+        // --- STATS ---
+        function renderStats() {
+            let totalDone = 0;
+            let totalPlan = 0;
+            let totalOvertime = 0;
+            let totalCanceled = 0;
+            let daysWorked = 0;
+
+            const daysInMonth = 31; // Mocking August length
+            const labels = [];
+            const dataPlan = [];
+            const dataDone = [];
+            const dataOver = [];
+            const dataCanc = [];
+
+            for(let i=1; i<=daysInMonth; i++) {
+                labels.push(`${i}. avg`);
+                const dStr = `2026-08-${String(i).padStart(2,'0')}`;
+                const e = state.workEntries[dStr];
+                
+                let p = 0, d = 0, o = 0, c = 0;
+
+                if(e && e.status !== 'off') {
+                    p = calculateDuration(e.plannedStart, e.plannedEnd);
+                    totalPlan += p;
+
+                    if(e.status === 'done') {
+                        d = calculateDuration(e.actualStart, e.actualEnd, e.breakMins);
+                        totalDone += d;
+                        daysWorked++;
+                        if(d > p) {
+                            o = d - p;
+                            totalOvertime += o;
+                        }
+                    } else if (e.status === 'canceled') {
+                        c = p;
+                        totalCanceled += c;
+                    }
+                }
+                
+                // Convert to hours for chart readability
+                dataPlan.push(p/60);
+                dataDone.push(d/60);
+                dataOver.push(o/60);
+                dataCanc.push(c/60);
+            }
+
+            document.getElementById('statDone').innerHTML = `${Math.floor(totalDone/60)}h <small>${totalDone%60}m</small>`;
+            document.getElementById('statPlan').innerHTML = `${Math.floor(totalPlan/60)}h <small>${totalPlan%60}m</small>`;
+            document.getElementById('statOvertime').innerHTML = `${Math.floor(totalOvertime/60)}h <small>${totalOvertime%60}m</small>`;
+            document.getElementById('statCanceled').innerHTML = `${Math.floor(totalCanceled/60)}h <small>${totalCanceled%60}m</small>`;
+
+            const avg = daysWorked > 0 ? Math.floor(totalDone / daysWorked) : 0;
+            document.getElementById('statAvg').innerText = minsToTimeStr(avg);
+            
+            const diff = totalDone - totalPlan;
+            document.getElementById('statDiff').innerText = `${diff > 0 ? '+' : ''}${minsToTimeStr(diff)}`;
+            if(diff < 0) document.getElementById('statDiff').style.color = "var(--warning)";
+            else document.getElementById('statDiff').style.color = "var(--success)";
+
+            // Render Chart
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Predvidene', data: dataPlan, backgroundColor: '#E2ECEC' },
+                        { label: 'Opravljene', data: dataDone, backgroundColor: '#2A9D8F' },
+                        { label: 'Nadure', data: dataOver, backgroundColor: '#9D4EDD' },
+                        { label: 'Odpovedane', data: dataCanc, backgroundColor: '#E76F51' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true, border: {display: false} }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Initialization
+        window.onload = () => {
+            initApp();
+        };
+
     </script>
 </body>
 </html>
