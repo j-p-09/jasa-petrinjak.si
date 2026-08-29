@@ -14,18 +14,18 @@
 
     <style>
         :root {
-            --primary: #235d6e; 
-            --primary-light: #e6f0f2;
+            --primary: #1c4b59; 
+            --primary-light: #e0edf0;
             --accent: #fd7e14; /* Oranžna (minus) */
             --success: #28a745; /* Zelena (opravljeno/ok) */
             --danger: #dc3545; /* Rdeča (odpovedano) */
             --purple: #6f42c1; /* Vijolična (nadure) */
             --blue: #007bff; /* Modra za predvidene (graf) */
-            --bg: #f4f6f9;
+            --bg: #edf1f5;
             --card-bg: #ffffff;
-            --text-main: #333333;
-            --text-muted: #777777;
-            --border: #e0e0e0;
+            --text-main: #222222;
+            --text-muted: #555555;
+            --border: #d0d0d0;
             --nav-height: 70px;
         }
 
@@ -49,7 +49,7 @@
         .nav-item i { font-size: 22px; margin-bottom: 4px; }
         .nav-item.active { color: var(--primary); }
         .nav-item.fab-container { position: relative; top: -25px; flex: 0.8; }
-        .fab { background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 4px 10px rgba(35, 93, 110, 0.4); border: 4px solid var(--bg); transition: 0.2s; }
+        .fab { background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 4px 10px rgba(28, 75, 89, 0.4); border: 4px solid var(--bg); transition: 0.2s; }
         .fab:active { transform: scale(0.95); }
         .desktop-only { display: none; }
 
@@ -121,7 +121,7 @@
         .stat-box p { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
         .stat-box h4 { font-size: 18px; color: var(--text-main); font-weight: bold; }
         .stat-box h4.text-green { color: var(--success); }
-        .stat-box h4.text-red { color: var(--accent); } /* Minus ure v oranžno po navadi ali rdeče, damo oranžno-rdečo */
+        .stat-box h4.text-red { color: var(--accent); }
 
         .selector { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; }
         .selector i { cursor: pointer; padding: 5px; color: var(--primary); font-size: 18px;}
@@ -154,6 +154,15 @@
         .ep-inputs { display: flex; gap: 10px; flex: 1; opacity: 0.3; pointer-events: none; }
         .ep-inputs.active { opacity: 1; pointer-events: auto; }
         .ep-inputs input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; }
+
+        /* Mesečni koledar CSS */
+        .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; margin-bottom: 15px;}
+        .month-day-header { font-weight: bold; font-size: 12px; color: var(--text-muted); padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        .month-day { padding: 5px 2px; font-size: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 45px;}
+        .month-day .circle { width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; color: white; font-weight: bold;}
+        .calendar-legend { display: flex; justify-content: center; gap: 10px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px;}
+        .calendar-legend div { display: flex; align-items: center; gap: 5px; }
+        .calendar-legend .status-icon { width: 14px; height: 14px; font-size: 0; }
 
         /* Skrivanje elementov */
         .hidden { display: none !important; }
@@ -217,13 +226,29 @@
                 </div>
             </div>
 
-            <div class="section-header"><h2>Ta teden</h2><a href="#" onclick="nav('calendar')">Poglej vse</a></div>
+            <div class="section-header"><h2>Ta teden</h2></div>
             <div class="card"><table class="week-table" id="home-week-table"></table></div>
         </section>
 
         <!-- KOLEDAR -->
         <section id="view-calendar" class="view-section">
-            <div class="section-header"><h2>Koledar</h2></div>
+            <div class="section-header"><h2>Mesečni koledar</h2></div>
+            <div class="selector">
+                <i class="fa-solid fa-chevron-left" onclick="changeMonth(-1)"></i>
+                <span id="cal-month-display"></span>
+                <i class="fa-solid fa-chevron-right" onclick="changeMonth(1)"></i>
+            </div>
+            <div class="card">
+                <div class="month-grid" id="cal-month-grid"></div>
+                <div class="calendar-legend">
+                    <div><span class="status-icon bg-green"></span> Po planu</div>
+                    <div><span class="status-icon bg-purple"></span> Nadure</div>
+                    <div><span class="status-icon bg-orange"></span> Minus ure</div>
+                    <div><span class="status-icon bg-red"></span> Odpovedano</div>
+                </div>
+            </div>
+
+            <div class="section-header" style="margin-top:25px;"><h2>Tedenski koledar</h2></div>
             <div class="selector">
                 <i class="fa-solid fa-chevron-left" onclick="changeWeek(-1)"></i>
                 <span id="cal-week-display"></span>
@@ -353,6 +378,8 @@
     // Dates
     let currentDate = new Date();
     let currentWeekStart = getMonday(new Date());
+    let currentMonthDate = new Date();
+    currentMonthDate.setDate(1);
     let editWeekStart = getMonday(new Date());
     
     let statMode = 'mesec'; // mesec, teden, leto
@@ -453,7 +480,7 @@
     function minsToStr(mins) {
         if(mins < 0) mins = 0;
         let h = Math.floor(mins/60); let m = mins%60;
-        return m > 0 ? `${h}h ${m}m` : `${h}h 00m`;
+        return m > 0 ? `${h}h ${m}m` : `${h}h`;
     }
     function calcDiffMins(s, e) {
         if(!s || !e) return 0;
@@ -479,13 +506,64 @@
         renderWeekTable('home-week-table', currentWeekStart);
         updateDanesDelas();
     }
+    
     function renderCalendar() {
         document.getElementById('cal-week-display').innerText = getWeekStr(currentWeekStart);
         renderWeekTable('cal-week-table', currentWeekStart);
+        renderMonthView();
     }
+
     function changeWeek(dir) {
         currentWeekStart.setDate(currentWeekStart.getDate() + (dir * 7));
-        renderCalendar();
+        renderWeekTable('cal-week-table', currentWeekStart);
+        document.getElementById('cal-week-display').innerText = getWeekStr(currentWeekStart);
+    }
+
+    function changeMonth(dir) {
+        currentMonthDate.setMonth(currentMonthDate.getMonth() + dir);
+        renderMonthView();
+    }
+
+    function renderMonthView() {
+        document.getElementById('cal-month-display').innerText = `${months[currentMonthDate.getMonth()]} ${currentMonthDate.getFullYear()}`;
+        const grid = document.getElementById('cal-month-grid');
+        if(!grid) return;
+        grid.innerHTML = '';
+        
+        daysShort.forEach(d => {
+            grid.innerHTML += `<div class="month-day-header">${d}</div>`;
+        });
+
+        let y = currentMonthDate.getFullYear();
+        let m = currentMonthDate.getMonth();
+        let firstDay = new Date(y, m, 1).getDay();
+        let emptyDays = firstDay === 0 ? 6 : firstDay - 1;
+        let daysInMonth = new Date(y, m + 1, 0).getDate();
+
+        for(let i=0; i<emptyDays; i++) {
+            grid.innerHTML += `<div class="month-day"></div>`;
+        }
+
+        for(let d=1; d<=daysInMonth; d++) {
+            let dateObj = new Date(y, m, d);
+            let dStr = formatDateStr(dateObj);
+            let plan = globalPlan[dStr];
+            let ev = globalEvidenca[dStr];
+
+            let circleClass = "";
+            if(ev) {
+                let pMins = (plan && plan.active) ? calcDiffMins(plan.start, plan.end) : 0;
+                let wMins = (ev.status === 'opravljeno') ? calcDiffMins(ev.start, ev.end) : 0;
+
+                if(ev.status === 'odpovedano') circleClass = "bg-red";
+                else if(wMins > pMins) circleClass = "bg-purple";
+                else if(wMins < pMins) circleClass = "bg-orange";
+                else circleClass = "bg-green";
+            }
+
+            let content = circleClass ? `<div class="circle ${circleClass}">${d}</div>` : `<div>${d}</div>`;
+            grid.innerHTML += `<div class="month-day">${content}</div>`;
+        }
     }
 
     function renderWeekTable(tableId, monday) {
@@ -517,7 +595,7 @@
                 if(ev && ev.status==='opravljeno') tdSum.innerText = minsToStr(calcDiffMins(ev.start, ev.end));
             }
 
-            // Status Ikonice po novih pravilih
+            // Status Ikonice
             if(ev) {
                 wMins = (ev.status === 'opravljeno') ? calcDiffMins(ev.start, ev.end) : 0;
                 
@@ -717,7 +795,7 @@
         document.getElementById('stat-period-display').innerText = label;
 
         let totalP = 0, totalW = 0, totalNad = 0, totalMin = 0;
-        let chartLabels = [], chartDataW = [], chartDataP = [];
+        let chartLabels = [], chartDataW = [], chartDataP = [], chartColorsW = [];
 
         // Loop skozi dneve v izbranem obdobju
         let curr = new Date(start);
@@ -728,10 +806,19 @@
             
             let pMins = (plan && plan.active) ? calcDiffMins(plan.start, plan.end) : 0;
             let wMins = 0;
+            let wColor = 'var(--success)';
             
             if(ev) {
                 if(ev.status === 'opravljeno') wMins = calcDiffMins(ev.start, ev.end);
                 else if(ev.status === 'odpovedano') wMins = 0; // Odpovedano
+                
+                if(ev.status === 'odpovedano') {
+                    wColor = 'var(--danger)';
+                } else {
+                    if(wMins > pMins) wColor = 'var(--purple)';
+                    else if(wMins < pMins) wColor = 'var(--accent)';
+                    else wColor = 'var(--success)';
+                }
             }
             
             totalP += pMins; totalW += wMins;
@@ -748,6 +835,7 @@
                 chartLabels.push(curr.getDate()+'.');
                 chartDataP.push(pMins/60);
                 chartDataW.push(wMins/60);
+                chartColorsW.push(wColor);
             }
             curr.setDate(curr.getDate() + 1);
         }
@@ -757,10 +845,10 @@
         document.getElementById('stat-nadure').innerText = minsToStr(totalNad);
         document.getElementById('stat-minus').innerText = minsToStr(totalMin);
 
-        if(statMode === 'mesec') drawChart(chartLabels, chartDataW, chartDataP);
+        if(statMode === 'mesec') drawChart(chartLabels, chartDataW, chartDataP, chartColorsW);
     }
 
-    function drawChart(labels, dataW, dataP) {
+    function drawChart(labels, dataW, dataP, colorsW) {
         let ctx = document.getElementById('statsChart').getContext('2d');
         if(chartInstance) chartInstance.destroy();
         
@@ -769,8 +857,8 @@
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Opravljene', data: dataW, backgroundColor: 'var(--success)' }, // Zelena
-                    { label: 'Predvidene', data: dataP, backgroundColor: 'var(--blue)' }     // Modra
+                    { label: 'Opravljene', data: dataW, backgroundColor: colorsW },
+                    { label: 'Predvidene', data: dataP, backgroundColor: 'var(--blue)' }
                 ]
             },
             options: {
@@ -783,4 +871,4 @@
 
 </script>
 </body>
-</html>s
+</html>
