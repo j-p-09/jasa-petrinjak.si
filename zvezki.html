@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="sl" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitalni Šolski Zvezki</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="h-full text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
+
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="view-login" class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-slate-100">
+        <div class="sm:mx-auto sm:w-full sm:max-width-md text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-600 text-white mb-4 shadow-lg shadow-brand-500/30">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Digitalni Zvezki</h2>
+            <p class="mt-2 text-sm text-slate-600">Prijavite se v svoj šolski profil</p>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white py-8 px-4 shadow-xl shadow-slate-200/50 sm:rounded-2xl sm:px-10 border border-slate-100">
+                <form id="form-login" class="space-y-6" onsubmit="handleLogin(event)">
+                    <div>
+                        <label for="login-username" class="block text-sm font-medium text-slate-700">Uporabniško ime</label>
+                        <div class="mt-1">
+                            <input id="login-username" name="username" type="text" required class="appearance-none block w-full px-3 py-2.5 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-slate-700">Geslo</label>
+                        <div class="mt-1">
+                            <input id="login-password" name="password" type="password" required class="appearance-none block w-full px-3 py-2.5 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors">
+                            Prijava
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-app" class="hidden min-h-full flex flex-col md:flex-row">
+        <div class="md:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                <span class="font-bold">Zvezki</span>
+            </div>
+            <button onclick="toggleMobileNav()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+
+        <aside id="sidebar" class="hidden md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 min-h-screen border-r border-slate-800">
+            <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+                <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-brand-500/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-white leading-tight">Digitalni Zvezki</h1>
+                    <span class="text-xs text-slate-400">Šolski Asistent</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-1">
+                <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors text-white bg-slate-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Domov
+                </button>
+
+                <button onclick="navigateTo('today')" id="nav-today" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors text-slate-400 hover:text-white hover:bg-slate-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Današnji urnik
+                </button>
+
+                <button onclick="navigateTo('notebooks')" id="nav-notebooks" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors text-slate-400 hover:text-white hover:bg-slate-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    Moji zvezki
+                </button>
+
+                <button onclick="navigateTo('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors text-slate-400 hover:text-white hover:bg-slate-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Nastavitve
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-semibold text-slate-200" id="user-avatar">
+                            U
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-white leading-tight" id="user-display-name">Uporabnik</p>
+                            <p class="text-xs text-slate-400" id="user-display-username">@user</p>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors" aria-label="Odjava" title="Odjava">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 bg-slate-50 min-h-screen p-4 sm:p-6 lg:p-8 overflow-y-auto w-full">
+            <section id="page-dashboard" class="space-y-6 max-w-5xl mx-auto">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900" id="dash-greeting">Dobrodošel, TEST</h2>
+                        <p class="text-slate-500 text-sm mt-1" id="dash-date">Torek, 1. september 2026</p>
+                    </div>
+                    <div>
+                        <button onclick="navigateTo('today')" class="inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-semibold text-sm transition-all shadow-md shadow-brand-500/20">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            DANAŠNJI URNIK
+                        </button>
+                    </div>
+                </div>
+
+                <div id="missing-notes-container"></div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-900">Današnji napredek</h3>
+                        <span class="text-sm font-semibold text-brand-600" id="dash-progress-text">0 / 0 ur</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                        <div id="dash-progress-bar" class="bg-brand-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 sm:gap-4 pt-2 text-center">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <p class="text-xs text-slate-500">Skupaj ur</p>
+                            <p class="text-xl font-bold text-slate-800 mt-0.5" id="dash-stat-total">0</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                            <p class="text-xs text-emerald-600">Zaključeno</p>
+                            <p class="text-xl font-bold text-emerald-700 mt-0.5" id="dash-stat-done">0</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-amber-50 border border-amber-100">
+                            <p class="text-xs text-amber-600">Še manjka</p>
+                            <p class="text-xl font-bold text-amber-700 mt-0.5" id="dash-stat-remaining">0</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-today" class="hidden space-y-6 max-w-5xl mx-auto">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Današnji urnik</h2>
+                        <p class="text-slate-500 text-sm mt-0.5" id="today-date-subtitle">Pregled in vnos zapiskov za danes</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden w-full">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    <th class="py-3.5 px-4 whitespace-nowrap">Ura</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap">Predmet</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap">Profesor</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap">Status</th>
+                                    <th class="py-3.5 px-4 text-right whitespace-nowrap">Akcija</th>
+                                </tr>
+                            </thead>
+                            <tbody id="today-schedule-tbody" class="divide-y divide-slate-100 text-sm">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-notebooks" class="hidden space-y-6 max-w-5xl mx-auto">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Moji zvezki</h2>
+                    <p class="text-slate-500 text-sm mt-0.5">Izberite predmet za pregled digitalnega zvezka</p>
+                </div>
+
+                <div id="notebooks-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    </div>
+            </section>
+
+            <section id="page-notebook-detail" class="hidden space-y-6 max-w-5xl mx-auto">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                    <div class="flex items-center gap-3">
+                        <button onclick="navigateTo('notebooks')" class="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors">
+                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900" id="nb-detail-title">Matematika</h2>
+                            <p class="text-slate-500 text-sm" id="nb-detail-sub">Zvezek in zbrani zapiski</p>
+                        </div>
+                    </div>
+                    <button onclick="exportNotebookPDF()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md shadow-emerald-600/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        PRENESI ZVEZEK PDF
+                    </button>
+                </div>
+
+                <div id="nb-photos-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    </div>
+            </section>
+
+            <section id="page-settings" class="hidden space-y-8 max-w-5xl mx-auto w-full">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Nastavitve</h2>
+                    <p class="text-slate-500 text-sm mt-0.5">Upravljajte svoj profil, predmete in urnik</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Moj profil</h3>
+                    <form onsubmit="handleUpdateProfile(event)" class="space-y-4 max-w-md">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Ime in priimek</label>
+                            <input type="text" id="set-fullname" required class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Uporabniško ime</label>
+                            <input type="text" id="set-username" required class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Novo geslo</label>
+                            <input type="password" id="set-password" required class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm px-4 py-2 rounded-xl transition-colors">
+                            Shrani spremembe
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-lg font-bold text-slate-900">Predmeti in profesorji</h3>
+                        <button onclick="openSubjectModal()" class="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Dodaj predmet
+                        </button>
+                    </div>
+
+                    <div id="settings-subjects-list" class="space-y-3">
+                        </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 overflow-hidden">
+                    <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Tedenski urnik</h3>
+                    <p class="text-xs text-slate-500">Nastavite predmete in profesorje po dneh v tednu (1. do 9. ura).</p>
+                    
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-xs text-left border-collapse min-w-[700px]">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700">
+                                    <th class="p-2.5 border border-slate-200 w-16 text-center whitespace-nowrap">Ura</th>
+                                    <th class="p-2.5 border border-slate-200 whitespace-nowrap">Ponedeljek</th>
+                                    <th class="p-2.5 border border-slate-200 whitespace-nowrap">Torek</th>
+                                    <th class="p-2.5 border border-slate-200 whitespace-nowrap">Sreda</th>
+                                    <th class="p-2.5 border border-slate-200 whitespace-nowrap">Četrtek</th>
+                                    <th class="p-2.5 border border-slate-200 whitespace-nowrap">Petek</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-matrix-tbody">
+                                </tbody>
+                        </table>
+                    </div>
+                    <div class="pt-2">
+                        <button onclick="saveScheduleMatrix()" class="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm px-5 py-2.5 rounded-xl transition-colors shadow-sm">
+                            Shrani urnik
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modal-lesson" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-xl overflow-hidden my-8">
+            <div class="bg-slate-900 text-white p-5 flex items-center justify-between">
+                <div>
+                    <span id="modal-lesson-number" class="text-xs font-semibold text-brand-400 uppercase tracking-wider">1. šolska ura</span>
+                    <h3 id="modal-lesson-subject" class="text-xl font-bold">Matematika</h3>
+                    <p id="modal-lesson-teacher" class="text-xs text-slate-400">Prof. Novak</p>
+                </div>
+                <button onclick="closeLessonModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <div class="flex items-center justify-between text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span class="text-slate-500">Datum pouka: <strong id="modal-lesson-date" class="text-slate-800">01.09.2026</strong></span>
+                    <span id="modal-lesson-status-badge" class="px-2.5 py-1 rounded-full font-semibold">Status</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <label class="flex-1 cursor-pointer inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Dodaj fotografijo
+                        <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+                    </label>
+                    <button id="btn-toggle-no-notes" onclick="toggleNoNotes()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors">
+                        Označi kot BREZ ZAPISKOV
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+                    <span>Naložene fotografije za to uro</span>
+                    <span id="modal-photo-count">0 / 10 fotografij</span>
+                </div>
+
+                <div id="modal-thumbnails" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-1">
+                    </div>
+            </div>
+
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 text-right">
+                <button onclick="closeLessonModal()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium text-sm px-5 py-2 rounded-xl transition-colors">
+                    Zapri
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-fullscreen" class="hidden fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-4 sm:p-6">
+        <div class="flex items-center justify-between text-white z-10">
+            <div>
+                <p id="fs-filename" class="font-mono text-sm font-semibold text-slate-200">01_MAT_01092026.jpg</p>
+                <p id="fs-info" class="text-xs text-slate-400">Datum pouka: 01.09.2026</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="fs-download-btn" onclick="downloadCurrentFSPhoto()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors" title="Prenesi fotografijo">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                </button>
+                <button onclick="closeFullscreen()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors" title="Zapri (ESC)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="relative flex-1 flex items-center justify-center my-4 overflow-hidden">
+            <button onclick="navigateFS(-1)" class="absolute left-2 sm:left-4 z-10 p-3 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <img id="fs-img" src="" alt="Celozaslonski predogled" class="max-h-full max-w-full object-contain rounded-lg shadow-2xl">
+            <button onclick="navigateFS(1)" class="absolute right-2 sm:right-4 z-10 p-3 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+
+        <div class="text-center text-xs text-slate-400">
+            Uporabi puščici <strong class="text-white">←</strong> in <strong class="text-white">→</strong> za navigacijo, <strong class="text-white">ESC</strong> za izhod
+        </div>
+    </div>
+
+    <div id="modal-subject" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-md p-6 space-y-4">
+            <h3 id="modal-subject-title" class="text-lg font-bold text-slate-900">Uredi predmet</h3>
+            <form onsubmit="handleSaveSubject(event)" class="space-y-4">
+                <input type="hidden" id="sub-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase">Polno ime</label>
+                    <input type="text" id="sub-name" required placeholder="npr. Matematika" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase">Kratica (VELIKE ČRKE)</label>
+                    <input type="text" id="sub-abbr" required placeholder="npr. MAT" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none uppercase">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Profesorji (loči z vejico)</label>
+                    <input type="text" id="sub-teachers" required placeholder="Janez Novak, Maja Kovač" class="block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeSubjectModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Prekliči</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-600 text-white hover:bg-brand-700">Shrani</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- INITIAL STATE & DATA MODEL ---
+        const DEFAULT_DATA = {
+            user: {
+                id: 'usr_1',
+                fullName: 'TEST',
+                username: 'TEST',
+                password: 'TEST'
+            },
+            subjects: [
+                { id: 'sub_mat', name: 'Matematika', abbreviation: 'MAT', teachers: ['Janez Novak', 'Maja Kovač'] },
+                { id: 'sub_slo', name: 'Slovenščina', abbreviation: 'SLO', teachers: ['Ana Kovač'] },
+                { id: 'sub_fiz', name: 'Fizika', abbreviation: 'FIZ', teachers: ['Janez Novak'] }
+            ],
+            schedule: [
+                { id: 'sc_1_1', weekday: 1, lessonNumber: 1, type: 'subject', subjectId: 'sub_mat', teacherId: 'Janez Novak' },
+                { id: 'sc_1_2', weekday: 1, lessonNumber: 2, type: 'subject', subjectId: 'sub_slo', teacherId: 'Ana Kovač' },
+                { id: 'sc_1_3', weekday: 1, lessonNumber: 3, type: 'break', subjectId: '', teacherId: '' },
+                { id: 'sc_1_4', weekday: 1, lessonNumber: 4, type: 'subject', subjectId: 'sub_fiz', teacherId: 'Janez Novak' },
+                { id: 'sc_1_5', weekday: 1, lessonNumber: 5, type: 'free', subjectId: '', teacherId: '' },
+
+                { id: 'sc_2_1', weekday: 2, lessonNumber: 1, type: 'subject', subjectId: 'sub_slo', teacherId: 'Ana Kovač' },
+                { id: 'sc_2_2', weekday: 2, lessonNumber: 2, type: 'subject', subjectId: 'sub_mat', teacherId: 'Janez Novak' },
+                { id: 'sc_2_3', weekday: 3, lessonNumber: 3, type: 'break', subjectId: '', teacherId: '' },
+                { id: 'sc_2_4', weekday: 2, lessonNumber: 4, type: 'subject', subjectId: 'sub_mat', teacherId: 'Maja Kovač' },
+
+                { id: 'sc_3_1', weekday: 3, lessonNumber: 1, type: 'subject', subjectId: 'sub_fiz', teacherId: 'Janez Novak' },
+                { id: 'sc_3_2', weekday: 3, lessonNumber: 2, type: 'subject', subjectId: 'sub_mat', teacherId: 'Janez Novak' },
+
+                { id: 'sc_4_1', weekday: 4, lessonNumber: 1, type: 'subject', subjectId: 'sub_mat', teacherId: 'Maja Kovač' },
+                { id: 'sc_4_2', weekday: 4, lessonNumber: 2, type: 'subject', subjectId: 'sub_slo', teacherId: 'Ana Kovač' },
+
+                { id: 'sc_5_1', weekday: 5, lessonNumber: 1, type: 'subject', subjectId: 'sub_fiz', teacherId: 'Janez Novak' }
+            ],
+            subjectCounters: {
+                'sub_mat': 0,
+                'sub_slo': 0,
+                'sub_fiz': 0
+            },
+            lessonRecords: [],
+            photos: []
+        };
+
+        const FIREBASE_URL = "https://jasa-petrinjak-zvezki-default-rtdb.europe-west1.firebasedatabase.app/dsz_data.json";
+        
+        let appData = null;
+        let activeLessonCtx = null; 
+        let activeFSIndex = 0;      
+        let currentFSPhotos = [];   
+
+        // --- CORE APPLICATION INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            setupKeyboardEvents();
+            await initStorage();
+            checkAuthStatus();
+        });
+
+        async function initStorage() {
+            try {
+                const response = await fetch(FIREBASE_URL);
+                const data = await response.json();
+                
+                if (!data) {
+                    appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                    await saveData();
+                } else {
+                    appData = data;
+                    // Fallbacks v primeru prazne baze
+                    if (!appData.subjectCounters) appData.subjectCounters = {};
+                    if (!appData.lessonRecords) appData.lessonRecords = [];
+                    if (!appData.photos) appData.photos = [];
+                    if (!appData.schedule) appData.schedule = [];
+                    if (!appData.subjects) appData.subjects = [];
+                }
+            } catch (error) {
+                console.error("Napaka pri branju iz Firebase, uporabljam default podatke:", error);
+                appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            }
+        }
+
+        async function saveData() {
+            try {
+                await fetch(FIREBASE_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appData)
+                });
+            } catch (error) {
+                console.error("Napaka pri shranjevanju v Firebase:", error);
+                showToast('Napaka pri shranjevanju v bazo!', 'error');
+            }
+        }
+
+        // --- AUTHENTICATION ---
+        function checkAuthStatus() {
+            const isLogged = sessionStorage.getItem('dsz_logged') === 'true';
+            if (isLogged) {
+                document.getElementById('view-login').classList.add('hidden');
+                document.getElementById('view-app').classList.remove('hidden');
+                updateUserDataUI();
+                navigateTo('dashboard');
+            } else {
+                document.getElementById('view-login').classList.remove('hidden');
+                document.getElementById('view-app').classList.add('hidden');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value.trim();
+
+            if (u === appData.user.username && p === appData.user.password) {
+                sessionStorage.setItem('dsz_logged', 'true');
+                showToast('Prijava uspešna!', 'success');
+                checkAuthStatus();
+            } else {
+                showToast('Napačno uporabniško ime ali geslo!', 'error');
+            }
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('dsz_logged');
+            showToast('Uspešno odjavljeni.', 'info');
+            checkAuthStatus();
+        }
+
+        function updateUserDataUI() {
+            document.getElementById('user-display-name').textContent = appData.user.fullName;
+            document.getElementById('user-display-username').textContent = '@' + appData.user.username;
+            document.getElementById('user-avatar').textContent = appData.user.fullName.charAt(0).toUpperCase();
+
+            document.getElementById('set-fullname').value = appData.user.fullName;
+            document.getElementById('set-username').value = appData.user.username;
+            document.getElementById('set-password').value = appData.user.password;
+        }
+
+        function handleUpdateProfile(e) {
+            e.preventDefault();
+            const fn = document.getElementById('set-fullname').value.trim();
+            const un = document.getElementById('set-username').value.trim();
+            const pw = document.getElementById('set-password').value.trim();
+
+            if (!fn || !un || !pw) {
+                showToast('Vsa polja so obvezna!', 'error');
+                return;
+            }
+
+            appData.user.fullName = fn;
+            appData.user.username = un;
+            appData.user.password = pw;
+            saveData();
+            updateUserDataUI();
+            showToast('Profil uspešno posodobljen!', 'success');
+        }
+
+        // --- NAVIGATION & ROUTING ---
+        function navigateTo(pageId, param = null) {
+            const pages = ['dashboard', 'today', 'notebooks', 'notebook-detail', 'settings'];
+            pages.forEach(p => {
+                const el = document.getElementById(`page-${p}`);
+                if (el) el.classList.add('hidden');
+            });
+
+            const navBtns = document.querySelectorAll('.nav-btn');
+            navBtns.forEach(btn => {
+                btn.classList.remove('text-white', 'bg-slate-800');
+                btn.classList.add('text-slate-400');
+            });
+
+            const activeNav = document.getElementById(`nav-${pageId}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-400');
+                activeNav.classList.add('text-white', 'bg-slate-800');
+            }
+
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+
+            if (pageId === 'dashboard') renderDashboard();
+            if (pageId === 'today') renderTodaySchedule();
+            if (pageId === 'notebooks') renderNotebooks();
+            if (pageId === 'notebook-detail' && param) renderNotebookDetail(param);
+            if (pageId === 'settings') renderSettings();
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        }
+
+        function toggleMobileNav() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('hidden');
+        }
+
+        // --- DATE UTILITIES ---
+        function getTodayDateStr() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getSlovenianFormattedDate(dateStr) {
+            const parts = dateStr.split('-');
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
+            const days = ['Nedelja', 'Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota'];
+            const months = ['januar', 'februar', 'marec', 'april', 'maj', 'junij', 'julij', 'avgust', 'september', 'oktober', 'november', 'december'];
+            return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        function formatDateDDMMYYYY(dateStr) {
+            const parts = dateStr.split('-');
+            return `${parts[2]}${parts[1]}${parts[0]}`;
+        }
+
+        // --- DASHBOARD RENDER ---
+        function renderDashboard() {
+            const todayStr = getTodayDateStr();
+            document.getElementById('dash-greeting').textContent = `Dobrodošel, ${appData.user.fullName}`;
+            document.getElementById('dash-date').textContent = getSlovenianFormattedDate(todayStr);
+
+            renderMissingNotes();
+
+            const dayOfWeek = new Date().getDay(); 
+            const todayItems = appData.schedule.filter(s => s.weekday === dayOfWeek && s.type === 'subject');
+            const total = todayItems.length;
+
+            let completed = 0;
+            todayItems.forEach(item => {
+                const rec = appData.lessonRecords.find(r => r.date === todayStr && r.lessonNumber === item.lessonNumber);
+                if (rec) {
+                    const photosCount = appData.photos.filter(p => p.lessonRecordId === rec.id).length;
+                    if (photosCount > 0 || rec.status === 'no_notes') {
+                        completed++;
+                    }
+                }
+            });
+
+            const remaining = total - completed;
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('dash-progress-text').textContent = `${completed} / ${total} ur`;
+            document.getElementById('dash-progress-bar').style.width = `${pct}%`;
+            document.getElementById('dash-stat-total').textContent = total;
+            document.getElementById('dash-stat-done').textContent = completed;
+            document.getElementById('dash-stat-remaining').textContent = remaining;
+        }
+
+        function renderMissingNotes() {
+            const container = document.getElementById('missing-notes-container');
+            container.innerHTML = '';
+
+            const todayStr = getTodayDateStr();
+            const missingList = [];
+
+            appData.lessonRecords.forEach(rec => {
+                if (rec.date <= todayStr) {
+                    const photoCount = appData.photos.filter(p => p.lessonRecordId === rec.id).length;
+                    if (photoCount === 0 && rec.status !== 'no_notes') {
+                        const subj = appData.subjects.find(s => s.id === rec.subjectId);
+                        if (subj) {
+                            missingList.push({
+                                record: rec,
+                                subjectName: subj.name,
+                                date: rec.date
+                            });
+                        }
+                    }
+                }
+            });
+
+            if (missingList.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center gap-3">
+                        <svg class="w-6 h-6 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <div>
+                            <p class="font-bold text-sm">Vse je urejeno!</p>
+                            <p class="text-xs text-emerald-700">Nimate manjkajočih zapiskov za pretekle ure.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                let html = `
+                    <div class="bg-amber-50 border border-amber-200 text-amber-900 p-5 rounded-2xl space-y-3">
+                        <div class="flex items-center gap-2 text-amber-800 font-bold text-sm">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Opozorilo: Manjkajoči zapiski
+                        </div>
+                        <ul class="space-y-2 text-xs">
+                `;
+                missingList.forEach(m => {
+                    html += `
+                        <li class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-200 shadow-sm">
+                            <span class="font-semibold text-slate-800">${m.date} — ${m.subjectName} (${m.record.lessonNumber}. ura)</span>
+                            <button onclick="openLessonModalDirect('${m.record.date}', ${m.record.lessonNumber}, '${m.record.subjectId}', '${m.record.teacherId}')" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 py-1 rounded-lg text-xs transition-colors">
+                                Uredi
+                            </button>
+                        </li>
+                    `;
+                });
+                html += `</ul></div>`;
+                container.innerHTML = html;
+            }
+        }
+
+        // --- TODAY SCHEDULE RENDER ---
+        function renderTodaySchedule() {
+            const todayStr = getTodayDateStr();
+            document.getElementById('today-date-subtitle').textContent = getSlovenianFormattedDate(todayStr);
+
+            const tbody = document.getElementById('today-schedule-tbody');
+            tbody.innerHTML = '';
+
+            const dayOfWeek = new Date().getDay(); 
+            const daySchedule = appData.schedule.filter(s => s.weekday === dayOfWeek).sort((a,b) => a.lessonNumber - b.lessonNumber);
+
+            if (daySchedule.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm">Za danes nimate vpisanih ur.</td></tr>`;
+                return;
+            }
+
+            daySchedule.forEach(slot => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition-colors";
+
+                if (slot.type === 'break') {
+                    tr.innerHTML = `
+                        <td class="py-3.5 px-4 font-semibold text-slate-500 whitespace-nowrap">${slot.lessonNumber}.</td>
+                        <td class="py-3.5 px-4 font-bold text-slate-400 whitespace-nowrap" colspan="2">MALICA</td>
+                        <td class="py-3.5 px-4 whitespace-nowrap"><span class="text-xs text-slate-400">—</span></td>
+                        <td class="py-3.5 px-4 text-right whitespace-nowrap"></td>
+                    `;
+                } else if (slot.type === 'free') {
+                    tr.innerHTML = `
+                        <td class="py-3.5 px-4 font-semibold text-slate-500 whitespace-nowrap">${slot.lessonNumber}.</td>
+                        <td class="py-3.5 px-4 font-bold text-slate-400 whitespace-nowrap" colspan="2">Prosta ura</td>
+                        <td class="py-3.5 px-4 whitespace-nowrap"><span class="text-xs text-slate-400">—</span></td>
+                        <td class="py-3.5 px-4 text-right whitespace-nowrap"></td>
+                    `;
+                } else {
+                    const subj = appData.subjects.find(s => s.id === slot.subjectId);
+                    const subjName = subj ? subj.name : 'Neznan predmet';
+
+                    let rec = appData.lessonRecords.find(r => r.date === todayStr && r.lessonNumber === slot.lessonNumber);
+                    let photoCount = 0;
+                    if (rec) {
+                        photoCount = appData.photos.filter(p => p.lessonRecordId === rec.id).length;
+                    }
+
+                    let statusBadge = '';
+                    if (photoCount > 0) {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ODDANO (${photoCount})
+                        </span>`;
+                    } else if (rec && rec.status === 'no_notes') {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> BREZ ZAPISKOV
+                        </span>`;
+                    } else {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-100 text-brand-800">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span> V TEKU / NI ODDANO
+                        </span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="py-3.5 px-4 font-bold text-slate-700 whitespace-nowrap">${slot.lessonNumber}.</td>
+                        <td class="py-3.5 px-4 font-semibold text-slate-900 whitespace-nowrap">${subjName}</td>
+                        <td class="py-3.5 px-4 text-slate-600 whitespace-nowrap">${slot.teacherId || '-'}</td>
+                        <td class="py-3.5 px-4 whitespace-nowrap">${statusBadge}</td>
+                        <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                            <button onclick="openLessonModalDirect('${todayStr}', ${slot.lessonNumber}, '${slot.subjectId}', '${slot.teacherId}')" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-xl transition-all shadow-sm">
+                                Odpri ura
+                            </button>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- LESSON MODAL LOGIC & PHOTO UPLOAD ---
+        function openLessonModalDirect(dateStr, lessonNumber, subjectId, teacherId) {
+            const subj = appData.subjects.find(s => s.id === subjectId);
+            if (!subj) return;
+
+            let rec = appData.lessonRecords.find(r => r.date === dateStr && r.lessonNumber === lessonNumber);
+            if (!rec) {
+                rec = {
+                    id: 'rec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    date: dateStr,
+                    lessonNumber: lessonNumber,
+                    subjectId: subjectId,
+                    teacherId: teacherId,
+                    status: 'pending'
+                };
+                appData.lessonRecords.push(rec);
+                saveData();
+            }
+
+            activeLessonCtx = {
+                recordId: rec.id,
+                dateStr: dateStr,
+                lessonNumber: lessonNumber,
+                subjectId: subjectId,
+                teacherId: teacherId,
+                subjectAbbr: subj.abbreviation
+            };
+
+            document.getElementById('modal-lesson-number').textContent = `${lessonNumber}. šolska ura`;
+            document.getElementById('modal-lesson-subject').textContent = subj.name;
+            document.getElementById('modal-lesson-teacher').textContent = `Prof. ${teacherId}`;
+            document.getElementById('modal-lesson-date').textContent = dateStr;
+
+            renderLessonModalPhotos();
+            document.getElementById('modal-lesson').classList.remove('hidden');
+        }
+
+        function closeLessonModal() {
+            document.getElementById('modal-lesson').classList.add('hidden');
+            activeLessonCtx = null;
+            renderDashboard();
+            renderTodaySchedule();
+        }
+
+        function renderLessonModalPhotos() {
+            if (!activeLessonCtx) return;
+
+            const rec = appData.lessonRecords.find(r => r.id === activeLessonCtx.recordId);
+            const photos = appData.photos.filter(p => p.lessonRecordId === activeLessonCtx.recordId);
+            const countEl = document.getElementById('modal-photo-count');
+            countEl.textContent = `${photos.length} / 10 fotografij`;
+
+            const badge = document.getElementById('modal-lesson-status-badge');
+            if (photos.length > 0) {
+                badge.className = "px-2.5 py-1 rounded-full font-semibold text-xs bg-emerald-100 text-emerald-800";
+                badge.textContent = "ODDANO";
+            } else if (rec && rec.status === 'no_notes') {
+                badge.className = "px-2.5 py-1 rounded-full font-semibold text-xs bg-slate-200 text-slate-700";
+                badge.textContent = "BREZ ZAPISKOV";
+            } else {
+                badge.className = "px-2.5 py-1 rounded-full font-semibold text-xs bg-amber-100 text-amber-800";
+                badge.textContent = "NI ODDANO";
+            }
+
+            const container = document.getElementById('modal-thumbnails');
+            container.innerHTML = '';
+
+            photos.forEach(photo => {
+                const item = document.createElement('div');
+                item.className = "relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-100 aspect-video flex flex-col justify-between p-2";
+                item.style.backgroundImage = `url(${photo.dataUrl})`;
+                item.style.backgroundSize = 'cover';
+                item.style.backgroundPosition = 'center';
+
+                item.innerHTML = `
+                    <div class="bg-slate-900/70 text-white text-[10px] px-2 py-0.5 rounded backdrop-blur-xs font-mono self-start">
+                        #${photo.sequenceNumber}
+                    </div>
+                    <div class="flex items-center justify-between gap-1 mt-auto">
+                        <span class="text-[9px] text-white font-mono bg-black/60 px-1.5 py-0.5 rounded truncate">${photo.generatedFilename}</span>
+                        <button onclick="deletePhoto('${photo.id}')" class="p-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors" title="Odstrani">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file || !activeLessonCtx) return;
+
+            const photosCount = appData.photos.filter(p => p.lessonRecordId === activeLessonCtx.recordId).length;
+            if (photosCount >= 10) {
+                showToast('Doseženo je največje število (10) fotografij za to uro!', 'error');
+                e.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const base64Data = event.target.result;
+
+                const subjId = activeLessonCtx.subjectId;
+                if (!appData.subjectCounters[subjId]) {
+                    appData.subjectCounters[subjId] = 0;
+                }
+                appData.subjectCounters[subjId] += 1;
+                const seq = appData.subjectCounters[subjId];
+                const seqFormatted = String(seq).padStart(2, '0');
+
+                const dateFormatted = formatDateDDMMYYYY(activeLessonCtx.dateStr);
+                const generatedName = `${seqFormatted}_${activeLessonCtx.subjectAbbr}_${dateFormatted}.jpg`;
+
+                const newPhoto = {
+                    id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    subjectId: subjId,
+                    lessonRecordId: activeLessonCtx.recordId,
+                    lessonDate: activeLessonCtx.dateStr,
+                    uploadDate: getTodayDateStr(),
+                    sequenceNumber: seqFormatted,
+                    generatedFilename: generatedName,
+                    dataUrl: base64Data
+                };
+
+                appData.photos.push(newPhoto);
+
+                const rec = appData.lessonRecords.find(r => r.id === activeLessonCtx.recordId);
+                if (rec) rec.status = 'submitted';
+
+                saveData();
+                showToast(`Fotografija dodana: ${generatedName}`, 'success');
+                renderLessonModalPhotos();
+                e.target.value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function toggleNoNotes() {
+            if (!activeLessonCtx) return;
+
+            const rec = appData.lessonRecords.find(r => r.id === activeLessonCtx.recordId);
+            if (!rec) return;
+
+            if (rec.status === 'no_notes') {
+                rec.status = 'pending';
+                showToast('Status ponastavljen.', 'info');
+            } else {
+                rec.status = 'no_notes';
+                showToast('Označeno kot BREZ ZAPISKOV', 'info');
+            }
+
+            saveData();
+            renderLessonModalPhotos();
+        }
+
+        function deletePhoto(photoId) {
+            if (!confirm('Ali res želite izbrisati to fotografijo?')) return;
+
+            appData.photos = appData.photos.filter(p => p.id !== photoId);
+            saveData();
+            showToast('Fotografija izbrisana.', 'info');
+            renderLessonModalPhotos();
+        }
+
+        // --- MY NOTEBOOKS RENDER ---
+        function renderNotebooks() {
+            const grid = document.getElementById('notebooks-grid');
+            grid.innerHTML = '';
+
+            appData.subjects.forEach(subj => {
+                const photoCount = appData.photos.filter(p => p.subjectId === subj.id).length;
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4";
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <span class="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg">${subj.abbreviation}</span>
+                            <h3 class="text-xl font-bold text-slate-900 mt-2">${subj.name}</h3>
+                            <p class="text-xs text-slate-500 mt-1">Profesorji: ${subj.teachers.join(', ')}</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-slate-100 pt-4 text-xs">
+                        <span class="font-semibold text-slate-600">${photoCount} fotografij</span>
+                        <button onclick="navigateTo('notebook-detail', '${subj.id}')" class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-700">
+                            Odpri zvezek
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- SINGLE NOTEBOOK DETAIL ---
+        let currentNotebookSubjectId = null;
+
+        function renderNotebookDetail(subjectId) {
+            currentNotebookSubjectId = subjectId;
+            const subj = appData.subjects.find(s => s.id === subjectId);
+            if (!subj) return;
+
+            document.getElementById('nb-detail-title').textContent = subj.name;
+
+            const grid = document.getElementById('nb-photos-grid');
+            grid.innerHTML = '';
+
+            const photos = appData.photos
+                .filter(p => p.subjectId === subjectId)
+                .sort((a,b) => a.lessonDate.localeCompare(b.lessonDate) || a.sequenceNumber.localeCompare(b.sequenceNumber));
+
+            document.getElementById('nb-detail-sub').textContent = `${photos.length} zapiskov • Kratica: ${subj.abbreviation}`;
+
+            if (photos.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-slate-200">
+                        <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p class="text-slate-600 font-bold">Ta zvezek je še prazen.</p>
+                        <p class="text-xs text-slate-400 mt-1">Dodajte zapiske preko urnika na domači strani ali v nastavitvah.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            photos.forEach((photo, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col";
+
+                card.innerHTML = `
+                    <div onclick="openFullscreen(${idx})" class="relative cursor-pointer aspect-3/4 bg-slate-100 overflow-hidden">
+                        <img src="${photo.dataUrl}" alt="${photo.generatedFilename}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition-colors flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                        </div>
+                        <span class="absolute top-2 left-2 bg-slate-900/80 text-white font-mono text-[10px] px-2 py-0.5 rounded-md backdrop-blur-xs">#${photo.sequenceNumber}</span>
+                    </div>
+                    <div class="p-3 bg-white space-y-2 border-t border-slate-100 flex-1 flex flex-col justify-between">
+                        <div>
+                            <p class="font-mono text-xs font-bold text-slate-800 truncate" title="${photo.generatedFilename}">${photo.generatedFilename}</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Datum pouka: ${photo.lessonDate}</p>
+                        </div>
+                        <button onclick="downloadSinglePhoto('${photo.id}')" class="w-full flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-1.5 rounded-lg transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Prenesi
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- FULLSCREEN VIEWER ---
+        function openFullscreen(index) {
+            const photos = appData.photos
+                .filter(p => p.subjectId === currentNotebookSubjectId)
+                .sort((a,b) => a.lessonDate.localeCompare(b.lessonDate) || a.sequenceNumber.localeCompare(b.sequenceNumber));
+
+            if (photos.length === 0) return;
+
+            currentFSPhotos = photos;
+            activeFSIndex = index;
+            updateFSModal();
+            document.getElementById('modal-fullscreen').classList.remove('hidden');
+        }
+
+        function updateFSModal() {
+            const photo = currentFSPhotos[activeFSIndex];
+            if (!photo) return;
+
+            document.getElementById('fs-img').src = photo.dataUrl;
+            document.getElementById('fs-filename').textContent = photo.generatedFilename;
+            document.getElementById('fs-info').textContent = `Datum pouka: ${photo.lessonDate} (${activeFSIndex + 1} od ${currentFSPhotos.length})`;
+        }
+
+        function navigateFS(dir) {
+            activeFSIndex += dir;
+            if (activeFSIndex < 0) activeFSIndex = currentFSPhotos.length - 1;
+            if (activeFSIndex >= currentFSPhotos.length) activeFSIndex = 0;
+            updateFSModal();
+        }
+
+        function closeFullscreen() {
+            document.getElementById('modal-fullscreen').classList.add('hidden');
+        }
+
+        function downloadCurrentFSPhoto() {
+            const photo = currentFSPhotos[activeFSIndex];
+            if (photo) downloadSinglePhoto(photo.id);
+        }
+
+        function downloadSinglePhoto(photoId) {
+            const photo = appData.photos.find(p => p.id === photoId);
+            if (!photo) return;
+
+            const link = document.createElement('a');
+            link.href = photo.dataUrl;
+            link.download = photo.generatedFilename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast(`Prenos datoteke: ${photo.generatedFilename}`, 'info');
+        }
+
+        // --- PDF EXPORT FUNCTION ---
+        function removeSumniki(str) {
+            return str.replace(/[čć]/g, 'c').replace(/[ČĆ]/g, 'C')
+                      .replace(/š/g, 's').replace(/Š/g, 'S')
+                      .replace(/ž/g, 'z').replace(/Ž/g, 'Z');
+        }
+
+        function exportNotebookPDF() {
+            if (!currentNotebookSubjectId) return;
+
+            const subj = appData.subjects.find(s => s.id === currentNotebookSubjectId);
+            const photos = appData.photos
+                .filter(p => p.subjectId === currentNotebookSubjectId)
+                .sort((a,b) => a.lessonDate.localeCompare(b.lessonDate) || a.sequenceNumber.localeCompare(b.sequenceNumber));
+
+            if (photos.length === 0) {
+                showToast('Zvezek nima fotografij za izvoz!', 'error');
+                return;
+            }
+
+            showToast('Pripravljam PDF zvezek...', 'info');
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+            const safeSubjectName = removeSumniki(subj.name).toUpperCase();
+            const safeStudentName = removeSumniki(appData.user.fullName);
+
+            // Title Page
+            doc.setFillColor(30, 41, 59); // slate-900
+            doc.rect(0, 0, 210, 297, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(28);
+            doc.text(safeSubjectName, 105, 130, { align: 'center' });
+
+            doc.setFontSize(16);
+            doc.setTextColor(148, 163, 184); // slate-400
+            doc.text(safeStudentName, 105, 145, { align: 'center' });
+
+            // Render photos sequentially
+            photos.forEach((photo) => {
+                doc.addPage();
+                
+                // Image fitting A4 page bounds brez ozadij in napisov
+                try {
+                    doc.addImage(photo.dataUrl, 'JPEG', 5, 5, 200, 287, undefined, 'FAST');
+                } catch (e) {
+                    doc.addImage(photo.dataUrl, 'PNG', 5, 5, 200, 287, undefined, 'FAST');
+                }
+            });
+
+            doc.save(`Zvezek_${subj.abbreviation}.pdf`);
+            showToast('PDF uspešno generiran in prenesen!', 'success');
+        }
+
+        // --- SETTINGS SECTION RENDER ---
+        function renderSettings() {
+            const subContainer = document.getElementById('settings-subjects-list');
+            subContainer.innerHTML = '';
+
+            appData.subjects.forEach(s => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200";
+                item.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-xs font-bold bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-800">${s.abbreviation}</span>
+                            <span class="font-bold text-slate-900 text-sm">${s.name}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">Profesorji: ${s.teachers.join(', ')}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openSubjectModal('${s.id}')" class="p-1.5 text-slate-600 hover:text-brand-600 hover:bg-white rounded-lg transition-colors" title="Uredi">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                        <button onclick="deleteSubject('${s.id}')" class="p-1.5 text-slate-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors" title="Izbriši">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                `;
+                subContainer.appendChild(item);
+            });
+
+            const tbody = document.getElementById('schedule-matrix-tbody');
+            tbody.innerHTML = '';
+
+            for (let lessonNum = 1; lessonNum <= 9; lessonNum++) {
+                const tr = document.createElement('tr');
+
+                let rowHtml = `<td class="p-2 border border-slate-200 font-bold text-center bg-slate-50">${lessonNum}.</td>`;
+
+                for (let day = 1; day <= 5; day++) {
+                    const slot = appData.schedule.find(s => s.weekday === day && s.lessonNumber === lessonNum) || {
+                        type: 'free', subjectId: '', teacherId: ''
+                    };
+
+                    rowHtml += `
+                        <td class="p-1.5 border border-slate-200">
+                            <select id="slot-${day}-${lessonNum}-type" onchange="handleSlotTypeChange(${day}, ${lessonNum})" class="w-full text-[11px] p-1 border border-slate-300 rounded focus:ring-1 focus:ring-brand-500 mb-1">
+                                <option value="free" ${slot.type === 'free' ? 'selected' : ''}>Prosta ura</option>
+                                <option value="break" ${slot.type === 'break' ? 'selected' : ''}>Malica</option>
+                                <option value="subject" ${slot.type === 'subject' ? 'selected' : ''}>Predmet</option>
+                            </select>
+                            
+                            <div id="slot-details-${day}-${lessonNum}" class="${slot.type === 'subject' ? '' : 'hidden'} space-y-1">
+                                <select id="slot-${day}-${lessonNum}-subject" onchange="handleSlotSubjectChange(${day}, ${lessonNum})" class="w-full text-[10px] p-1 border border-slate-200 rounded">
+                                    <option value="">Izberi predmet</option>
+                                    ${appData.subjects.map(s => `<option value="${s.id}" ${s.id === slot.subjectId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                                </select>
+                                <select id="slot-${day}-${lessonNum}-teacher" class="w-full text-[10px] p-1 border border-slate-200 rounded">
+                                    </select>
+                            </div>
+                        </td>
+                    `;
+                }
+
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
+
+                for (let day = 1; day <= 5; day++) {
+                    populateSlotTeachers(day, lessonNum);
+                }
+            }
+        }
+
+        function handleSlotTypeChange(day, lessonNum) {
+            const typeSelect = document.getElementById(`slot-${day}-${lessonNum}-type`);
+            const detailsDiv = document.getElementById(`slot-details-${day}-${lessonNum}`);
+            if (typeSelect.value === 'subject') {
+                detailsDiv.classList.remove('hidden');
+            } else {
+                detailsDiv.classList.add('hidden');
+            }
+        }
+
+        function handleSlotSubjectChange(day, lessonNum) {
+            populateSlotTeachers(day, lessonNum);
+        }
+
+        function populateSlotTeachers(day, lessonNum) {
+            const subjSelect = document.getElementById(`slot-${day}-${lessonNum}-subject`);
+            const teacherSelect = document.getElementById(`slot-${day}-${lessonNum}-teacher`);
+            if (!subjSelect || !teacherSelect) return;
+
+            const selectedSubjId = subjSelect.value;
+            const slot = appData.schedule.find(s => s.weekday === day && s.lessonNumber === lessonNum);
+
+            teacherSelect.innerHTML = '<option value="">Izberi profesorja</option>';
+
+            if (selectedSubjId) {
+                const subj = appData.subjects.find(s => s.id === selectedSubjId);
+                if (subj && subj.teachers) {
+                    subj.teachers.forEach(t => {
+                        const isSelected = slot && slot.teacherId === t;
+                        teacherSelect.innerHTML += `<option value="${t}" ${isSelected ? 'selected' : ''}>${t}</option>`;
+                    });
+                }
+            }
+        }
+
+        function saveScheduleMatrix() {
+            const newSchedule = [];
+
+            for (let day = 1; day <= 5; day++) {
+                for (let lessonNum = 1; lessonNum <= 9; lessonNum++) {
+                    const typeSelect = document.getElementById(`slot-${day}-${lessonNum}-type`);
+                    const subjSelect = document.getElementById(`slot-${day}-${lessonNum}-subject`);
+                    const teacherSelect = document.getElementById(`slot-${day}-${lessonNum}-teacher`);
+
+                    const type = typeSelect ? typeSelect.value : 'free';
+                    const subjectId = subjSelect ? subjSelect.value : '';
+                    const teacherId = teacherSelect ? teacherSelect.value : '';
+
+                    newSchedule.push({
+                        id: `sc_${day}_${lessonNum}`,
+                        weekday: day,
+                        lessonNumber: lessonNum,
+                        type: type,
+                        subjectId: type === 'subject' ? subjectId : '',
+                        teacherId: type === 'subject' ? teacherId : ''
+                    });
+                }
+            }
+
+            appData.schedule = newSchedule;
+            saveData();
+            showToast('Urnik uspešno shranjen!', 'success');
+        }
+
+        // --- SUBJECT MODAL ACTIONS ---
+        function openSubjectModal(subjectId = null) {
+            document.getElementById('sub-id').value = subjectId || '';
+            if (subjectId) {
+                const s = appData.subjects.find(x => x.id === subjectId);
+                if (s) {
+                    document.getElementById('modal-subject-title').textContent = 'Uredi predmet';
+                    document.getElementById('sub-name').value = s.name;
+                    document.getElementById('sub-abbr').value = s.abbreviation;
+                    document.getElementById('sub-teachers').value = s.teachers.join(', ');
+                }
+            } else {
+                document.getElementById('modal-subject-title').textContent = 'Dodaj nov predmet';
+                document.getElementById('sub-name').value = '';
+                document.getElementById('sub-abbr').value = '';
+                document.getElementById('sub-teachers').value = '';
+            }
+            document.getElementById('modal-subject').classList.remove('hidden');
+        }
+
+        function closeSubjectModal() {
+            document.getElementById('modal-subject').classList.add('hidden');
+        }
+
+        function handleSaveSubject(e) {
+            e.preventDefault();
+            const id = document.getElementById('sub-id').value;
+            const name = document.getElementById('sub-name').value.trim();
+            const abbr = document.getElementById('sub-abbr').value.trim().toUpperCase();
+            const teachersRaw = document.getElementById('sub-teachers').value.trim();
+
+            if (!name || !abbr || !teachersRaw) {
+                showToast('Prosimo, izpolnite vsa polja za predmet!', 'error');
+                return;
+            }
+
+            const exists = appData.subjects.find(s => s.abbreviation === abbr && s.id !== id);
+            if (exists) {
+                showToast('Kratica s tem imenom že obstaja!', 'error');
+                return;
+            }
+
+            const teachers = teachersRaw.split(',').map(t => t.trim()).filter(Boolean);
+
+            if (id) {
+                const s = appData.subjects.find(x => x.id === id);
+                if (s) {
+                    s.name = name;
+                    s.abbreviation = abbr;
+                    s.teachers = teachers;
+                }
+            } else {
+                const newId = 'sub_' + Date.now();
+                appData.subjects.push({
+                    id: newId,
+                    name: name,
+                    abbreviation: abbr,
+                    teachers: teachers
+                });
+                appData.subjectCounters[newId] = 0;
+            }
+
+            saveData();
+            closeSubjectModal();
+            renderSettings();
+            showToast('Predmet uspešno shranjen!', 'success');
+        }
+
+        function deleteSubject(subjectId) {
+            if (!confirm('Ali res želite izbrisati ta predmet? S tem boste odstranili tudi povezan urnik in zapiske.')) return;
+
+            appData.subjects = appData.subjects.filter(s => s.id !== subjectId);
+            delete appData.subjectCounters[subjectId];
+            saveData();
+            renderSettings();
+            showToast('Predmet odstranjen.', 'info');
+        }
+
+        // --- KEYBOARD EVENT HANDLERS ---
+        function setupKeyboardEvents() {
+            window.addEventListener('keydown', (e) => {
+                const fsModal = document.getElementById('modal-fullscreen');
+                if (!fsModal.classList.contains('hidden')) {
+                    if (e.key === 'Escape') closeFullscreen();
+                    if (e.key === 'ArrowLeft') navigateFS(-1);
+                    if (e.key === 'ArrowRight') navigateFS(1);
+                }
+            });
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let bgColors = 'bg-slate-900 text-white';
+            if (type === 'success') bgColors = 'bg-emerald-600 text-white';
+            if (type === 'error') bgColors = 'bg-red-600 text-white';
+
+            toast.className = `pointer-events-auto flex items-center gap-2 ${bgColors} px-4 py-3 rounded-xl shadow-lg text-xs font-semibold transition-all transform duration-300 translate-y-2 opacity-0`;
+            toast.textContent = message;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
