@@ -177,10 +177,13 @@
             </section>
 
             <section id="page-today" class="hidden space-y-6 max-w-5xl mx-auto">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Današnji urnik</h2>
+                        <h2 class="text-2xl font-bold text-slate-900" id="today-title">Današnji urnik</h2>
                         <p class="text-slate-500 text-sm mt-0.5" id="today-date-subtitle">Pregled in vnos zapiskov za danes</p>
+                    </div>
+                    <div>
+                        <input type="date" id="schedule-date-picker" onchange="handleScheduleDateChange()" class="block w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
                     </div>
                 </div>
 
@@ -456,6 +459,7 @@
         let activeLessonCtx = null; 
         let activeFSIndex = 0;      
         let currentFSPhotos = [];   
+        let currentScheduleDate = null;
 
         // --- CORE APPLICATION INITIALIZATION ---
         window.addEventListener('DOMContentLoaded', async () => {
@@ -474,7 +478,6 @@
                     await saveData();
                 } else {
                     appData = data;
-                    // Fallbacks v primeru prazne baze
                     if (!appData.subjectCounters) appData.subjectCounters = {};
                     if (!appData.lessonRecords) appData.lessonRecords = [];
                     if (!appData.photos) appData.photos = [];
@@ -586,7 +589,10 @@
             document.getElementById(`page-${pageId}`).classList.remove('hidden');
 
             if (pageId === 'dashboard') renderDashboard();
-            if (pageId === 'today') renderTodaySchedule();
+            if (pageId === 'today') {
+                currentScheduleDate = getTodayDateStr();
+                renderTodaySchedule();
+            }
             if (pageId === 'notebooks') renderNotebooks();
             if (pageId === 'notebook-detail' && param) renderNotebookDetail(param);
             if (pageId === 'settings') renderSettings();
@@ -713,19 +719,41 @@
             }
         }
 
+        // --- SCHEDULE DATE UTILS ---
+        function handleScheduleDateChange() {
+            const picker = document.getElementById('schedule-date-picker');
+            if (picker && picker.value) {
+                currentScheduleDate = picker.value;
+                renderTodaySchedule();
+            }
+        }
+
         // --- TODAY SCHEDULE RENDER ---
         function renderTodaySchedule() {
-            const todayStr = getTodayDateStr();
-            document.getElementById('today-date-subtitle').textContent = getSlovenianFormattedDate(todayStr);
+            if (!currentScheduleDate) currentScheduleDate = getTodayDateStr();
+            const dateStr = currentScheduleDate;
+            
+            const titleEl = document.getElementById('today-title');
+            if (titleEl) {
+                titleEl.textContent = dateStr === getTodayDateStr() ? 'Današnji urnik' : 'Urnik izbranega dne';
+            }
+            document.getElementById('today-date-subtitle').textContent = getSlovenianFormattedDate(dateStr);
+
+            const picker = document.getElementById('schedule-date-picker');
+            if (picker && picker.value !== dateStr) {
+                picker.value = dateStr;
+            }
 
             const tbody = document.getElementById('today-schedule-tbody');
             tbody.innerHTML = '';
 
-            const dayOfWeek = new Date().getDay(); 
+            const parts = dateStr.split('-');
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            const dayOfWeek = dateObj.getDay(); 
             const daySchedule = appData.schedule.filter(s => s.weekday === dayOfWeek).sort((a,b) => a.lessonNumber - b.lessonNumber);
 
             if (daySchedule.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm">Za danes nimate vpisanih ur.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm">Za izbrani dan nimate vpisanih ur.</td></tr>`;
                 return;
             }
 
@@ -751,7 +779,7 @@
                     const subj = appData.subjects.find(s => s.id === slot.subjectId);
                     const subjName = subj ? subj.name : 'Neznan predmet';
 
-                    let rec = appData.lessonRecords.find(r => r.date === todayStr && r.lessonNumber === slot.lessonNumber);
+                    let rec = appData.lessonRecords.find(r => r.date === dateStr && r.lessonNumber === slot.lessonNumber);
                     let photoCount = 0;
                     if (rec) {
                         photoCount = appData.photos.filter(p => p.lessonRecordId === rec.id).length;
@@ -778,7 +806,7 @@
                         <td class="py-3.5 px-4 text-slate-600 whitespace-nowrap">${slot.teacherId || '-'}</td>
                         <td class="py-3.5 px-4 whitespace-nowrap">${statusBadge}</td>
                         <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                            <button onclick="openLessonModalDirect('${todayStr}', ${slot.lessonNumber}, '${slot.subjectId}', '${slot.teacherId}')" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-xl transition-all shadow-sm">
+                            <button onclick="openLessonModalDirect('${dateStr}', ${slot.lessonNumber}, '${slot.subjectId}', '${slot.teacherId}')" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-xl transition-all shadow-sm">
                                 Odpri ura
                             </button>
                         </td>
