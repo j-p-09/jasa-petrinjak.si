@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administratorski Vmesnik - Zvezki</title>
+  <!-- Tailwind CSS za oblikovanje -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDK (Compat verzija za enostavno uporabo v brskalniku) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 p-6">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Glava -->
+    <header class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Administratorski Vmesnik</h1>
+        <p class="text-sm text-slate-500">Upravljanje uporabnikov, omejitev predmetov in evidenc ur</p>
+      </div>
+      <span id="db-status" class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Povezovanje...</span>
+    </header>
+
+    <!-- Tabela Uporabnikov -->
+    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <h2 class="text-lg font-bold mb-4 border-b pb-2">Uporabniki in Omejitve Predmetov</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b bg-slate-50 text-slate-600 text-sm">
+              <th class="p-3">ID / Uporabnik</th>
+              <th class="p-3">Ime in Priimek</th>
+              <th class="p-3">Št. Predmetov</th>
+              <th class="p-3">Maks. Predmetov</th>
+              <th class="p-3">Akcije</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body" class="divide-y text-sm">
+            <tr><td colspan="5" class="p-4 text-center text-slate-400">Nalaganje podakov...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Upravljanje Evidenc Ure (lessonRecords) -->
+    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <h2 class="text-lg font-bold mb-4 border-b pb-2">Evidenca Urah (lessonRecords)</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b bg-slate-50 text-slate-600 text-sm">
+              <th class="p-3">Datum</th>
+              <th class="p-3">Ura</th>
+              <th class="p-3">Učitelj</th>
+              <th class="p-3">ID Predmeta</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Akcije</th>
+            </tr>
+          </thead>
+          <tbody id="records-table-body" class="divide-y text-sm">
+            <tr><td colspan="6" class="p-4 text-center text-slate-400">Nalaganje evidenc...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 1. VSTAVITE VAŠE FIREBASE PODATKE TUKAJ
+    const firebaseConfig = {
+      apiKey: "VAŠ_API_KEY",
+      authDomain: "jasa-petrinjak-zvezki.firebaseapp.com",
+      databaseURL: "https://jasa-petrinjak-zvezki-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "jasa-petrinjak-zvezki",
+      storageBucket: "jasa-petrinjak-zvezki.appspot.com",
+      messagingSenderId: "VAŠ_SENDER_ID",
+      appId: "VAŠ_APP_ID"
+    };
+
+    // Inicializacija Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Prikaz statusa povezave
+    db.ref('.info/connected').on('value', (snap) => {
+      const statusEl = document.getElementById('db-status');
+      if (snap.val() === true) {
+        statusEl.textContent = "Povezano";
+        statusEl.className = "px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold";
+      } else {
+        statusEl.textContent = "Brez povezave";
+        statusEl.className = "px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold";
+      }
+    });
+
+    // POSLUŠANJE PODATKOV V REALNEM ČASU
+
+    // Poslušanje uporabnikov in predmetov
+    db.ref().on('value', (snapshot) => {
+      const rootData = snapshot.val() || {};
+      const users = rootData.users || {};
+      const subjects = rootData.subjects || {};
+      const dszData = rootData.dsz_data || {};
+      const records = dszData.lessonRecords || [];
+
+      renderUsersTable(users, subjects);
+      renderRecordsTable(records);
+    });
+
+    // Prikaz tabele uporabnikov
+    function renderUsersTable(users, subjects) {
+      const tbody = document.getElementById('users-table-body');
+      tbody.innerHTML = '';
+
+      const userKeys = Object.keys(users);
+      if (userKeys.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Ni najdenih uporabnikov v bazi (potrebno ustvariti vozlišče "users").</td></tr>';
+        return;
+      }
+
+      userKeys.forEach(userId => {
+        const user = users[userId];
+        
+        // Preštej predmete glede na uporabnika
+        const userSubjects = Object.values(subjects).filter(sub => sub.userId === userId || sub.ownerId === userId);
+        const subjectCount = userSubjects.length;
+        const maxSubjects = user.maxSubjects !== undefined ? user.maxSubjects : 10;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 font-mono text-xs text-slate-500">${userId}</td>
+          <td class="p-3">
+            <input type="text" id="name-${userId}" value="${user.name || ''}" class="border rounded px-2 py-1 w-full max-w-xs bg-slate-50 focus:bg-white">
+          </td>
+          <td class="p-3 font-semibold ${subjectCount >= maxSubjects ? 'text-red-600' : 'text-slate-700'}">
+            ${subjectCount} predmetov
+          </td>
+          <td class="p-3">
+            <input type="number" id="max-${userId}" value="${maxSubjects}" min="0" class="border rounded px-2 py-1 w-24 bg-slate-50 focus:bg-white">
+          </td>
+          <td class="p-3">
+            <button onclick="saveUser('${userId}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition text-xs font-medium">
+              Shrani
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Prikaz tabele urnika / evidenc (iz dsz_data/lessonRecords)
+    function renderRecordsTable(records) {
+      const tbody = document.getElementById('records-table-body');
+      tbody.innerHTML = '';
+
+      if (!records || records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Ni evidenc urov.</td></tr>';
+        return;
+      }
+
+      records.forEach((rec, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3"><input type="date" id="rec-date-${index}" value="${rec.date || ''}" class="border rounded px-2 py-1 text-xs"></td>
+          <td class="p-3"><input type="number" id="rec-num-${index}" value="${rec.lessonNumber || ''}" class="border rounded px-2 py-1 w-16 text-xs"></td>
+          <td class="p-3"><input type="text" id="rec-teacher-${index}" value="${rec.teacherId || ''}" class="border rounded px-2 py-1 text-xs"></td>
+          <td class="p-3 font-mono text-xs">${rec.subjectId || ''}</td>
+          <td class="p-3">
+            <select id="rec-status-${index}" class="border rounded px-2 py-1 text-xs">
+              <option value="no_notes" ${rec.status === 'no_notes' ? 'selected' : ''}>Brez zapiskov</option>
+              <option value="submitted" ${rec.status === 'submitted' ? 'selected' : ''}>Oddano</option>
+            </select>
+          </td>
+          <td class="p-3">
+            <button onclick="saveRecord(${index})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs">
+              Uredi
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // AKCIJE ZA SHRANJEVANJE V FIREBASE
+
+    // Shranjevanje sprememb uporabnika in nastavitev maksimalnega števila predmetov
+    window.saveUser = function(userId) {
+      const newName = document.getElementById(`name-${userId}`).value;
+      const newMax = parseInt(document.getElementById(`max-${userId}`).value, 10);
+
+      db.ref(`users/${userId}`).update({
+        name: newName,
+        maxSubjects: newMax
+      }).then(() => {
+        alert('Podatki uporabnika in maksimalno število predmetov sta uspešno shranjena!');
+      }).catch(err => {
+        alert('Napaka pri shranjevanju: ' + err.message);
+      });
+    };
+
+    // Shranjevanje sprememb posamezne evidence ure
+    window.saveRecord = function(index) {
+      const updatedRecord = {
+        date: document.getElementById(`rec-date-${index}`).value,
+        lessonNumber: parseInt(document.getElementById(`rec-num-${index}`).value, 10),
+        teacherId: document.getElementById(`rec-teacher-${index}`).value,
+        status: document.getElementById(`rec-status-${index}`).value
+      };
+
+      db.ref(`dsz_data/lessonRecords/${index}`).update(updatedRecord)
+        .then(() => alert('Record uspešno posodobljen!'))
+        .catch(err => alert('Napaka: ' + err.message));
+    };
+  </script>
+</body>
+</html>
