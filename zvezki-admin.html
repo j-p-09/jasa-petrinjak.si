@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administratorski Vmesnik - Zvezki</title>
+  <title>Administratorski Vmesnik - Čakalna Vrsta</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -14,85 +14,45 @@
     <!-- Glava -->
     <header class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900">Administratorski Vmesnik</h1>
-        <p class="text-sm text-slate-500">Upravljanje uporabnikov, omejitev, evidenc in čakalne vrste (e-pošta)</p>
+        <h1 class="text-2xl font-bold text-slate-900">Nadzor Čakalne Vrste</h1>
+        <p class="text-sm text-slate-500">Upravljanje prijav in statusov poslane e-pošte</p>
       </div>
       <span id="db-status" class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Povezovanje...</span>
     </header>
 
-    <!-- Čakalna vrsta in E-pošta (Tretja spletna stran) -->
+    <!-- Čakalna vrsta in E-pošta -->
     <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
       <div class="flex justify-between items-center mb-4 border-b pb-2">
-        <h2 class="text-lg font-bold">Čakalna Vrsta in Status E-pošte</h2>
+        <h2 class="text-lg font-bold">Prijave za testiranje</h2>
         <div class="flex space-x-4 text-sm">
           <span class="flex items-center"><span class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></span> Čakajoči</span>
-          <span class="flex items-center"><span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span> Poslano</span>
+          <span class="flex items-center"><span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span> Sprejeti (Poslano)</span>
         </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="border-b bg-slate-50 text-slate-600 text-sm">
-              <th class="p-3">ID Zahteve / Uporabnik</th>
-              <th class="p-3">E-poštni naslov</th>
-              <th class="p-3">Datum prijave</th>
-              <th class="p-3">Status E-pošte</th>
-              <th class="p-3">Akcije</th>
-            </tr>
-          </thead>
-          <tbody id="waiting-list-body" class="divide-y text-sm">
-            <tr><td colspan="5" class="p-4 text-center text-slate-400">Nalaganje čakalne vrste...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Tabela Uporabnikov in Predmetov -->
-    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-lg font-bold mb-4 border-b pb-2">Uporabniki in Omejitve Predmetov</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="border-b bg-slate-50 text-slate-600 text-sm">
+              <th class="p-3 w-10">#</th>
               <th class="p-3">ID / Uporabnik</th>
-              <th class="p-3">Ime in Priimek</th>
-              <th class="p-3">Št. Predmetov</th>
-              <th class="p-3">Maks. Predmetov</th>
-              <th class="p-3">Akcije</th>
-            </tr>
-          </thead>
-          <tbody id="users-table-body" class="divide-y text-sm">
-            <tr><td colspan="5" class="p-4 text-center text-slate-400">Nalaganje podatkov...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Upravljanje Evidenc Ure (lessonRecords) -->
-    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-lg font-bold mb-4 border-b pb-2">Evidenca Ur (lessonRecords)</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="border-b bg-slate-50 text-slate-600 text-sm">
-              <th class="p-3">Datum</th>
-              <th class="p-3">Ura</th>
-              <th class="p-3">Učitelj</th>
-              <th class="p-3">ID Predmeta</th>
+              <th class="p-3">E-poštni naslov</th>
+              <th class="p-3">Datum prijave (in 1. e-pošte)</th>
+              <th class="p-3">Datum spremembe / napredovanja</th>
               <th class="p-3">Status</th>
               <th class="p-3">Akcije</th>
             </tr>
           </thead>
-          <tbody id="records-table-body" class="divide-y text-sm">
-            <tr><td colspan="6" class="p-4 text-center text-slate-400">Nalaganje evidenc...</td></tr>
+          <tbody id="waiting-list-body" class="divide-y text-sm">
+            <tr><td colspan="7" class="p-4 text-center text-slate-400">Nalaganje prijav...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
+
   </div>
 
   <script>
-    // 1. POENOSTAVLJENA POVEZAVA (Samo Database URL, brez my apps config objekta)
+    // 1. POVEZAVA NA BAZO
     firebase.initializeApp({
       databaseURL: "https://jasa-petrinjak-zvezki-default-rtdb.europe-west1.firebasedatabase.app"
     });
@@ -111,29 +71,20 @@
       }
     });
 
-    // POSLUŠANJE PODATKOV V REALNEM ČASU
-    db.ref().on('value', (snapshot) => {
-      const rootData = snapshot.val() || {};
-      
-      const users = rootData.users || {};
-      const subjects = rootData.subjects || {};
-      const dszData = rootData.dsz_data || {};
-      const records = dszData.lessonRecords || [];
-      const waitingList = rootData.waitingList || {}; // Podatki iz tretje spletne strani
-
+    // POSLUŠANJE PODATKOV ČAKALNE VRSTE V REALNEM ČASU
+    db.ref('waitingList').on('value', (snapshot) => {
+      const waitingList = snapshot.val() || {};
       renderWaitingListTable(waitingList);
-      renderUsersTable(users, subjects);
-      renderRecordsTable(records);
     });
 
-    // PRIKAZ ČAKALNE VRSTE IN STATUSOV E-POŠTE
+    // PRIKAZ ČAKALNE VRSTE
     function renderWaitingListTable(waitingList) {
       const tbody = document.getElementById('waiting-list-body');
       tbody.innerHTML = '';
 
       const requestKeys = Object.keys(waitingList);
       if (requestKeys.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Čakalna vrsta je trenutno prazna.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Ni prejetih prijav.</td></tr>';
         return;
       }
 
@@ -146,141 +97,68 @@
         return 0;
       });
 
-      requestKeys.forEach(reqId => {
+      // Zanka za izris vsake vrstice z oštevilčenjem
+      requestKeys.forEach((reqId, index) => {
         const req = waitingList[reqId];
         const isSent = req.status === 'sent';
         const statusClass = isSent ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
-        const statusText = isSent ? 'Mail Poslan' : 'Čaka na mail';
+        const statusText = isSent ? 'Sprejet' : 'V čakalni vrsti';
+        
         const nextStatus = isSent ? 'waiting' : 'sent';
-        const actionBtnText = isSent ? 'Označi kot čakajoče' : 'Označi kot poslano';
+        const actionBtnText = isSent ? 'Premakni v čakalno' : 'Sprejmi (Označi poslano)';
         const actionBtnClass = isSent ? 'bg-slate-500 hover:bg-slate-600' : 'bg-indigo-600 hover:bg-indigo-700';
 
         const tr = document.createElement('tr');
-        tr.className = isSent ? 'opacity-70' : '';
+        tr.className = isSent ? 'bg-slate-50/50' : '';
         tr.innerHTML = `
+          <td class="p-3 font-semibold text-slate-400">${index + 1}</td>
           <td class="p-3">
-            <div class="font-semibold">${req.name || 'Neznano ime'}</div>
-            <div class="font-mono text-xs text-slate-500">${reqId}</div>
+            <div class="font-semibold text-slate-900">${req.name || 'Neznano ime'}</div>
+            <div class="font-mono text-xs text-slate-400">${reqId}</div>
           </td>
-          <td class="p-3">${req.email || '/'}</td>
-          <td class="p-3 text-slate-600">${req.date || '/'}</td>
+          <td class="p-3 font-medium text-slate-700">${req.email || '/'}</td>
+          <td class="p-3 text-slate-500 text-xs">${req.date || 'Ni podatka'}</td>
+          <td class="p-3 text-slate-500 text-xs">${req.promotionDate || 'Ni sprememb'}</td>
           <td class="p-3">
             <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">
               ${statusText}
             </span>
           </td>
           <td class="p-3">
-            <button onclick="updateEmailStatus('${reqId}', '${nextStatus}')" class="${actionBtnClass} text-white px-3 py-1 rounded transition text-xs font-medium">
-              ${actionBtnText}
-            </button>
+            <div class="flex space-x-2">
+              <button onclick="updateEmailStatus('${reqId}', '${nextStatus}')" class="${actionBtnClass} text-white px-3 py-1 rounded transition text-xs font-medium">
+                ${actionBtnText}
+              </button>
+              <button onclick="deleteRequest('${reqId}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition text-xs font-medium">
+                Zbriši
+              </button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // PRIKAZ UPORABNIKOV
-    function renderUsersTable(users, subjects) {
-      const tbody = document.getElementById('users-table-body');
-      tbody.innerHTML = '';
+    // --- AKCIJE ---
 
-      const userKeys = Object.keys(users);
-      if (userKeys.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Ni najdenih uporabnikov.</td></tr>';
-        return;
-      }
-
-      userKeys.forEach(userId => {
-        const user = users[userId];
-        const userSubjects = Object.values(subjects).filter(sub => sub.userId === userId || sub.ownerId === userId);
-        const subjectCount = userSubjects.length;
-        const maxSubjects = user.maxSubjects !== undefined ? user.maxSubjects : 10;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="p-3 font-mono text-xs text-slate-500">${userId}</td>
-          <td class="p-3">
-            <input type="text" id="name-${userId}" value="${user.name || ''}" class="border rounded px-2 py-1 w-full max-w-xs bg-slate-50 focus:bg-white">
-          </td>
-          <td class="p-3 font-semibold ${subjectCount >= maxSubjects ? 'text-red-600' : 'text-slate-700'}">
-            ${subjectCount} predmetov
-          </td>
-          <td class="p-3">
-            <input type="number" id="max-${userId}" value="${maxSubjects}" min="0" class="border rounded px-2 py-1 w-24 bg-slate-50 focus:bg-white">
-          </td>
-          <td class="p-3">
-            <button onclick="saveUser('${userId}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition text-xs font-medium">
-              Shrani
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    // PRIKAZ EVIDENC
-    function renderRecordsTable(records) {
-      const tbody = document.getElementById('records-table-body');
-      tbody.innerHTML = '';
-
-      if (!records || records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Ni evidenc urov.</td></tr>';
-        return;
-      }
-
-      records.forEach((rec, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="p-3"><input type="date" id="rec-date-${index}" value="${rec.date || ''}" class="border rounded px-2 py-1 text-xs"></td>
-          <td class="p-3"><input type="number" id="rec-num-${index}" value="${rec.lessonNumber || ''}" class="border rounded px-2 py-1 w-16 text-xs"></td>
-          <td class="p-3"><input type="text" id="rec-teacher-${index}" value="${rec.teacherId || ''}" class="border rounded px-2 py-1 text-xs"></td>
-          <td class="p-3 font-mono text-xs">${rec.subjectId || ''}</td>
-          <td class="p-3">
-            <select id="rec-status-${index}" class="border rounded px-2 py-1 text-xs">
-              <option value="no_notes" ${rec.status === 'no_notes' ? 'selected' : ''}>Brez zapiskov</option>
-              <option value="submitted" ${rec.status === 'submitted' ? 'selected' : ''}>Oddano</option>
-            </select>
-          </td>
-          <td class="p-3">
-            <button onclick="saveRecord(${index})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs">
-              Uredi
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    // --- AKCIJE ZA SHRANJEVANJE ---
-
-    // Posodobitev statusa e-pošte za čakalno vrsto
+    // Posodobitev statusa (ob tem se zapiše tudi datum spremembe/napredovanja)
     window.updateEmailStatus = function(reqId, newStatus) {
+      const now = new Date().toLocaleString('sl-SI');
+      
       db.ref(`waitingList/${reqId}`).update({
-        status: newStatus
+        status: newStatus,
+        promotionDate: now
       }).catch(err => alert('Napaka pri posodabljanju statusa: ' + err.message));
     };
 
-    // Shranjevanje uporabnika
-    window.saveUser = function(userId) {
-      const newName = document.getElementById(`name-${userId}`).value;
-      const newMax = parseInt(document.getElementById(`max-${userId}`).value, 10);
-      db.ref(`users/${userId}`).update({ name: newName, maxSubjects: newMax })
-        .then(() => alert('Uporabnik shranjen!'))
-        .catch(err => alert('Napaka: ' + err.message));
+    // Brisanje prijave (z opozorilom)
+    window.deleteRequest = function(reqId) {
+      if (confirm("Opozorilo: Ali res želiš trajno izbrisati to prijavo iz baze?")) {
+        db.ref(`waitingList/${reqId}`).remove()
+          .catch(err => alert('Napaka pri brisanju: ' + err.message));
+      }
     };
 
-    // Shranjevanje evidence ure
-    window.saveRecord = function(index) {
-      const updatedRecord = {
-        date: document.getElementById(`rec-date-${index}`).value,
-        lessonNumber: parseInt(document.getElementById(`rec-num-${index}`).value, 10),
-        teacherId: document.getElementById(`rec-teacher-${index}`).value,
-        status: document.getElementById(`rec-status-${index}`).value
-      };
-      db.ref(`dsz_data/lessonRecords/${index}`).update(updatedRecord)
-        .then(() => alert('Evidenca shranjena!'))
-        .catch(err => alert('Napaka: ' + err.message));
-    };
   </script>
 </body>
 </html>
