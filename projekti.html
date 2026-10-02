@@ -3,901 +3,724 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poslovni Sistem</title>
+    <title>Upravljanje Projektov</title>
+    
     <!-- FontAwesome za klasične majhne ikone -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK (Version 8 compat za enostavno CDN vključitev) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
-        /* =========================================
-           OSNOVNI WINDOWS 2000 / CLASSIC STIL
-           ========================================= */
+        /* =========================================================
+           OSNOVNI WINDOWS 2000 / XP POSLOVNI STIL
+           ========================================================= */
         body {
             background-color: #d4d0c8;
-            font-family: Tahoma, Arial, "MS Sans Serif", sans-serif;
+            font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
             font-size: 11px;
-            color: #000000;
+            color: #000;
             margin: 0;
-            padding: 0;
+            padding: 10px;
             display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            justify-content: center;
         }
 
-        /* 3D okvirji in okna */
-        .window {
+        #app-container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Skrivanje in prikazovanje pogledov */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* --- Okna (Windows) --- */
+        .win-window {
             background-color: #d4d0c8;
-            border-top: 1px solid #ffffff;
-            border-left: 1px solid #ffffff;
-            border-right: 1px solid #404040;
-            border-bottom: 1px solid #404040;
-            box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #404040;
+            border-bottom: 2px solid #404040;
+            box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf;
             padding: 2px;
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 15px;
         }
 
-        .title-bar {
-            background: linear-gradient(to right, #0a246a, #a6caf0);
-            color: #ffffff;
-            padding: 2px 4px;
+        /* --- Naslovna vrstica (Title Bar) --- */
+        .win-titlebar {
+            background: linear-gradient(to right, #0A246A, #A6CAF0);
+            color: #fff;
             font-weight: bold;
+            padding: 3px 4px;
             font-size: 11px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        .title-bar-text {
+        .win-titlebar-text {
             display: flex;
             align-items: center;
+            gap: 5px;
+        }
+        .win-titlebar img {
+            height: 14px;
+        }
+        
+        .win-content {
+            padding: 10px;
         }
 
-        .title-bar-controls button {
-            background: #d4d0c8;
-            border-top: 1px solid #ffffff;
-            border-left: 1px solid #ffffff;
-            border-right: 1px solid #404040;
-            border-bottom: 1px solid #404040;
-            font-weight: bold;
-            font-size: 10px;
-            padding: 0 4px;
-            margin-left: 2px;
-            cursor: pointer;
-        }
-
-        /* Gumbi */
-        button, .btn {
+        /* --- Gumbi --- */
+        .win-btn {
             background-color: #d4d0c8;
-            border-top: 1px solid #ffffff;
-            border-left: 1px solid #ffffff;
+            border-top: 1px solid #fff;
+            border-left: 1px solid #fff;
             border-right: 1px solid #404040;
             border-bottom: 1px solid #404040;
-            font-family: Tahoma, Arial, sans-serif;
+            box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf;
+            padding: 3px 8px;
+            font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
             font-size: 11px;
-            padding: 4px 10px;
-            color: #000000;
+            color: #000;
             cursor: pointer;
-            outline: none;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            text-decoration: none;
         }
-
-        button:active, .btn:active {
+        .win-btn:active {
             border-top: 1px solid #404040;
             border-left: 1px solid #404040;
-            border-right: 1px solid #ffffff;
-            border-bottom: 1px solid #ffffff;
-            padding: 5px 9px 3px 11px; /* Zamik besedila pri kliku */
+            border-right: 1px solid #fff;
+            border-bottom: 1px solid #fff;
+            box-shadow: inset 1px 1px #808080;
+            padding: 4px 7px 2px 9px; /* Shift content down and right */
         }
+        .win-btn i { font-size: 10px; }
 
-        button:disabled {
-            color: #808080;
-            text-shadow: 1px 1px #ffffff;
-        }
+        .btn-icon-only { padding: 3px 5px; }
 
-        /* Vnosna polja */
-        input[type="text"], input[type="password"], textarea {
-            background-color: #ffffff;
+        /* --- Vnosna polja --- */
+        .win-input, .win-textarea {
+            background-color: #fff;
             border-top: 1px solid #404040;
             border-left: 1px solid #404040;
-            border-right: 1px solid #ffffff;
-            border-bottom: 1px solid #ffffff;
+            border-right: 1px solid #fff;
+            border-bottom: 1px solid #fff;
             box-shadow: inset 1px 1px #808080, inset -1px -1px #dfdfdf;
-            font-family: Tahoma, Arial, sans-serif;
-            font-size: 11px;
             padding: 3px;
-            box-sizing: border-box;
+            font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+            font-size: 11px;
             width: 100%;
+            box-sizing: border-box;
         }
+        .win-textarea { resize: none; height: 60px; }
 
-        textarea {
-            resize: none;
+        /* --- Obrazci in Tabele --- */
+        .form-group {
+            margin-bottom: 8px;
         }
-
-        /* Paneli in struktura */
-        .panel {
+        .form-group label {
+            display: block;
+            margin-bottom: 3px;
+        }
+        
+        .win-table {
+            width: 100%;
+            background-color: #fff;
             border-top: 1px solid #808080;
             border-left: 1px solid #808080;
-            border-right: 1px solid #ffffff;
-            border-bottom: 1px solid #ffffff;
-            padding: 10px;
-            margin: 5px;
+            border-right: 1px solid #fff;
+            border-bottom: 1px solid #fff;
+            border-collapse: collapse;
+            box-shadow: -1px -1px 0 #404040, 1px 1px 0 #dfdfdf;
+        }
+        .win-table th, .win-table td {
+            border: 1px solid #dfdfdf;
+            border-right-color: #c0c0c0;
+            border-bottom-color: #c0c0c0;
+            padding: 3px 5px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .win-table th {
             background-color: #d4d0c8;
+            border-top: 1px solid #fff;
+            border-left: 1px solid #fff;
+            border-right: 1px solid #808080;
+            border-bottom: 1px solid #808080;
+            font-weight: normal;
+        }
+        .win-table tr:hover td {
+            background-color: #0A246A;
+            color: white;
         }
 
-        .header-area {
+        /* --- Projekt trakovi --- */
+        .project-strip {
+            background-color: #fff;
+            border: 1px solid #808080;
+            padding: 4px;
+            margin-bottom: 4px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 10px;
-            border-bottom: 1px solid #808080;
-            box-shadow: 0 1px 0 #ffffff;
         }
+        .project-title { font-weight: bold; }
+        .project-actions { display: flex; gap: 2px; }
 
-        .toolbar {
-            padding: 5px 10px;
-            display: flex;
-            gap: 5px;
-            border-bottom: 1px solid #808080;
-            box-shadow: 0 1px 0 #ffffff;
-        }
-
-        /* Tabele */
-        .table-container {
-            background-color: #ffffff;
-            border-top: 1px solid #404040;
-            border-left: 1px solid #404040;
-            border-right: 1px solid #ffffff;
-            border-bottom: 1px solid #ffffff;
-            box-shadow: inset 1px 1px #808080;
-            overflow-y: auto;
-            flex-grow: 1;
-            margin: 5px 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background-color: #d4d0c8;
-            border-top: 1px solid #ffffff;
-            border-left: 1px solid #ffffff;
-            border-right: 1px solid #808080;
-            border-bottom: 1px solid #808080;
-            padding: 4px;
-            text-align: left;
-            font-weight: normal;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-
-        td {
-            border-right: 1px solid #d4d0c8;
-            border-bottom: 1px solid #d4d0c8;
-            padding: 3px 4px;
-        }
-
-        tr:nth-child(even) td {
-            background-color: #f7f7f7;
-        }
-        
-        tr:hover td {
-            background-color: #0a246a;
-            color: #ffffff;
-        }
-
-        .actions-cell {
-            white-space: nowrap;
-            width: 70px;
-            text-align: center;
-        }
-
-        .actions-cell button {
-            padding: 2px 4px;
-            margin: 0 1px;
-            font-size: 10px;
-        }
-
-        /* Obrazci in layoti */
-        .form-group {
-            margin-bottom: 8px;
-            display: flex;
-            flex-direction: column;
-        }
-        .form-group label {
-            margin-bottom: 2px;
-        }
-        .form-row {
-            display: flex;
-            gap: 10px;
-        }
-        .form-row > .form-group {
-            flex: 1;
-        }
-
-        /* Modalna (pogovorna) okna */
+        /* --- Dialogi (Modals) --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.3);
+            background: transparent;
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
-
-        .dialog-window {
-            width: 400px;
-            max-width: 95%;
+        .modal-overlay.active { display: flex; }
+        
+        .win-dialog {
+            width: 350px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
-
-        .dialog-content {
-            padding: 10px;
-            background: #d4d0c8;
-        }
-
-        .dialog-buttons {
+        .dialog-actions {
+            margin-top: 15px;
+            text-align: right;
             display: flex;
             justify-content: flex-end;
             gap: 5px;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #808080;
-            box-shadow: inset 0 1px 0 #ffffff;
         }
 
-        /* Status bar */
-        .status-bar {
+        /* --- Status bar --- */
+        .win-statusbar {
+            margin-top: 10px;
             border-top: 1px solid #808080;
-            box-shadow: inset 0 1px 0 #ffffff;
-            padding: 3px 5px;
-            color: #000;
-            display: flex;
-            align-items: center;
-            height: 20px;
-            background: #d4d0c8;
-        }
-        .status-bar-inner {
-            border-top: 1px solid #404040;
-            border-left: 1px solid #404040;
-            border-right: 1px solid #ffffff;
-            border-bottom: 1px solid #ffffff;
+            border-left: 1px solid #808080;
+            border-right: 1px solid #fff;
+            border-bottom: 1px solid #fff;
             padding: 2px 5px;
-            flex-grow: 1;
-            box-shadow: inset 1px 1px #808080;
+            color: #404040;
+            min-height: 14px;
         }
 
-        /* Prijavno okno */
-        #login-screen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: #3a6ea5; /* Windows desktop background feel */
-        }
-        .login-box {
-            width: 320px;
-        }
-        
-        /* Aplikacija - Glavni View */
-        #app-screen {
-            display: none;
-            flex-direction: column;
-            height: 100vh;
-        }
-        
-        .main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .view-section {
-            display: none;
-            flex-direction: column;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-        
-        .view-section.active {
-            display: flex;
-        }
-
-        /* Info okno v pogledu projekta */
-        .info-box {
-            background-color: #ffffff;
-            border-top: 1px solid #404040;
-            border-left: 1px solid #404040;
-            border-right: 1px solid #ffffff;
-            border-bottom: 1px solid #ffffff;
-            box-shadow: inset 1px 1px #808080;
-            padding: 10px;
-            margin: 10px;
-        }
-        .info-row {
-            margin-bottom: 5px;
-        }
-        .info-label {
-            font-weight: bold;
-            display: inline-block;
-            width: 100px;
-            color: #555;
-        }
-
-        /* Ikone naprav */
-        .device-icons {
-            display: flex;
-            gap: 5px;
-            color: #555;
-        }
-
-        /* Skrij elemente */
-        .hidden { display: none !important; }
-        
         /* Prazno stanje */
         .empty-state {
-            padding: 20px;
+            padding: 15px;
             text-align: center;
-            color: #666;
+            color: #808080;
             font-style: italic;
+        }
+
+        /* Read-only info section */
+        .info-panel {
+            background-color: #d4d0c8;
+            border-top: 1px solid #808080;
+            border-left: 1px solid #808080;
+            border-right: 1px solid #fff;
+            border-bottom: 1px solid #fff;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        .info-row { margin-bottom: 4px; }
+        .info-label { font-weight: bold; display: inline-block; width: 80px; }
+
+        /* Skrijemo vse dokler nismo prijavljeni */
+        #dashboard-view, #project-view { display: none; }
+        
+        /* Mobile prilagoditve (Ohranjamo retro stil!) */
+        @media (max-width: 500px) {
+            .win-dialog { width: 90%; }
+            .win-table { display: block; overflow-x: auto; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ==================== PRIJAVA ==================== -->
-    <div id="login-screen">
-        <div class="window login-box">
-            <div class="title-bar">
-                <div class="title-bar-text">
-                    <img src="logo.png" alt="" style="height: 12px; margin-right: 4px;" onerror="this.style.display='none'"> 
-                    Prijava v sistem
+<div id="app-container">
+
+    <!-- ==============================================
+         1. PRIJAVA (LOGIN)
+         ============================================== -->
+    <div id="login-view" class="view active">
+        <div class="win-window" style="max-width: 300px; margin: 100px auto;">
+            <div class="win-titlebar">
+                <div class="win-titlebar-text">
+                    <img src="logo.png" alt="Logo" onerror="this.style.display='none'"> Prijava
                 </div>
-                <div class="title-bar-controls">
-                    <button>×</button>
+                <div class="win-titlebar-controls">
+                    <button class="win-btn btn-icon-only" style="padding:0 3px;" disabled><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
-            <div class="dialog-content">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <i class="fa-solid fa-key" style="font-size: 32px; margin-right: 15px; color: #0a246a;"></i>
-                    <div>Prosimo, vnesite vaše poverilnice za dostop.</div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Uporabniško ime:</label>
-                    <input type="text" id="login-username" value="jasa_petrinjak">
-                </div>
-                <div class="form-group">
-                    <label>Geslo:</label>
-                    <input type="password" id="login-password">
-                </div>
-                
-                <div id="login-error" style="color: red; margin-top: 5px; display: none;">
-                    Napačno uporabniško ime ali geslo.
-                </div>
-
-                <div class="dialog-buttons">
-                    <button id="btn-login">Prijava</button>
-                </div>
+            <div class="win-content">
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Uporabniško ime:</label>
+                        <input type="text" id="login-user" class="win-input" value="jasa_petrinjak">
+                    </div>
+                    <div class="form-group">
+                        <label>Geslo:</label>
+                        <input type="password" id="login-pass" class="win-input" value="Gorenje1">
+                    </div>
+                    <div style="color: red; margin-bottom: 5px; min-height: 12px;" id="login-error"></div>
+                    <div style="text-align: right;">
+                        <button type="submit" class="win-btn">Prijava</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- ==================== GLAVNA APLIKACIJA ==================== -->
-    <div id="app-screen">
+    <!-- ==============================================
+         2. DOMAČA STRAN (SEZNAM PROJEKTOV)
+         ============================================== -->
+    <div id="dashboard-view" class="view">
+        <div class="win-window">
+            <div class="win-titlebar">
+                <div class="win-titlebar-text">
+                    <img src="logo.png" alt="Logo" onerror="this.style.display='none'"> Sistem za upravljanje projektov
+                </div>
+                <div>
+                    <i class="fa-brands fa-apple" style="margin-right:3px;" title="Apple"></i>
+                    <i class="fa-brands fa-android" style="margin-right:3px;" title="Android"></i>
+                    <i class="fa-solid fa-globe" style="margin-right:10px;" title="Splet"></i>
+                    <button class="win-btn btn-icon-only" onclick="handleLogout()" title="Odjava"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
+            <div class="win-content">
+                <div style="margin-bottom: 10px;">
+                    <button class="win-btn" onclick="openProjectModal()"><i class="fa-solid fa-plus"></i> Nov projekt</button>
+                </div>
+                
+                <div style="background: #808080; padding: 2px; border-top: 1px solid #404040; border-left: 1px solid #404040;">
+                    <div id="projects-list-container" style="background: #fff; min-height: 150px; padding: 2px;">
+                        <!-- Projekti se naložijo sem -->
+                    </div>
+                </div>
+
+                <div class="win-statusbar" id="main-status">Pripravljen.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================
+         3. POGLED PROJEKTA IN NAPREDEK
+         ============================================== -->
+    <div id="project-view" class="view">
+        <div class="win-window">
+            <div class="win-titlebar">
+                <div class="win-titlebar-text">
+                    <img src="logo.png" alt="Logo" onerror="this.style.display='none'"> Podrobnosti projekta
+                </div>
+                <button class="win-btn btn-icon-only" onclick="showDashboard()" title="Zapri in se vrni"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="win-content">
+                <div class="info-panel">
+                    <div class="info-row"><span class="info-label">Naslov:</span> <span id="view-proj-title"></span></div>
+                    <div class="info-row"><span class="info-label">Naročnik:</span> <span id="view-proj-client"></span></div>
+                    <div class="info-row"><span class="info-label">Vrsta:</span> <span id="view-proj-type"></span></div>
+                    <div class="info-row"><span class="info-label">Opombe:</span> <span id="view-proj-notes"></span></div>
+                </div>
+
+                <h3 style="font-size: 11px; margin: 10px 0 5px 0;">Napredek projekta</h3>
+                <div style="margin-bottom: 5px;">
+                    <button class="win-btn" onclick="openProgressModal()"><i class="fa-solid fa-plus"></i> Dodaj napredek</button>
+                </div>
+                
+                <table class="win-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Datum</th>
+                            <th>Napredek</th>
+                            <th style="width: 50px;">Akcije</th>
+                        </tr>
+                    </thead>
+                    <tbody id="progress-list-container">
+                        <!-- Napredek se naloži sem -->
+                    </tbody>
+                </table>
+
+                <div class="win-statusbar" id="project-status">Pripravljen.</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ==============================================
+     MODALNA OKNA (DIALOGI)
+     ============================================== -->
+
+<!-- Dialog: Projekt (Dodaj/Uredi) -->
+<div id="project-modal" class="modal-overlay">
+    <div class="win-window win-dialog">
+        <div class="win-titlebar">
+            <span id="project-modal-title">Nov projekt</span>
+            <button class="win-btn btn-icon-only" onclick="closeModal('project-modal')" style="padding:0 3px;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="win-content">
+            <input type="hidden" id="proj-id">
+            <div class="form-group">
+                <label>Naslov projekta:</label>
+                <input type="text" id="proj-title" class="win-input">
+            </div>
+            <div class="form-group">
+                <label>Naročnik:</label>
+                <input type="text" id="proj-client" class="win-input">
+            </div>
+            <div class="form-group">
+                <label>Vrsta:</label>
+                <input type="text" id="proj-type" class="win-input">
+            </div>
+            <div class="form-group">
+                <label>Opombe:</label>
+                <textarea id="proj-notes" class="win-textarea"></textarea>
+            </div>
+            <div class="dialog-actions">
+                <button class="win-btn" onclick="closeModal('project-modal')">Prekliči</button>
+                <button class="win-btn" onclick="saveProject()"><i class="fa-solid fa-floppy-disk"></i> Shrani</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dialog: Napredek (Dodaj/Uredi) -->
+<div id="progress-modal" class="modal-overlay">
+    <div class="win-window win-dialog">
+        <div class="win-titlebar">
+            <span id="progress-modal-title">Dodaj napredek</span>
+            <button class="win-btn btn-icon-only" onclick="closeModal('progress-modal')" style="padding:0 3px;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="win-content">
+            <input type="hidden" id="prog-id">
+            <div class="form-group">
+                <label>Datum:</label>
+                <input type="text" id="prog-date" class="win-input">
+            </div>
+            <div class="form-group">
+                <label>Kaj je bilo urejeno:</label>
+                <textarea id="prog-desc" class="win-textarea"></textarea>
+            </div>
+            <div class="dialog-actions">
+                <button class="win-btn" onclick="closeModal('progress-modal')">Prekliči</button>
+                <button class="win-btn" onclick="saveProgress()"><i class="fa-solid fa-floppy-disk"></i> Shrani</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dialog: Potrditev brisanja -->
+<div id="confirm-modal" class="modal-overlay">
+    <div class="win-window win-dialog" style="width: 250px;">
+        <div class="win-titlebar">Potrditev</div>
+        <div class="win-content">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                <i class="fa-solid fa-circle-exclamation" style="color: #0A246A; font-size: 24px;"></i>
+                <span id="confirm-text">Ali ste prepričani?</span>
+            </div>
+            <div class="dialog-actions">
+                <button class="win-btn" id="confirm-yes">Da</button>
+                <button class="win-btn" onclick="closeModal('confirm-modal')">Ne</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================================================
+       FIREBASE INICIALIZACIJA
+       ========================================================= */
+    const firebaseConfig = {
+        databaseURL: "https://jasa-petrinak-default-rtdb.europe-west1.firebasedatabase.app/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    /* =========================================================
+       GLOBALNE SPREMENLJIVKE
+       ========================================================= */
+    let currentProjectId = null;
+    let confirmAction = null; // Shrani funkcijo za potrditev brisanja
+
+    /* =========================================================
+       PRIJAVA IN ODJAVA
+       ========================================================= */
+    function handleLogin(e) {
+        e.preventDefault();
+        const user = document.getElementById('login-user').value;
+        const pass = document.getElementById('login-pass').value;
+        const errorDiv = document.getElementById('login-error');
+
+        if (user === 'jasa_petrinjak' && pass === 'Gorenje1') {
+            errorDiv.innerText = '';
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            showDashboard();
+            setStatus('main-status', 'Uspešna prijava.');
+        } else {
+            errorDiv.innerText = 'Napačno uporabniško ime ali geslo.';
+        }
+    }
+
+    function handleLogout() {
+        hideAllViews();
+        document.getElementById('login-view').classList.add('active');
+        currentProjectId = null;
+    }
+
+    function showDashboard() {
+        hideAllViews();
+        document.getElementById('dashboard-view').classList.add('active');
+        currentProjectId = null;
+    }
+
+    function hideAllViews() {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    }
+
+    /* =========================================================
+       POMOŽNE FUNKCIJE UI
+       ========================================================= */
+    function setStatus(elementId, message) {
+        document.getElementById(elementId).innerText = message;
+        setTimeout(() => {
+            if(document.getElementById(elementId).innerText === message) {
+                document.getElementById(elementId).innerText = 'Pripravljen.';
+            }
+        }, 3000);
+    }
+
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    function promptConfirm(text, actionFunction) {
+        document.getElementById('confirm-text').innerText = text;
+        confirmAction = actionFunction;
         
-        <!-- Glava aplikacije -->
-        <div class="header-area">
-            <div style="display: flex; align-items: center; font-weight: bold; font-size: 14px;">
-                <img src="logo.png" alt="Logo" style="height: 20px; margin-right: 10px;" onerror="this.style.display='none'">
-                Poslovni Sistem 2007
-            </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div class="device-icons">
-                    <i class="fa-brands fa-apple" title="Apple podpora"></i>
-                    <i class="fa-brands fa-android" title="Android podpora"></i>
-                    <i class="fa-solid fa-globe" title="Spletni dostop"></i>
-                </div>
-                <button id="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Odjava</button>
-            </div>
-        </div>
+        const btnYes = document.getElementById('confirm-yes');
+        // Odstranimo stare listenerje
+        const newBtnYes = btnYes.cloneNode(true);
+        btnYes.parentNode.replaceChild(newBtnYes, btnYes);
+        
+        newBtnYes.addEventListener('click', () => {
+            if (confirmAction) confirmAction();
+            closeModal('confirm-modal');
+        });
 
-        <div class="main-content">
+        openModal('confirm-modal');
+    }
+
+    function getCurrentDateStr() {
+        const d = new Date();
+        return `${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()}`;
+    }
+
+    /* =========================================================
+       LOGIKA PROJEKTOV
+       ========================================================= */
+    
+    // Real-time poslušalec za projekte
+    db.ref('projects').on('value', (snapshot) => {
+        const container = document.getElementById('projects-list-container');
+        container.innerHTML = '';
+        
+        const data = snapshot.val();
+        
+        if (!data) {
+            container.innerHTML = '<div class="empty-state">Trenutno ni dodanih projektov.</div>';
+            return;
+        }
+
+        Object.keys(data).forEach(key => {
+            const proj = data[key];
+            const div = document.createElement('div');
+            div.className = 'project-strip';
             
-            <!-- SEZNAM PROJEKTOV -->
-            <div id="view-projects" class="view-section active">
-                <div class="toolbar">
-                    <button id="btn-new-project"><i class="fa-solid fa-plus"></i> Nov projekt</button>
-                </div>
-                <div class="table-container">
-                    <table id="projects-table">
-                        <thead>
-                            <tr>
-                                <th>Naslov projekta</th>
-                                <th>Naročnik</th>
-                                <th>Vrsta</th>
-                                <th class="actions-cell">Akcije</th>
-                            </tr>
-                        </thead>
-                        <tbody id="projects-tbody">
-                            <!-- Vrstice se generirajo preko JS -->
-                        </tbody>
-                    </table>
-                    <div id="projects-empty" class="empty-state hidden">Trenutno ni dodanih projektov.</div>
-                </div>
-            </div>
-
-            <!-- POGLED PROJEKTA IN NAPREDKA -->
-            <div id="view-project-detail" class="view-section">
-                <div class="toolbar">
-                    <button id="btn-back-projects"><i class="fa-solid fa-arrow-left"></i> Nazaj na seznam</button>
-                    <span style="border-left: 1px solid #808080; border-right: 1px solid #fff; margin: 0 5px;"></span>
-                    <button id="btn-new-progress"><i class="fa-solid fa-plus"></i> Dodaj napredek</button>
-                </div>
-                
-                <div class="info-box">
-                    <div class="info-row"><span class="info-label">Naslov projekta:</span> <span id="detail-title"></span></div>
-                    <div class="info-row"><span class="info-label">Naročnik:</span> <span id="detail-client"></span></div>
-                    <div class="info-row"><span class="info-label">Vrsta:</span> <span id="detail-type"></span></div>
-                    <div class="info-row"><span class="info-label">Opombe:</span> <span id="detail-notes" style="white-space: pre-wrap;"></span></div>
-                </div>
-
-                <div style="padding: 0 10px; font-weight: bold; margin-top: 5px;">Napredek projekta:</div>
-                
-                <div class="table-container">
-                    <table id="progress-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 100px;">Datum</th>
-                                <th>Napredek (Kaj je bilo urejeno)</th>
-                                <th class="actions-cell">Akcije</th>
-                            </tr>
-                        </thead>
-                        <tbody id="progress-tbody">
-                            <!-- Vrstice se generirajo preko JS -->
-                        </tbody>
-                    </table>
-                    <div id="progress-empty" class="empty-state hidden">Za ta projekt še ni zabeleženega napredka.</div>
-                </div>
-            </div>
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'project-title';
+            titleSpan.innerText = proj.title || '(Brez imena)';
             
-        </div>
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'project-actions';
+            
+            actionsDiv.innerHTML = `
+                <button class="win-btn btn-icon-only" onclick="openProjectView('${key}')" title="Odpri projekt"><i class="fa-solid fa-file-lines"></i></button>
+                <button class="win-btn btn-icon-only" onclick="openEditProjectModal('${key}')" title="Uredi projekt"><i class="fa-solid fa-pencil"></i></button>
+                <button class="win-btn btn-icon-only" onclick="deleteProject('${key}')" title="Izbriši projekt"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            
+            div.appendChild(titleSpan);
+            div.appendChild(actionsDiv);
+            container.appendChild(div);
+        });
 
-        <!-- Statusna vrstica spodaj -->
-        <div class="status-bar">
-            <div class="status-bar-inner" id="status-text">Pripravljen.</div>
-        </div>
-    </div>
+        // Če smo v pogledu projekta, osvežimo tudi njegove podatke, če so se spremenili
+        if (currentProjectId && data[currentProjectId]) {
+            populateProjectView(data[currentProjectId]);
+            renderProgress(data[currentProjectId].progress || null);
+        }
+    });
 
+    function openProjectModal() {
+        document.getElementById('project-modal-title').innerText = 'Nov projekt';
+        document.getElementById('proj-id').value = '';
+        document.getElementById('proj-title').value = '';
+        document.getElementById('proj-client').value = '';
+        document.getElementById('proj-type').value = '';
+        document.getElementById('proj-notes').value = '';
+        openModal('project-modal');
+    }
 
-    <!-- ==================== POGOVORNA OKNA (MODALS) ==================== -->
+    function openEditProjectModal(id) {
+        db.ref('projects/' + id).once('value').then(snapshot => {
+            const proj = snapshot.val();
+            if(!proj) return;
+            document.getElementById('project-modal-title').innerText = 'Uredi projekt';
+            document.getElementById('proj-id').value = id;
+            document.getElementById('proj-title').value = proj.title || '';
+            document.getElementById('proj-client').value = proj.client || '';
+            document.getElementById('proj-type').value = proj.type || '';
+            document.getElementById('proj-notes').value = proj.notes || '';
+            openModal('project-modal');
+        });
+    }
 
-    <!-- Obrazec: Projekt -->
-    <div id="modal-project" class="modal-overlay">
-        <div class="window dialog-window">
-            <div class="title-bar">
-                <div class="title-bar-text" id="modal-project-title">Nov projekt</div>
-                <div class="title-bar-controls"><button class="close-modal">×</button></div>
-            </div>
-            <div class="dialog-content">
-                <input type="hidden" id="form-project-id">
-                
-                <div class="form-group">
-                    <label>Naslov projekta:</label>
-                    <input type="text" id="form-project-title">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Naročnik:</label>
-                        <input type="text" id="form-project-client">
-                    </div>
-                    <div class="form-group">
-                        <label>Vrsta:</label>
-                        <input type="text" id="form-project-type">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Opombe:</label>
-                    <textarea id="form-project-notes" rows="4"></textarea>
-                </div>
-                
-                <div class="dialog-buttons">
-                    <button class="close-modal">Prekliči</button>
-                    <button id="btn-save-project"><i class="fa-solid fa-floppy-disk"></i> Shrani</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Obrazec: Napredek -->
-    <div id="modal-progress" class="modal-overlay">
-        <div class="window dialog-window">
-            <div class="title-bar">
-                <div class="title-bar-text" id="modal-progress-title">Dodaj napredek</div>
-                <div class="title-bar-controls"><button class="close-modal">×</button></div>
-            </div>
-            <div class="dialog-content">
-                <input type="hidden" id="form-progress-id">
-                
-                <div class="form-group">
-                    <label>Datum:</label>
-                    <input type="text" id="form-progress-date" placeholder="DD. MM. YYYY">
-                </div>
-                <div class="form-group">
-                    <label>Kaj je bilo urejeno:</label>
-                    <textarea id="form-progress-desc" rows="5"></textarea>
-                </div>
-                
-                <div class="dialog-buttons">
-                    <button class="close-modal">Prekliči</button>
-                    <button id="btn-save-progress"><i class="fa-solid fa-floppy-disk"></i> Shrani</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Potrditveno okno: Izbris -->
-    <div id="modal-confirm" class="modal-overlay">
-        <div class="window dialog-window" style="width: 320px;">
-            <div class="title-bar">
-                <div class="title-bar-text">Potrditev izbrisa</div>
-                <div class="title-bar-controls"><button class="close-modal">×</button></div>
-            </div>
-            <div class="dialog-content">
-                <div style="display: flex; align-items: center; margin-bottom: 10px; margin-top: 5px;">
-                    <i class="fa-solid fa-triangle-exclamation" style="color: #d1b100; font-size: 24px; margin-right: 15px;"></i>
-                    <div id="confirm-message">Ali ste prepričani?</div>
-                </div>
-                <div class="dialog-buttons">
-                    <button id="btn-confirm-yes">Da</button>
-                    <button class="close-modal">Ne</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- ==================== SKRIPTE / FIREBASE IN LOGIKA ==================== -->
-    <script type="module">
-        // Uvoz Firebase knjižnic (verzija 10+)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
-
-        // Konfiguracija Firebase na tvoj naslov
-        const firebaseConfig = {
-            databaseURL: "https://jasa-petrinak-default-rtdb.europe-west1.firebasedatabase.app/"
+    function saveProject() {
+        const id = document.getElementById('proj-id').value;
+        const data = {
+            title: document.getElementById('proj-title').value,
+            client: document.getElementById('proj-client').value,
+            type: document.getElementById('proj-type').value,
+            notes: document.getElementById('proj-notes').value
         };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
 
-        // Globalne spremenljivke
-        let projectsData = {};
-        let currentActiveProjectId = null;
-        let deleteActionCallback = null;
-
-        // Pomožna funkcija za Status
-        function setStatus(msg) {
-            document.getElementById("status-text").innerText = msg;
-            setTimeout(() => {
-                if (document.getElementById("status-text").innerText === msg) {
-                    document.getElementById("status-text").innerText = "Pripravljen.";
-                }
-            }, 5000);
+        if (id) {
+            db.ref('projects/' + id).update(data).then(() => {
+                setStatus('main-status', 'Projekt je bil uspešno posodobljen.');
+            });
+        } else {
+            data.createdAt = firebase.database.ServerValue.TIMESTAMP;
+            db.ref('projects').push(data).then(() => {
+                setStatus('main-status', 'Projekt je bil uspešno shranjen.');
+            });
         }
+        closeModal('project-modal');
+    }
 
-        // Pomožna funkcija za današnji datum v klasičnem formatu
-        function getTodayDateString() {
-            const d = new Date();
-            return `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
-        }
-
-        // --- UPRAVLJANJE PRIJAVE (Login) ---
-        const loginScreen = document.getElementById("login-screen");
-        const appScreen = document.getElementById("app-screen");
-
-        // Preveri session storage za ohranitev prijave ob osvežitvi
-        if (sessionStorage.getItem("isLoggedIn") === "true") {
-            loginScreen.style.display = "none";
-            appScreen.style.display = "flex";
-        }
-
-        document.getElementById("btn-login").addEventListener("click", () => {
-            const user = document.getElementById("login-username").value;
-            const pass = document.getElementById("login-password").value;
-            
-            if (user === "jasa_petrinjak" && pass === "Gorenje1") {
-                sessionStorage.setItem("isLoggedIn", "true");
-                document.getElementById("login-error").style.display = "none";
-                loginScreen.style.display = "none";
-                appScreen.style.display = "flex";
-                setStatus("Prijava uspešna.");
-            } else {
-                document.getElementById("login-error").style.display = "block";
-            }
-        });
-
-        document.getElementById("btn-logout").addEventListener("click", () => {
-            sessionStorage.removeItem("isLoggedIn");
-            appScreen.style.display = "none";
-            loginScreen.style.display = "flex";
-            document.getElementById("login-password").value = "";
-        });
-
-
-        // --- REAL-TIME POSLUŠANJE FIREBASE (Projekti) ---
-        const projectsRef = ref(db, 'projects');
-        onValue(projectsRef, (snapshot) => {
-            projectsData = snapshot.val() || {};
-            renderProjectsList();
-            
-            // Če smo trenutno v pogledu enega projekta, osvežimo tudi tisti pogled
-            if (currentActiveProjectId && projectsData[currentActiveProjectId]) {
-                renderProjectDetail(currentActiveProjectId);
-            } else if (currentActiveProjectId && !projectsData[currentActiveProjectId]) {
-                // Če je bil projekt izbrisan medtem ko smo v njem
-                document.getElementById("btn-back-projects").click();
-            }
-        });
-
-
-        // --- RENDERING: Seznam projektov ---
-        function renderProjectsList() {
-            const tbody = document.getElementById("projects-tbody");
-            const emptyState = document.getElementById("projects-empty");
-            tbody.innerHTML = "";
-
-            const projectIds = Object.keys(projectsData);
-            
-            if (projectIds.length === 0) {
-                emptyState.classList.remove("hidden");
-            } else {
-                emptyState.classList.add("hidden");
-                
-                projectIds.forEach(id => {
-                    const p = projectsData[id];
-                    const tr = document.createElement("tr");
-                    
-                    tr.innerHTML = `
-                        <td>${escapeHtml(p.title || '')}</td>
-                        <td>${escapeHtml(p.client || '')}</td>
-                        <td>${escapeHtml(p.type || '')}</td>
-                        <td class="actions-cell">
-                            <button class="action-open" data-id="${id}" title="Odpri projekt"><i class="fa-solid fa-file-lines"></i></button>
-                            <button class="action-edit" data-id="${id}" title="Uredi projekt"><i class="fa-solid fa-pencil"></i></button>
-                            <button class="action-del" data-id="${id}" title="Izbriši projekt"><i class="fa-solid fa-xmark"></i></button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                // Attach event listenerje
-                document.querySelectorAll(".action-open").forEach(btn => {
-                    btn.addEventListener("click", (e) => openProjectDetail(e.currentTarget.dataset.id));
-                });
-                document.querySelectorAll(".action-edit").forEach(btn => {
-                    btn.addEventListener("click", (e) => openProjectForm(e.currentTarget.dataset.id));
-                });
-                document.querySelectorAll(".action-del").forEach(btn => {
-                    btn.addEventListener("click", (e) => confirmDeleteProject(e.currentTarget.dataset.id));
-                });
-            }
-        }
-
-        // --- RENDERING: Pogled projekta in napredek ---
-        function openProjectDetail(id) {
-            currentActiveProjectId = id;
-            document.getElementById("view-projects").classList.remove("active");
-            document.getElementById("view-project-detail").classList.add("active");
-            renderProjectDetail(id);
-        }
-
-        document.getElementById("btn-back-projects").addEventListener("click", () => {
-            currentActiveProjectId = null;
-            document.getElementById("view-project-detail").classList.remove("active");
-            document.getElementById("view-projects").classList.add("active");
-        });
-
-        function renderProjectDetail(id) {
-            const p = projectsData[id];
-            if (!p) return;
-
-            document.getElementById("detail-title").innerText = p.title || '';
-            document.getElementById("detail-client").innerText = p.client || '';
-            document.getElementById("detail-type").innerText = p.type || '';
-            document.getElementById("detail-notes").innerText = p.notes || '';
-
-            // Tabela napredka
-            const tbody = document.getElementById("progress-tbody");
-            const emptyState = document.getElementById("progress-empty");
-            tbody.innerHTML = "";
-
-            const progressData = p.progress || {};
-            const progressIds = Object.keys(progressData);
-
-            if (progressIds.length === 0) {
-                emptyState.classList.remove("hidden");
-            } else {
-                emptyState.classList.add("hidden");
-                // Sort by ID to maintain insertion order roughly (Firebase push keys are chronological)
-                progressIds.sort().forEach(pid => {
-                    const prog = progressData[pid];
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${escapeHtml(prog.date || '')}</td>
-                        <td style="white-space: pre-wrap;">${escapeHtml(prog.description || '')}</td>
-                        <td class="actions-cell">
-                            <button class="action-edit-prog" data-pid="${pid}" title="Uredi napredek"><i class="fa-solid fa-pencil"></i></button>
-                            <button class="action-del-prog" data-pid="${pid}" title="Izbriši napredek"><i class="fa-solid fa-xmark"></i></button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                document.querySelectorAll(".action-edit-prog").forEach(btn => {
-                    btn.addEventListener("click", (e) => openProgressForm(e.currentTarget.dataset.pid));
-                });
-                document.querySelectorAll(".action-del-prog").forEach(btn => {
-                    btn.addEventListener("click", (e) => confirmDeleteProgress(e.currentTarget.dataset.pid));
-                });
-            }
-        }
-
-
-        // --- MODALS & FORMS LOGIKA ---
-        
-        // Zaprto katerokoli okno z gumbom Prekliči ali X
-        document.querySelectorAll(".close-modal").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                e.target.closest(".modal-overlay").style.display = "none";
+    function deleteProject(id) {
+        promptConfirm("Ali ste prepričani, da želite izbrisati ta projekt?", () => {
+            db.ref('projects/' + id).remove().then(() => {
+                setStatus('main-status', 'Projekt je bil izbrisan.');
+                if(currentProjectId === id) showDashboard();
             });
         });
+    }
 
-        // ================= PROJEKTI CRUD =================
-        
-        document.getElementById("btn-new-project").addEventListener("click", () => openProjectForm());
-
-        function openProjectForm(id = null) {
-            const modal = document.getElementById("modal-project");
-            document.getElementById("form-project-id").value = id || "";
+    /* =========================================================
+       LOGIKA POSAMEZNEGA PROJEKTA (POGLED IN NAPREDEK)
+       ========================================================= */
+    function openProjectView(id) {
+        currentProjectId = id;
+        db.ref('projects/' + id).once('value').then(snapshot => {
+            const proj = snapshot.val();
+            if(!proj) return;
             
-            if (id && projectsData[id]) {
-                const p = projectsData[id];
-                document.getElementById("modal-project-title").innerText = "Uredi projekt";
-                document.getElementById("form-project-title").value = p.title || "";
-                document.getElementById("form-project-client").value = p.client || "";
-                document.getElementById("form-project-type").value = p.type || "";
-                document.getElementById("form-project-notes").value = p.notes || "";
-            } else {
-                document.getElementById("modal-project-title").innerText = "Nov projekt";
-                document.getElementById("form-project-title").value = "";
-                document.getElementById("form-project-client").value = "";
-                document.getElementById("form-project-type").value = "";
-                document.getElementById("form-project-notes").value = "";
-            }
-            modal.style.display = "flex";
-        }
-
-        document.getElementById("btn-save-project").addEventListener("click", () => {
-            const id = document.getElementById("form-project-id").value;
-            const data = {
-                title: document.getElementById("form-project-title").value,
-                client: document.getElementById("form-project-client").value,
-                type: document.getElementById("form-project-type").value,
-                notes: document.getElementById("form-project-notes").value
-            };
-
-            if (id) {
-                // Update
-                update(ref(db, `projects/${id}`), data)
-                    .then(() => {
-                        setStatus("Projekt je bil uspešno shranjen.");
-                        document.getElementById("modal-project").style.display = "none";
-                    });
-            } else {
-                // Create
-                data.createdAt = new Date().toISOString();
-                push(ref(db, 'projects'), data)
-                    .then(() => {
-                        setStatus("Projekt je bil uspešno dodan.");
-                        document.getElementById("modal-project").style.display = "none";
-                    });
-            }
-        });
-
-        function confirmDeleteProject(id) {
-            document.getElementById("confirm-message").innerText = "Ali ste prepričani, da želite izbrisati ta projekt?";
-            deleteActionCallback = () => {
-                remove(ref(db, `projects/${id}`)).then(() => {
-                    setStatus("Projekt je bil izbrisan.");
-                    document.getElementById("modal-confirm").style.display = "none";
-                });
-            };
-            document.getElementById("modal-confirm").style.display = "flex";
-        }
-
-
-        // ================= NAPREDEK CRUD =================
-
-        document.getElementById("btn-new-progress").addEventListener("click", () => openProgressForm());
-
-        function openProgressForm(pid = null) {
-            const modal = document.getElementById("modal-progress");
-            document.getElementById("form-progress-id").value = pid || "";
+            populateProjectView(proj);
+            renderProgress(proj.progress || null);
             
-            if (pid && projectsData[currentActiveProjectId].progress[pid]) {
-                const prog = projectsData[currentActiveProjectId].progress[pid];
-                document.getElementById("modal-progress-title").innerText = "Uredi napredek";
-                document.getElementById("form-progress-date").value = prog.date || "";
-                document.getElementById("form-progress-desc").value = prog.description || "";
-            } else {
-                document.getElementById("modal-progress-title").innerText = "Dodaj napredek";
-                document.getElementById("form-progress-date").value = getTodayDateString();
-                document.getElementById("form-progress-desc").value = "";
-            }
-            modal.style.display = "flex";
-        }
-
-        document.getElementById("btn-save-progress").addEventListener("click", () => {
-            const pid = document.getElementById("form-progress-id").value;
-            const data = {
-                date: document.getElementById("form-progress-date").value,
-                description: document.getElementById("form-progress-desc").value
-            };
-
-            if (pid) {
-                // Update
-                update(ref(db, `projects/${currentActiveProjectId}/progress/${pid}`), data)
-                    .then(() => {
-                        setStatus("Napredek je bil uspešno shranjen.");
-                        document.getElementById("modal-progress").style.display = "none";
-                    });
-            } else {
-                // Create
-                push(ref(db, `projects/${currentActiveProjectId}/progress`), data)
-                    .then(() => {
-                        setStatus("Napredek je bil uspešno dodan.");
-                        document.getElementById("modal-progress").style.display = "none";
-                    });
-            }
+            hideAllViews();
+            document.getElementById('project-view').classList.add('active');
+            setStatus('project-status', 'Projekt odprt.');
         });
+    }
 
-        function confirmDeleteProgress(pid) {
-            document.getElementById("confirm-message").innerText = "Ali ste prepričani, da želite izbrisati ta zapis napredka?";
-            deleteActionCallback = () => {
-                remove(ref(db, `projects/${currentActiveProjectId}/progress/${pid}`)).then(() => {
-                    setStatus("Napredek je bil izbrisan.");
-                    document.getElementById("modal-confirm").style.display = "none";
-                });
-            };
-            document.getElementById("modal-confirm").style.display = "flex";
+    function populateProjectView(proj) {
+        document.getElementById('view-proj-title').innerText = proj.title || '-';
+        document.getElementById('view-proj-client').innerText = proj.client || '-';
+        document.getElementById('view-proj-type').innerText = proj.type || '-';
+        document.getElementById('view-proj-notes').innerText = proj.notes || '-';
+    }
+
+    function renderProgress(progressData) {
+        const tbody = document.getElementById('progress-list-container');
+        tbody.innerHTML = '';
+
+        if (!progressData) {
+            tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Za ta projekt še ni zabeleženega napredka.</td></tr>';
+            return;
         }
 
-
-        // ================= POTRDITVENO OKNO =================
-
-        document.getElementById("btn-confirm-yes").addEventListener("click", () => {
-            if (deleteActionCallback) {
-                deleteActionCallback();
-                deleteActionCallback = null;
-            }
+        Object.keys(progressData).forEach(key => {
+            const prog = progressData[key];
+            const tr = document.createElement('tr');
+            
+            tr.innerHTML = `
+                <td>${prog.date || ''}</td>
+                <td style="white-space: normal;">${prog.description || ''}</td>
+                <td>
+                    <button class="win-btn btn-icon-only" onclick="openEditProgressModal('${key}')" title="Uredi napredek"><i class="fa-solid fa-pencil"></i></button>
+                    <button class="win-btn btn-icon-only" onclick="deleteProgress('${key}')" title="Izbriši napredek"><i class="fa-solid fa-xmark"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
         });
+    }
 
+    function openProgressModal() {
+        document.getElementById('progress-modal-title').innerText = 'Dodaj napredek';
+        document.getElementById('prog-id').value = '';
+        document.getElementById('prog-date').value = getCurrentDateStr();
+        document.getElementById('prog-desc').value = '';
+        openModal('progress-modal');
+    }
 
-        // ================= POMOŽNE FUNKCIJE =================
-        function escapeHtml(unsafe) {
-            return unsafe
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, "&lt;")
-                 .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;")
-                 .replace(/'/g, "&#039;");
+    function openEditProgressModal(progId) {
+        db.ref(`projects/${currentProjectId}/progress/${progId}`).once('value').then(snapshot => {
+            const prog = snapshot.val();
+            if(!prog) return;
+            document.getElementById('progress-modal-title').innerText = 'Uredi napredek';
+            document.getElementById('prog-id').value = progId;
+            document.getElementById('prog-date').value = prog.date || '';
+            document.getElementById('prog-desc').value = prog.description || '';
+            openModal('progress-modal');
+        });
+    }
+
+    function saveProgress() {
+        const id = document.getElementById('prog-id').value;
+        const data = {
+            date: document.getElementById('prog-date').value,
+            description: document.getElementById('prog-desc').value
+        };
+
+        if (id) {
+            db.ref(`projects/${currentProjectId}/progress/${id}`).update(data).then(() => {
+                setStatus('project-status', 'Napredek je bil uspešno posodobljen.');
+            });
+        } else {
+            db.ref(`projects/${currentProjectId}/progress`).push(data).then(() => {
+                setStatus('project-status', 'Napredek je bil uspešno dodan.');
+            });
         }
+        closeModal('progress-modal');
+    }
 
-    </script>
+    function deleteProgress(progId) {
+        promptConfirm("Ali ste prepričani, da želite izbrisati ta zapis napredka?", () => {
+            db.ref(`projects/${currentProjectId}/progress/${progId}`).remove().then(() => {
+                setStatus('project-status', 'Napredek je bil izbrisan.');
+            });
+        });
+    }
+
+</script>
 </body>
 </html>
