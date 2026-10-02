@@ -123,6 +123,7 @@
             font-size: 11px;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 5px;
         }
         button.win-btn:active {
@@ -332,8 +333,8 @@
             background-color: #0a246a;
             color: #ffffff;
         }
-        .data-table tr:hover td button {
-            color: #000; /* Gumbi ostanejo črni */
+        .data-table tr:hover td button i {
+            /* On hover barve ikon ostanejo enake */
         }
 
         /* ==========================================================================
@@ -423,11 +424,13 @@
 
             <div class="form-group">
                 <label for="login-username">Uporabniško ime:</label>
-                <input type="text" id="login-username" value="jasa_petrinjak">
+                <!-- Zbrisana pre-fill vrednost -->
+                <input type="text" id="login-username" value="">
             </div>
             <div class="form-group">
                 <label for="login-password">Geslo:</label>
-                <input type="password" id="login-password" value="Gorenje1">
+                <!-- Zbrisana pre-fill vrednost -->
+                <input type="password" id="login-password" value="">
             </div>
         </div>
         <div class="dialog-footer">
@@ -465,15 +468,15 @@
         <!-- Orodna vrstica -->
         <div class="toolbar">
             <button class="win-btn" onclick="showProjectList()">
-                <i class="fas fa-home"></i> Domača stran
+                <i class="fas fa-home" style="color: #0a246a;"></i> Domača stran
             </button>
             <div class="toolbar-separator"></div>
             <button class="win-btn" onclick="openProjectDialog()">
-                <i class="fas fa-plus"></i> Nov projekt
+                <i class="fas fa-plus" style="color: green;"></i> Nov projekt
             </button>
             <div class="toolbar-separator"></div>
             <button class="win-btn" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i> Odjava
+                <i class="fas fa-sign-out-alt" style="color: black;"></i> Odjava
             </button>
             
             <div style="flex: 1;"></div>
@@ -530,7 +533,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                         <div class="section-title">Napredek projekta</div>
                         <button class="win-btn" onclick="openProgressDialog()">
-                            <i class="fas fa-plus"></i> Dodaj napredek
+                            <i class="fas fa-plus" style="color: green;"></i> Dodaj napredek
                         </button>
                     </div>
                     
@@ -594,7 +597,7 @@
         <div class="dialog-footer">
             <button class="win-btn" onclick="closeDialog('dialog-project')">Prekliči</button>
             <button class="win-btn" onclick="saveProject()">
-                <i class="fas fa-save"></i> Shrani
+                <i class="fas fa-save" style="color: #0a246a;"></i> Shrani
             </button>
         </div>
     </div>
@@ -621,7 +624,7 @@
         <div class="dialog-footer">
             <button class="win-btn" onclick="closeDialog('dialog-progress')">Prekliči</button>
             <button class="win-btn" onclick="saveProgress()">
-                <i class="fas fa-save"></i> Shrani
+                <i class="fas fa-save" style="color: #0a246a;"></i> Shrani
             </button>
         </div>
     </div>
@@ -663,7 +666,6 @@
         // --------------------------------------------------------------------------
         let globalProjectsData = {};
         let currentOpenProjectId = null;
-        let confirmActionCallback = null;
 
         // --------------------------------------------------------------------------
         // URA V STATUS BARU
@@ -704,6 +706,8 @@
 
         function handleLogout() {
             sessionStorage.removeItem('isLoggedIn');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
             showLoginScreen();
             currentOpenProjectId = null;
         }
@@ -741,6 +745,9 @@
                     renderProjectDetail(currentOpenProjectId);
                 }
             }
+        }, (error) => {
+            console.error("Firebase napaka pri branju:", error);
+            setStatus("Napaka pri povezavi s podatkovno bazo!");
         });
 
         // --------------------------------------------------------------------------
@@ -763,7 +770,9 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         Trenutno ni dodanih projektov.<br><br>
-                        <button class="win-btn" onclick="openProjectDialog()">+ Nov projekt</button>
+                        <button class="win-btn" onclick="openProjectDialog()">
+                            <i class="fas fa-plus" style="color: green;"></i> Nov projekt
+                        </button>
                     </div>`;
                 return;
             }
@@ -781,25 +790,25 @@
                 const actions = document.createElement('div');
                 actions.className = 'project-actions';
                 
-                // Gumb Odpri
+                // Gumb Odpri (Modra datoteka)
                 const btnOpen = document.createElement('button');
                 btnOpen.className = 'win-btn small';
                 btnOpen.title = 'Odpri projekt';
-                btnOpen.innerHTML = '<i class="fas fa-file-alt"></i>';
+                btnOpen.innerHTML = '<i class="fas fa-file-alt" style="color: #0000ff;"></i>';
                 btnOpen.onclick = () => openProjectDetailView(key);
                 
-                // Gumb Uredi
+                // Gumb Uredi (Črn svinčnik)
                 const btnEdit = document.createElement('button');
                 btnEdit.className = 'win-btn small';
                 btnEdit.title = 'Uredi projekt';
-                btnEdit.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+                btnEdit.innerHTML = '<i class="fas fa-pencil-alt" style="color: #000000;"></i>';
                 btnEdit.onclick = () => openProjectDialog(key);
                 
-                // Gumb Izbriši
+                // Gumb Izbriši (Rdeč X)
                 const btnDelete = document.createElement('button');
                 btnDelete.className = 'win-btn small';
                 btnDelete.title = 'Izbriši projekt';
-                btnDelete.innerHTML = '<i class="fas fa-times"></i>';
+                btnDelete.innerHTML = '<i class="fas fa-times" style="color: #ff0000;"></i>';
                 btnDelete.onclick = () => askDeleteProject(key);
 
                 actions.appendChild(btnOpen);
@@ -815,7 +824,7 @@
             const btnNew = document.createElement('button');
             btnNew.className = 'win-btn';
             btnNew.style.marginTop = '10px';
-            btnNew.innerHTML = '+ Nov projekt';
+            btnNew.innerHTML = '<i class="fas fa-plus" style="color: green;"></i> Nov projekt';
             btnNew.onclick = () => openProjectDialog();
             container.appendChild(btnNew);
         }
@@ -848,7 +857,7 @@
                 return;
             }
 
-            // Sortiraj po datumu (najprej najnovejši, preprosto s string primerjavo če je ISO datum)
+            // Sortiraj po datumu (najprej najnovejši)
             keys.sort((a,b) => {
                 const dA = new Date(progressData[a].date || 0);
                 const dB = new Date(progressData[b].date || 0);
@@ -859,7 +868,6 @@
                 const prog = progressData[k];
                 const tr = document.createElement('tr');
                 
-                // Formiraj lepši datum če je možno
                 let displayDate = prog.date;
                 if(prog.date) {
                     const dParts = prog.date.split('-');
@@ -870,8 +878,12 @@
                     <td>${displayDate || ''}</td>
                     <td>${prog.description || ''}</td>
                     <td style="text-align: center;">
-                        <button class="win-btn small" title="Uredi napredek" onclick="openProgressDialog('${k}')"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="win-btn small" title="Izbriši napredek" onclick="askDeleteProgress('${k}')"><i class="fas fa-times"></i></button>
+                        <button class="win-btn small" title="Uredi napredek" onclick="openProgressDialog('${k}')">
+                            <i class="fas fa-pencil-alt" style="color: #000000;"></i>
+                        </button>
+                        <button class="win-btn small" title="Izbriši napredek" onclick="askDeleteProgress('${k}')">
+                            <i class="fas fa-times" style="color: #ff0000;"></i>
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -912,20 +924,32 @@
                 notes: document.getElementById('form-project-notes').value
             };
 
+            setStatus("Shranjujem projekt...");
+
             if (id) {
-                // Update
+                // Posodobitev obstoječega (z dodanim lovljenjem napak)
                 projectsRef.child(id).update(data)
                     .then(() => {
                         closeDialog('dialog-project');
                         setStatus("Projekt je bil uspešno shranjen.");
+                    })
+                    .catch((error) => {
+                        console.error("Napaka Firebase:", error);
+                        alert("Napaka pri shranjevanju! Morda nimate pravic (Permission denied) v bazi podatkov.\n\nPodrobnosti: " + error.message);
+                        setStatus("Napaka pri shranjevanju.");
                     });
             } else {
-                // Dodaj createdAt samo pri novem
+                // Nov projekt (z dodanim lovljenjem napak)
                 data.createdAt = new Date().toISOString();
                 projectsRef.push(data)
                     .then(() => {
                         closeDialog('dialog-project');
                         setStatus("Projekt je bil uspešno shranjen.");
+                    })
+                    .catch((error) => {
+                        console.error("Napaka Firebase:", error);
+                        alert("Napaka pri ustvarjanju! Morda nimate pravic (Permission denied) v bazi podatkov.\n\nPodrobnosti: " + error.message);
+                        setStatus("Napaka pri shranjevanju.");
                     });
             }
         }
@@ -935,6 +959,9 @@
                 projectsRef.child(projectId).remove()
                     .then(() => {
                         setStatus("Projekt je bil izbrisan.");
+                    })
+                    .catch((error) => {
+                        alert("Napaka pri brisanju: " + error.message);
                     });
             });
         }
@@ -955,7 +982,6 @@
             } else {
                 document.getElementById('dialog-progress-title').textContent = "Dodaj napredek";
                 document.getElementById('form-progress-id').value = '';
-                // Privzeto današnji datum formata YYYY-MM-DD
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('form-progress-date').value = today;
                 document.getElementById('form-progress-desc').value = '';
@@ -973,18 +999,22 @@
 
             const progRef = projectsRef.child(currentOpenProjectId).child('progress');
 
+            setStatus("Shranjujem napredek...");
+
             if (pId) {
                 progRef.child(pId).update(data)
                     .then(() => {
                         closeDialog('dialog-progress');
                         setStatus("Napredek je bil uspešno shranjen.");
-                    });
+                    })
+                    .catch((error) => alert("Napaka: " + error.message));
             } else {
                 progRef.push(data)
                     .then(() => {
                         closeDialog('dialog-progress');
                         setStatus("Napredek je bil uspešno dodan.");
-                    });
+                    })
+                    .catch((error) => alert("Napaka: " + error.message));
             }
         }
 
@@ -993,7 +1023,8 @@
                 projectsRef.child(currentOpenProjectId).child('progress').child(progressId).remove()
                     .then(() => {
                         setStatus("Zapis napredka je bil izbrisan.");
-                    });
+                    })
+                    .catch((error) => alert("Napaka: " + error.message));
             });
         }
 
