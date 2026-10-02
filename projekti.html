@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poslovni ERP Sistem v2.07 - Vodenje Projektov</title>
+<!-- Font Awesome za pristne ikone -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* ==========================================
+VINTAGE WINDOWS 2000 / XP ERP OBLIKOVANJE
+========================================== */
+* {
+box-sizing: border-box;
+font-family: Tahoma, Arial, "MS Sans Serif", sans-serif;
+font-size: 11px;
+margin: 0;
+padding: 0;
+user-select: none;
+}
+body {
+background-color: #3a6ea5; /* Klasično Windows XP ozadje */
+color: #000;
+height: 100vh;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+/* Windows 3D bevel robovi */
+.win-bevel-out {
+background-color: #ece9d8;
+border: 2px solid;
+border-color: #ffffff #404040 #404040 #ffffff;
+}
+.win-bevel-in {
+background-color: #ffffff;
+border: 2px solid;
+border-color: #808080 #ffffff #ffffff #808080;
+}
+.win-panel-in {
+background-color: #ece9d8;
+border: 2px solid;
+border-color: #808080 #ffffff #ffffff #808080;
+padding: 4px;
+}
+/* Naslovna vrstica okna (Titlebar) */
+.win-titlebar {
+background: linear-gradient(90deg, #0058ee 0%, #3793ff 100%);
+color: #ffffff;
+font-weight: bold;
+padding: 3px 6px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+letter-spacing: 0.5px;
+height: 24px;
+}
+.win-titlebar .win-title {
+display: flex;
+align-items: center;
+gap: 6px;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.win-titlebar-controls {
+display: flex;
+gap: 2px;
+}
+.win-btn-control {
+width: 16px;
+height: 14px;
+background-color: #ece9d8;
+border: 1px solid;
+border-color: #ffffff #404040 #404040 #ffffff;
+color: #000;
+font-size: 9px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+font-weight: bold;
+}
+.win-btn-control:active {
+border-color: #404040 #ffffff #ffffff #404040;
+}
+.win-btn-control.close {
+background-color: #d84a38;
+color: #fff;
+border-color: #f18d80 #8a2418 #8a2418 #f18d80;
+}
+/* Klasični gumbi */
+.win-btn {
+background: #ece9d8;
+border: 2px solid;
+border-color: #ffffff #404040 #404040 #ffffff;
+color: #000;
+padding: 3px 12px;
+cursor: pointer;
+outline: none;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 5px;
+font-weight: normal;
+height: 22px;
+white-space: nowrap;
+}
+.win-btn:hover {
+background-color: #f1efe2;
+}
+.win-btn:active {
+border-color: #404040 #ffffff #ffffff #404040;
+padding: 4px 11px 2px 13px;
+}
+.win-btn:disabled {
+color: #808080;
+border-color: #ffffff #808080 #808080 #ffffff;
+cursor: not-allowed;
+}
+.win-btn-icon {
+padding: 2px 6px;
+min-width: 24px;
+height: 22px;
+}
+/* Obrazci in polja */
+.win-label {
+display: block;
+margin-bottom: 3px;
+color: #000;
+font-weight: bold;
+}
+.win-input, .win-textarea, .win-select {
+width: 100%;
+background-color: #fff;
+border: 2px solid;
+border-color: #808080 #ffffff #ffffff #808080;
+padding: 3px 5px;
+outline: none;
+color: #000;
+font-size: 11px;
+}
+.win-input:focus, .win-textarea:focus {
+background-color: #ffffee;
+}
+.win-textarea {
+resize: vertical;
+min-height: 60px;
+}
+/* Zaslon za prijavo */
+#login-screen {
+position: fixed;
+top: 0;
+left: 0;
+width: 100vw;
+height: 100vh;
+background: #3a6ea5;
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 9999;
+}
+.login-dialog {
+width: 360px;
+box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+}
+.login-body {
+padding: 16px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+.login-row {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.login-key-icon {
+font-size: 32px;
+color: #0058ee;
+padding: 5px;
+}
+.login-fields {
+flex: 1;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.login-error {
+color: #b00000;
+background-color: #ffdddd;
+border: 1px solid #b00000;
+padding: 4px;
+display: none;
+font-size: 10px;
+}
+/* Glavna aplikacijska struktura */
+#app-screen {
+display: none;
+flex-direction: column;
+height: 100vh;
+width: 100vw;
+padding: 4px;
+gap: 4px;
+}
+.app-window {
+display: flex;
+flex-direction: column;
+height: 100%;
+width: 100%;
+box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+}
+.app-header {
+background: #ece9d8;
+border-bottom: 2px solid #808080;
+padding: 4px 8px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+.app-branding {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.app-logo-img {
+height: 20px;
+width: auto;
+object-fit: contain;
+}
+.app-title-text {
+font-weight: bold;
+font-size: 12px;
+color: #000;
+}
+.platform-icons {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 0 10px;
+border-left: 1px solid #808080;
+border-right: 1px solid #fff;
+margin: 0 10px;
+color: #404040;
+}
+.platform-icons i {
+font-size: 13px;
+}
+.app-content {
+flex: 1;
+padding: 6px;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 8px;
+background-color: #d4d0c8;
+}
+/* Toolbar / Menijska vrstica */
+.win-toolbar {
+display: flex;
+gap: 4px;
+background: #ece9d8;
+padding: 3px;
+border-bottom: 1px solid #808080;
+align-items: center;
+}
+/* Tabele v Windows slogu */
+.win-table-container {
+width: 100%;
+overflow-x: auto;
+background-color: #fff;
+}
+table.win-table {
+width: 100%;
+border-collapse: collapse;
+background-color: #fff;
+}
+table.win-table th {
+background-color: #ece9d8;
+border: 2px solid;
+border-color: #ffffff #808080 #808080 #ffffff;
+padding: 4px 6px;
+text-align: left;
+font-weight: bold;
+position: sticky;
+top: 0;
+z-index: 2;
+}
+table.win-table td {
+border: 1px solid #d0d0d0;
+padding: 4px 6px;
+vertical-align: middle;
+}
+table.win-table tr:nth-child(even) {
+background-color: #f9f9f6;
+}
+table.win-table tr:hover {
+background-color: #000080;
+color: #ffffff;
+}
+table.win-table tr:hover .action-btn {
+color: #000;
+}
+/* Seznam projektov v trakovih */
+.project-strip-list {
+display: flex;
+flex-direction: column;
+gap: 3px;
+}
+.project-strip {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 5px 8px;
+background-color: #ffffff;
+border: 1px solid #808080;
+box-shadow: inset 1px 1px 0 #f0f0f0;
+}
+.project-strip:hover {
+background-color: #e8f0fe;
+}
+.project-strip-title {
+font-weight: bold;
+font-size: 11px;
+color: #000080;
+display: flex;
+align-items: center;
+gap: 6px;
+}
+.project-strip-actions {
+display: flex;
+gap: 4px;
+}
+/* Statusna vrstica na dnu */
+.win-statusbar {
+background: #ece9d8;
+border-top: 1px solid #ffffff;
+padding: 2px 4px;
+display: flex;
+gap: 4px;
+height: 22px;
+align-items: center;
+}
+.statusbar-cell {
+border: 1px solid;
+border-color: #808080 #ffffff #ffffff #808080;
+padding: 1px 6px;
+font-size: 10px;
+color: #333;
+overflow: hidden;
+white-space: nowrap;
+text-overflow: ellipsis;
+}
+.statusbar-cell.main {
+flex: 1;
+}
+.statusbar-cell.sec {
+width: 120px;
+text-align: center;
+}
+/* Modalna okna (Dialogi) */
+.modal-overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100vw;
+height: 100vh;
+background-color: rgba(0, 0, 0, 0.2);
+display: none;
+align-items: center;
+justify-content: center;
+z-index: 10000;
+}
+.modal-overlay.active {
+display: flex;
+}
+.win-dialog {
+min-width: 320px;
+max-width: 500px;
+width: 90%;
+box-shadow: 4px 4px 12px rgba(0,0,0,0.5);
+}
+.dialog-body {
+padding: 12px;
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+.dialog-footer {
+display: flex;
+justify-content: flex-end;
+gap: 6px;
+padding: 8px 12px;
+background-color: #ece9d8;
+border-top: 1px solid #d0d0d0;
+}
+/* Podrobnosti projekta - kartica podatkov */
+.project-info-grid {
+display: grid;
+grid-template-columns: 100px 1fr;
+gap: 6px;
+padding: 8px;
+background-color: #f5f5f0;
+border: 1px solid #a0a0a0;
+margin-bottom: 8px;
+}
+.info-label {
+font-weight: bold;
+color: #404040;
+}
+.info-val {
+color: #000;
+word-break: break-word;
+}
+/* Prazno stanje */
+.empty-state {
+padding: 20px;
+text-align: center;
+color: #666;
+font-style: italic;
+background-color: #fff;
+border: 1px dashed #808080;
+margin: 8px 0;
+}
+/* Prilagoditev za mobilne naprave */
+@media (max-width: 600px) {
+.project-info-grid {
+grid-template-columns: 1fr;
+}
+.platform-icons {
+display: none;
+}
+.login-dialog {
+width: 95%;
+}
+}
+</style>
+</head>
+<body>
+<!-- ==========================================
+1. PRIJAVNO OKNO (LOGIN DIALOG)
+========================================== -->
+<div id="login-screen">
+<div class="win-bevel-out win-dialog login-dialog">
+<div class="win-titlebar">
+<div class="win-title">
+<i class="fa-solid fa-lock"></i>
+<span>Prijava v sistem - ERP v2.07</span>
+</div>
+<div class="win-titlebar-controls">
+<div class="win-btn-control">?</div>
+</div>
+</div>
+<div class="login-body">
+<div class="login-row">
+<div class="login-key-icon">
+<i class="fa-solid fa-user-shield"></i>
+</div>
+<div class="login-fields">
+<div id="login-error" class="login-error">
+Napačno uporabniško ime ali geslo.
+</div>
+<div>
+<label class="win-label" for="login-username">Uporabniško ime:</label>
+<input type="text" id="login-username" class="win-input" value="jasa_petrinjak" autocomplete="off">
+</div>
+<div>
+<label class="win-label" for="login-password">Geslo:</label>
+<input type="password" id="login-password" class="win-input" value="Gorenje1">
+</div>
+</div>
+</div>
+</div>
+<div class="dialog-footer">
+<button class="win-btn" onclick="handleLogin()">
+<i class="fa-solid fa-right-to-bracket"></i> Prijava
+</button>
+</div>
+</div>
+</div>
+<!-- ==========================================
+2. GLAVNO APILKACIJSKO OKNO
+========================================== -->
+<div id="app-screen">
+<div class="win-bevel-out app-window">
+<!-- Glava z logotipom in naslovom -->
+<div class="win-titlebar">
+<div class="win-title">
+<img src="logo.png" alt="Logo" class="app-logo-img" onerror="this.style.display='none'">
+<i class="fa-solid fa-window-maximize" id="logo-fallback-icon" style="display:none;"></i>
+<span>Vodenje Projektov - Poslovni Informacijski Sistem (2007)</span>
+</div>
+<div class="win-titlebar-controls">
+<div class="win-btn-control">_</div>
+<div class="win-btn-control">□</div>
+<div class="win-btn-control close" onclick="handleLogout()">X</div>
+</div>
+</div>
+<!-- Menijska / Orodna vrstica -->
+<div class="app-header">
+<div class="app-branding">
+<span class="app-title-text">Sistem Vodenja Projektov</span>
+<div class="platform-icons" title="Podprte platforme: Apple, Android, Splet">
+<i class="fa-brands fa-apple" title="Apple"></i>
+<i class="fa-brands fa-android" title="Android"></i>
+<i class="fa-solid fa-globe" title="Splet"></i>
+</div>
+</div>
+<div>
+<button class="win-btn" onclick="handleLogout()" title="Odjava iz sistema">
+<i class="fa-solid fa-power-off"></i> Odjava
+</button>
+</div>
+</div>
+<!-- VSEBINA APLIKACIJE -->
+<div class="app-content">
+<!-- POGLED 1: SEZNAM PROJEKTOV -->
+<div id="view-projects-list">
+<div class="win-toolbar" style="margin-bottom: 6px;">
+<button class="win-btn" onclick="openNewProjectModal()">
+<i class="fa-solid fa-plus" style="color: green;"></i> Nov projekt
+</button>
+<button class="win-btn" onclick="loadProjectsFromFirebase()">
+<i class="fa-solid fa-rotate"></i> Osveži
+</button>
+</div>
+<div class="win-panel-in">
+<div style="font-weight: bold; margin-bottom: 6px; color: #000080;">
+<i class="fa-solid fa-folder-tree"></i> Seznam vseh aktivnih projektov:
+</div>
+<div id="projects-container" class="project-strip-list">
+<!-- Dinamično naloženi projekti -->
+</div>
+</div>
+</div>
+<!-- POGLED 2: PODROBNOSTI PROJEKTA IN NAPREDEK -->
+<div id="view-project-details" style="display: none;">
+<div class="win-toolbar" style="margin-bottom: 6px;">
+<button class="win-btn" onclick="showProjectsList()">
+<i class="fa-solid fa-arrow-left"></i> Nazaj na seznam
+</button>
+<button class="win-btn" onclick="openEditProjectModal(currentProjectId)">
+<i class="fa-solid fa-pen"></i> Uredi ta projekt
+</button>
+</div>
+<!-- Osnovni podatki projekta (Samo za ogled) -->
+<div class="win-panel-in" style="margin-bottom: 8px;">
+<div style="font-weight: bold; margin-bottom: 6px; color: #000080;">
+<i class="fa-solid fa-circle-info"></i> Osnovni podatki projekta
+</div>
+<div class="project-info-grid">
+<div class="info-label">Naslov projekta:</div>
+<div class="info-val" id="detail-title">-</div>
+<div class="info-label">Naročnik:</div>
+<div class="info-val" id="detail-client">-</div>
+<div class="info-label">Vrsta:</div>
+<div class="info-val" id="detail-type">-</div>
+<div class="info-label">Opombe:</div>
+<div class="info-val" id="detail-notes">-</div>
+</div>
+</div>
+<!-- Sekcija: Napredek projekta -->
+<div class="win-panel-in">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+<div style="font-weight: bold; color: #000080;">
+<i class="fa-solid fa-chart-line"></i> Napredek projekta
+</div>
+<button class="win-btn" onclick="openAddProgressModal()">
+<i class="fa-solid fa-plus" style="color: green;"></i> Dodaj napredek
+</button>
+</div>
+<div class="win-table-container win-bevel-in">
+<table class="win-table">
+<thead>
+<tr>
+<th style="width: 110px;">Datum</th>
+<th>Napredek / Opis opravila</th>
+<th style="width: 80px; text-align: center;">Akcije</th>
+</tr>
+</thead>
+<tbody id="progress-table-body">
+<!-- Dinamično naložen napredek -->
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- Statusna vrstica na dnu -->
+<div class="win-statusbar">
+<div class="statusbar-cell main" id="status-text">Pripravljen.</div>
+<div class="statusbar-cell sec" id="status-user">Uporabnik: jasa_petrinjak</div>
+<div class="statusbar-cell sec" id="status-date">2007-05-12</div>
+</div>
+</div>
+</div>
+<!-- ==========================================
+MODALNA OKNA (DIALOGI)
+========================================== -->
+<!-- MODAL: UREJANJE / DODAJANJE PROJEKTA -->
+<div id="modal-project" class="modal-overlay">
+<div class="win-bevel-out win-dialog">
+<div class="win-titlebar">
+<div class="win-title">
+<i class="fa-solid fa-floppy-disk"></i>
+<span id="modal-project-title">Nov projekt</span>
+</div>
+<div class="win-titlebar-controls">
+<div class="win-btn-control close" onclick="closeModal('modal-project')">X</div>
+</div>
+</div>
+<div class="dialog-body">
+<div>
+<label class="win-label" for="proj-input-title">Naslov projekta:</label>
+<input type="text" id="proj-input-title" class="win-input">
+</div>
+<div>
+<label class="win-label" for="proj-input-client">Naročnik:</label>
+<input type="text" id="proj-input-client" class="win-input">
+</div>
+<div>
+<label class="win-label" for="proj-input-type">Vrsta:</label>
+<input type="text" id="proj-input-type" class="win-input">
+</div>
+<div>
+<label class="win-label" for="proj-input-notes">Opombe:</label>
+<textarea id="proj-input-notes" class="win-textarea"></textarea>
+</div>
+</div>
+<div class="dialog-footer">
+<button class="win-btn" onclick="closeModal('modal-project')">
+Prekliči
+</button>
+<button class="win-btn" onclick="saveProject()">
+<i class="fa-solid fa-floppy-disk"></i> Shrani
+</button>
+</div>
+</div>
+</div>
+<!-- MODAL: POTRDITEV IZBRISA PROJEKTA -->
+<div id="modal-delete-project" class="modal-overlay">
+<div class="win-bevel-out win-dialog">
+<div class="win-titlebar">
+<div class="win-title">
+<i class="fa-solid fa-triangle-exclamation"></i>
+<span>Potrditev izbrisa</span>
+</div>
+<div class="win-titlebar-controls">
+<div class="win-btn-control close" onclick="closeModal('modal-delete-project')">X</div>
+</div>
+</div>
+<div class="dialog-body" style="flex-direction: row; align-items: center; gap: 12px;">
+<i class="fa-solid fa-circle-question" style="font-size: 30px; color: #0058ee;"></i>
+<div>Ali ste prepričani, da želite izbrisati ta projekt?</div>
+</div>
+<div class="dialog-footer">
+<button class="win-btn" onclick="executeDeleteProject()">Da</button>
+<button class="win-btn" onclick="closeModal('modal-delete-project')">Ne</button>
+</div>
+</div>
+</div>
+<!-- MODAL: DODAJANJE / UREJANJE NAPREDKA -->
+<div id="modal-progress" class="modal-overlay">
+<div class="win-bevel-out win-dialog">
+<div class="win-titlebar">
+<div class="win-title">
+<i class="fa-solid fa-list-check"></i>
+<span id="modal-progress-title">Dodaj napredek</span>
+</div>
+<div class="win-titlebar-controls">
+<div class="win-btn-control close" onclick="closeModal('modal-progress')">X</div>
+</div>
+</div>
+<div class="dialog-body">
+<div>
+<label class="win-label" for="prog-input-date">Datum:</label>
+<input type="text" id="prog-input-date" class="win-input" placeholder="npr. 12. 5. 2026">
+</div>
+<div>
+<label class="win-label" for="prog-input-desc">Kaj je bilo urejeno:</label>
+<textarea id="prog-input-desc" class="win-textarea"></textarea>
+</div>
+</div>
+<div class="dialog-footer">
+<button class="win-btn" onclick="closeModal('modal-progress')">Prekliči</button>
+<button class="win-btn" onclick="saveProgress()">
+<i class="fa-solid fa-floppy-disk"></i> Shrani
+</button>
+</div>
+</div>
+</div>
+<!-- MODAL: POTRDITEV IZBRISA NAPREDKA -->
+<div id="modal-delete-progress" class="modal-overlay">
+<div class="win-bevel-out win-dialog">
+<div class="win-titlebar">
+<div class="win-title">
+<i class="fa-solid fa-triangle-exclamation"></i>
+<span>Potrditev izbrisa napredka</span>
+</div>
+<div class="win-titlebar-controls">
+<div class="win-btn-control close" onclick="closeModal('modal-delete-progress')">X</div>
+</div>
+</div>
+<div class="dialog-body" style="flex-direction: row; align-items: center; gap: 12px;">
+<i class="fa-solid fa-circle-question" style="font-size: 30px; color: #0058ee;"></i>
+<div>Ali ste prepričani, da želite izbrisati ta zapis napredka?</div>
+</div>
+<div class="dialog-footer">
+<button class="win-btn" onclick="executeDeleteProgress()">Da</button>
+<button class="win-btn" onclick="closeModal('modal-delete-progress')">Ne</button>
+</div>
+</div>
+</div>
+<!-- ==========================================
+JAVASCRIPT LOGIKA Z FIREBASE INTEGRACIJO
+========================================== -->
+<script>
+// Konfiguracija Firebase Realtime Database REST API-ja
+const FIREBASE_BASE_URL = "https://jasa-petrinak-default-rtdb.europe-west1.firebasedatabase.app";
+// Lokalno stanje aplikacije
+let projectsData = {};
+let currentProjectId = null;
+let editingProjectId = null;
+let deletingProjectId = null;
+let editingProgressId = null;
+let deletingProgressId = null;
+// Ob zagonu
+window.addEventListener('DOMContentLoaded', () => {
+// Preveri sliko logotipa
+const img = document.querySelector('.app-logo-img');
+img.onerror = () => {
+img.style.display = 'none';
+document.getElementById('logo-fallback-icon').style.display = 'inline-block';
+};
+// Nastavi datum v statusni vrstici
+const today = new Date();
+document.getElementById('status-date').innerText = today.toLocaleDateString('sl-SI');
+// Preveri prijavo v seji
+if (sessionStorage.getItem('is_logged_in') === 'true') {
+showAppScreen();
+}
+});
+// Prikaz statusnega sporočila v Windows statusbaru
+function setStatus(msg) {
+document.getElementById('status-text').innerText = msg;
+}
+/* ------------------------------------------
+PRIJAVA IN ODJAVA
+------------------------------------------ */
+function handleLogin() {
+const user = document.getElementById('login-username').value.trim();
+const pass = document.getElementById('login-password').value.trim();
+const errBox = document.getElementById('login-error');
+if (user === 'jasa_petrinjak' && pass === 'Gorenje1') {
+errBox.style.display = 'none';
+sessionStorage.setItem('is_logged_in', 'true');
+showAppScreen();
+} else {
+errBox.style.display = 'block';
+}
+}
+function handleLogout() {
+sessionStorage.removeItem('is_logged_in');
+document.getElementById('app-screen').style.display = 'none';
+document.getElementById('login-screen').style.display = 'flex';
+setStatus('Pripravljen.');
+}
+function showAppScreen() {
+document.getElementById('login-screen').style.display = 'none';
+document.getElementById('app-screen').style.display = 'flex';
+loadProjectsFromFirebase();
+}
+/* ------------------------------------------
+FIREBASE REALTIME DATABASE INTERAKCIJA
+------------------------------------------ */
+async function loadProjectsFromFirebase() {
+setStatus('Nalaganje podatkov iz Firebase strežnika...');
+try {
+const response = await fetch(⁠${FIREBASE_BASE_URL}/projects.json⁠);
+if (!response.ok) throw new Error('Napaka pri branju');
+const data = await response.json();
+projectsData = data || {};
+renderProjectsList();
+if (currentProjectId && projectsData[currentProjectId]) {
+renderProjectDetails(currentProjectId);
+}
+setStatus('Podatki so uspešno osveženi.');
+} catch (err) {
+console.error(err);
+setStatus('Napaka pri povezavi s Firebase bazo.');
+}
+}
+/* ------------------------------------------
+PRIKAZ SEZNAMA PROJEKTOV
+------------------------------------------ */
+function showProjectsList() {
+currentProjectId = null;
+document.getElementById('view-project-details').style.display = 'none';
+document.getElementById('view-projects-list').style.display = 'block';
+renderProjectsList();
+}
+function renderProjectsList() {
+const container = document.getElementById('projects-container');
+container.innerHTML = '';
+const keys = Object.keys(projectsData);
+if (keys.length === 0) {
+container.innerHTML = ⁠<div class="empty-state"> <div>Trenutno ni dodanih projektov.</div> <button class="win-btn" style="margin-top: 8px;" onclick="openNewProjectModal()"> <i class="fa-solid fa-plus" style="color: green;"></i> Nov projekt </button> </div>⁠;
+return;
+}
+keys.forEach(id => {
+const proj = projectsData[id];
+const strip = document.createElement('div');
+strip.className = 'project-strip';
+const titleText = proj.title || 'Neimenovan projekt';
+strip.innerHTML = ⁠<div class="project-strip-title"> <i class="fa-solid fa-folder" style="color: #d0a000;"></i> <span>${escapeHtml(titleText)}</span> </div> <div class="project-strip-actions"> <button class="win-btn win-btn-icon" title="Odpri projekt" onclick="openProject('${id}')"> <i class="fa-regular fa-file-lines"></i> </button> <button class="win-btn win-btn-icon" title="Uredi projekt" onclick="openEditProjectModal('${id}')"> <i class="fa-solid fa-pen"></i> </button> <button class="win-btn win-btn-icon" title="Izbriši projekt" onclick="confirmDeleteProject('${id}')"> <i class="fa-solid fa-xmark" style="color: red;"></i> </button> </div>⁠;
+container.appendChild(strip);
+});
+}
+/* ------------------------------------------
+DODAJANJE IN UREJANJE PROJEKTA
+------------------------------------------ */
+function openNewProjectModal() {
+editingProjectId = null;
+document.getElementById('modal-project-title').innerText = 'Nov projekt';
+document.getElementById('proj-input-title').value = '';
+document.getElementById('proj-input-client').value = '';
+document.getElementById('proj-input-type').value = '';
+document.getElementById('proj-input-notes').value = '';
+openModal('modal-project');
+}
+function openEditProjectModal(id) {
+const proj = projectsData[id];
+if (!proj) return;
+editingProjectId = id;
+document.getElementById('modal-project-title').innerText = 'Uredi projekt';
+document.getElementById('proj-input-title').value = proj.title || '';
+document.getElementById('proj-input-client').value = proj.client || '';
+document.getElementById('proj-input-type').value = proj.type || '';
+document.getElementById('proj-input-notes').value = proj.notes || '';
+openModal('modal-project');
+}
+async function saveProject() {
+const title = document.getElementById('proj-input-title').value.trim();
+const client = document.getElementById('proj-input-client').value.trim();
+const type = document.getElementById('proj-input-type').value.trim();
+const notes = document.getElementById('proj-input-notes').value.trim();
+if (!title) {
+alert('Prosimo, vnesite naslov projekta.');
+return;
+}
+setStatus('Shranjevanje projekta v Firebase...');
+try {
+if (editingProjectId) {
+// Uredi obstoječ projekt (PATCH)
+const patchData = { title, client, type, notes };
+await fetch(⁠${FIREBASE_BASE_URL}/projects/${editingProjectId}.json⁠, {
+method: 'PATCH',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(patchData)
+});
+setStatus('Projekt je bil uspešno shranjen.');
+} else {
+// Nov projekt (POST)
+const newProj = {
+title,
+client,
+type,
+notes,
+createdAt: new Date().toISOString(),
+progress: {}
+};
+await fetch(⁠${FIREBASE_BASE_URL}/projects.json⁠, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(newProj)
+});
+setStatus('Nov projekt je bil uspešno ustvarjen.');
+}
+closeModal('modal-project');
+await loadProjectsFromFirebase();
+} catch (err) {
+console.error(err);
+setStatus('Napaka pri shranjevanju projekta.');
+}
+}
+/* ------------------------------------------
+IZBRIS PROJEKTA
+------------------------------------------ */
+function confirmDeleteProject(id) {
+deletingProjectId = id;
+openModal('modal-delete-project');
+}
+async function executeDeleteProject() {
+if (!deletingProjectId) return;
+setStatus('Brisanje projekta...');
+try {
+await fetch(⁠${FIREBASE_BASE_URL}/projects/${deletingProjectId}.json⁠, {
+method: 'DELETE'
+});
+setStatus('Projekt je bil izbrisan.');
+closeModal('modal-delete-project');
+if (currentProjectId === deletingProjectId) {
+showProjectsList();
+}
+deletingProjectId = null;
+await loadProjectsFromFirebase();
+} catch (err) {
+console.error(err);
+setStatus('Napaka pri brisanju projekta.');
+}
+}
+/* ------------------------------------------
+ODPRI PROJEKT (PODROBNOSTI & NAPREDEK)
+------------------------------------------ */
+function openProject(id) {
+currentProjectId = id;
+document.getElementById('view-projects-list').style.display = 'none';
+document.getElementById('view-project-details').style.display = 'block';
+renderProjectDetails(id);
+}
+function renderProjectDetails(id) {
+const proj = projectsData[id];
+if (!proj) {
+showProjectsList();
+return;
+}
+document.getElementById('detail-title').innerText = proj.title || '-';
+document.getElementById('detail-client').innerText = proj.client || '-';
+document.getElementById('detail-type').innerText = proj.type || '-';
+document.getElementById('detail-notes').innerText = proj.notes || '-';
+// Napredek tabela
+const tbody = document.getElementById('progress-table-body');
+tbody.innerHTML = '';
+const progressList = proj.progress || {};
+const progKeys = Object.keys(progressList);
+if (progKeys.length === 0) {
+tbody.innerHTML = ⁠<tr> <td colspan="3" class="empty-state"> Za ta projekt še ni zabeleženega napredka. </td> </tr>⁠;
+return;
+}
+progKeys.forEach(pId => {
+const item = progressList[pId];
+const tr = document.createElement('tr');
+tr.innerHTML = ⁠<td style="white-space: nowrap; font-weight: bold;">${escapeHtml(item.date || '')}</td> <td>${escapeHtml(item.description || '')}</td> <td style="text-align: center;"> <button class="win-btn win-btn-icon" title="Uredi napredek" onclick="openEditProgressModal('${pId}')"> <i class="fa-solid fa-pen"></i> </button> <button class="win-btn win-btn-icon" title="Izbriši napredek" onclick="confirmDeleteProgress('${pId}')"> <i class="fa-solid fa-xmark" style="color: red;"></i> </button> </td>⁠;
+tbody.appendChild(tr);
+});
+}
+/* ------------------------------------------
+DODAJANJE IN UREJANJE NAPREDKA
+------------------------------------------ */
+function openAddProgressModal() {
+editingProgressId = null;
+document.getElementById('modal-progress-title').innerText = 'Dodaj napredek';
+const today = new Date();
+const dateStr = ⁠${today.getDate()}. ${today.getMonth() + 1}. ${today.getFullYear()}⁠;
+document.getElementById('prog-input-date').value = dateStr;
+document.getElementById('prog-input-desc').value = '';
+openModal('modal-progress');
+}
+function openEditProgressModal(pId) {
+if (!currentProjectId || !projectsData[currentProjectId]) return;
+const prog = projectsData[currentProjectId].progress[pId];
+if (!prog) return;
+editingProgressId = pId;
+document.getElementById('modal-progress-title').innerText = 'Uredi napredek';
+document.getElementById('prog-input-date').value = prog.date || '';
+document.getElementById('prog-input-desc').value = prog.description || '';
+openModal('modal-progress');
+}
+async function saveProgress() {
+if (!currentProjectId) return;
+const date = document.getElementById('prog-input-date').value.trim();
+const description = document.getElementById('prog-input-desc').value.trim();
+if (!description) {
+alert('Prosimo, vnesite opis opravljenega napredka.');
+return;
+}
+setStatus('Shranjevanje napredka v Firebase...');
+try {
+if (editingProgressId) {
+// Uredi napredek (PATCH)
+await fetch(⁠${FIREBASE_BASE_URL}/projects/${currentProjectId}/progress/${editingProgressId}.json⁠, {
+method: 'PATCH',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ date, description })
+});
+setStatus('Napredek je bil uspešno posodobljen.');
+} else {
+// Nov napredek (POST)
+await fetch(⁠${FIREBASE_BASE_URL}/projects/${currentProjectId}/progress.json⁠, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ date, description })
+});
+setStatus('Napredek je bil uspešno dodan.');
+}
+closeModal('modal-progress');
+await loadProjectsFromFirebase();
+} catch (err) {
+console.error(err);
+setStatus('Napaka pri shranjevanju napredka.');
+}
+}
+/* ------------------------------------------
+IZBRIS NAPREDKA
+------------------------------------------ */
+function confirmDeleteProgress(pId) {
+deletingProgressId = pId;
+openModal('modal-delete-progress');
+}
+async function executeDeleteProgress() {
+if (!currentProjectId || !deletingProgressId) return;
+setStatus('Brisanje zapisa napredka...');
+try {
+await fetch(⁠${FIREBASE_BASE_URL}/projects/${currentProjectId}/progress/${deletingProgressId}.json⁠, {
+method: 'DELETE'
+});
+setStatus('Zapis napredka je bil izbrisan.');
+closeModal('modal-delete-progress');
+deletingProgressId = null;
+await loadProjectsFromFirebase();
+} catch (err) {
+console.error(err);
+setStatus('Napaka pri brisanju napredka.');
+}
+}
+/* ------------------------------------------
+MODAL POMOŽNE FUNKCIJE
+------------------------------------------ */
+function openModal(modalId) {
+document.getElementById(modalId).classList.add('active');
+}
+function closeModal(modalId) {
+document.getElementById(modalId).classList.remove('active');
+}
+function escapeHtml(str) {
+if (!str) return '';
+return String(str)
+.replace(/&/g, "&")
+.replace(/</g, "<")
+.replace(/>/g, ">")
+.replace(/"/g, """)
+.replace(/'/g, "'");
+}
+</script>
+</body>
+</html>
