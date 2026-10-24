@@ -527,6 +527,7 @@
             <h2 style="color: var(--primary); margin-bottom: 20px;">Administracija</h2>
             <button class="btn" onclick="loadAdminLibraries()">VSE KNJIŽNICE</button><br>
             <button class="btn" onclick="openLibraryEditor()">DODAJ NOVO KNJIŽNICO</button><br>
+            <button class="btn" onclick="loadEscapeAdmin()">KODE ZA SOBO POBEGA</button><br>
             <button class="btn" onclick="openModal('changePinModal')">SPREMENI ŠIFRO ZA DOSTOP DO ADMINISTRACIJE</button><br>
             <button class="btn btn-outline" onclick="logoutAdmin()">ODJAVA</button>
         </div>
@@ -604,6 +605,66 @@
                 <input type="file" id="imageUpload" multiple accept="image/png, image/jpeg" style="margin: 10px 0;">
                 <button class="btn btn-outline" onclick="uploadImages()">Naloži izbrane slike</button>
                 <div id="editLibImages" class="gallery-grid" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- POGLED 6: Kode za sobo pobega (Admin) -->
+        <div id="escapeAdminListView" class="view-section">
+            <button class="btn btn-outline" onclick="showView('adminMenuView')"><i class="fa-solid fa-arrow-left"></i> Nazaj na meni</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:20px 0;">
+                <h2>Kode za sobo pobega</h2>
+                <button class="btn" style="margin:0;" onclick="openEscapeEditor()"><i class="fa-solid fa-plus"></i> Nova koda</button>
+            </div>
+            <div style="overflow-x:auto;" id="escapeAdminTable"></div>
+        </div>
+
+        <!-- POGLED 7: Urejanje/Dodajanje kode za sobo pobega (Admin) -->
+        <div id="escapeAdminEditView" class="view-section">
+            <button class="btn btn-outline" onclick="loadEscapeAdmin()"><i class="fa-solid fa-arrow-left"></i> Nazaj</button>
+            <h2 style="margin: 20px 0;" id="escapeEditTitle">Nova koda</h2>
+
+            <input type="hidden" id="escapeEditExisting">
+            <table class="admin-table">
+                <tr>
+                    <td>Koda</td>
+                    <td>
+                        <input type="text" id="escapeEditCode" placeholder="npr. DETEKTIV-2026" maxlength="24" style="text-transform:uppercase;">
+                        <button class="btn btn-outline" id="escapeGenBtn" style="padding:5px 10px;" onclick="generateEscapeCode()">Generiraj</button>
+                        <div style="font-size:0.8rem; color:#666; margin-top:5px;">Dovoljene so črke A-Z, števke in vezaj (4-24 znakov).</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Vrsta kode</td>
+                    <td>
+                        <select id="escapeEditType">
+                            <option value="solo">Solo detektiv</option>
+                            <option value="team">Detektivska ekipa</option>
+                            <option value="reopen">Ponovno odprtje primera</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Največ uporabnikov</td>
+                    <td><input type="number" id="escapeEditMaxUsers" min="1" max="1000" value="1"></td>
+                </tr>
+                <tr>
+                    <td>Veljavnost</td>
+                    <td>
+                        <select id="escapeEditValidity" onchange="toggleEscapeDate()">
+                            <option value="unlimited">Do preklica</option>
+                            <option value="limited">Omejena</option>
+                        </select>
+                        <input type="date" id="escapeEditDate" style="display:none; margin-top:10px;">
+                    </td>
+                </tr>
+            </table>
+
+            <button class="btn" onclick="saveEscapeCode()">Shrani kodo</button>
+
+            <div id="escapeUsersBox" style="margin-top:30px; display:none;">
+                <h3>Uporaba kode</h3>
+                <p id="escapeUsersInfo" style="margin:10px 0;"></p>
+                <button class="btn btn-danger" onclick="resetEscapeUsers()">Ponastavi uporabnike</button>
             </div>
         </div>
     </main>
@@ -1155,6 +1216,183 @@
             if (confirm("Izbrišem to sliko?")) {
                 db.ref('libraries/' + libId + '/images/' + imgId).remove().then(() => {
                     openLibraryEditor(libId); 
+                });
+            }
+        }
+
+        // ==========================================
+        // 9. KODE ZA SOBO POBEGA (ADMIN)
+        // ==========================================
+        let escapeCodesData = {};
+        const ESCAPE_TYPES = { solo: 'Solo detektiv', team: 'Detektivska ekipa', reopen: 'Ponovno odprtje primera' };
+
+        db.ref('escapeCodes').on('value', (snapshot) => {
+            escapeCodesData = snapshot.val() || {};
+            if (document.getElementById('escapeAdminListView').classList.contains('active')) {
+                renderEscapeAdminList();
+            }
+        });
+
+        function escapeIsExpired(c) {
+            return c.validityType === 'limited' && c.validUntil &&
+                   Date.now() > new Date(c.validUntil + 'T23:59:59').getTime();
+        }
+
+        function escapeFmtDate(iso) {
+            const p = iso.split('-');
+            return parseInt(p[2], 10) + '. ' + parseInt(p[1], 10) + '. ' + p[0];
+        }
+
+        function loadEscapeAdmin() {
+            renderEscapeAdminList();
+            showView('escapeAdminListView');
+        }
+
+        function renderEscapeAdminList() {
+            const container = document.getElementById('escapeAdminTable');
+            const keys = Object.keys(escapeCodesData);
+
+            if (keys.length === 0) {
+                container.innerHTML = '<p style="color:#666;">Ni še nobene kode. Dodaj jo z gumbom "Nova koda".</p>';
+                return;
+            }
+
+            let html = `
+                <table class="admin-table">
+                    <tr>
+                        <th>Koda</th>
+                        <th>Vrsta</th>
+                        <th>Uporabniki</th>
+                        <th>Odprti primeri</th>
+                        <th>Veljavnost</th>
+                        <th>Status</th>
+                        <th>Akcije</th>
+                    </tr>
+            `;
+
+            keys.forEach(code => {
+                const c = escapeCodesData[code];
+                const users = c.users ? Object.keys(c.users) : [];
+                const openedCount = users.filter(u => c.users[u].opened).length;
+                const expired = escapeIsExpired(c);
+                const validity = c.validityType === 'limited' && c.validUntil
+                    ? 'Do ' + escapeFmtDate(c.validUntil)
+                    : 'Do preklica';
+                html += `
+                    <tr>
+                        <td><b>${code}</b></td>
+                        <td>${ESCAPE_TYPES[c.type] || c.type}</td>
+                        <td>${users.length} / ${c.maxUsers || 1}</td>
+                        <td>${openedCount}</td>
+                        <td>${validity}</td>
+                        <td>${expired ? '<span style="color:#d32f2f;">Potekla</span>' : '<span style="color:var(--primary);">Aktivna</span>'}</td>
+                        <td style="white-space:nowrap;">
+                            <button class="btn" style="padding:5px 10px;" onclick="openEscapeEditor('${code}')">Uredi</button>
+                            <button class="btn btn-danger" style="padding:5px 10px;" onclick="deleteEscapeCode('${code}')">Izbriši</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        function toggleEscapeDate() {
+            const v = document.getElementById('escapeEditValidity').value;
+            document.getElementById('escapeEditDate').style.display = v === 'limited' ? 'block' : 'none';
+        }
+
+        function generateEscapeCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let out = '';
+            for (let i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
+            document.getElementById('escapeEditCode').value = out.slice(0, 4) + '-' + out.slice(4);
+        }
+
+        function openEscapeEditor(code = null) {
+            const codeInput = document.getElementById('escapeEditCode');
+            document.getElementById('escapeEditExisting').value = code || '';
+            document.getElementById('escapeEditTitle').innerText = code ? 'Urejanje kode' : 'Nova koda';
+
+            if (code && escapeCodesData[code]) {
+                const c = escapeCodesData[code];
+                codeInput.value = code;
+                codeInput.disabled = true;
+                document.getElementById('escapeGenBtn').style.display = 'none';
+                document.getElementById('escapeEditType').value = c.type || 'solo';
+                document.getElementById('escapeEditMaxUsers').value = c.maxUsers || 1;
+                document.getElementById('escapeEditValidity').value = c.validityType || 'unlimited';
+                document.getElementById('escapeEditDate').value = c.validUntil || '';
+
+                const users = c.users ? Object.keys(c.users) : [];
+                const openedCount = users.filter(u => c.users[u].opened).length;
+                document.getElementById('escapeUsersInfo').innerText =
+                    'Uporabnikov: ' + users.length + ' / ' + (c.maxUsers || 1) + ' | Odprtih primerov: ' + openedCount;
+                document.getElementById('escapeUsersBox').style.display = 'block';
+            } else {
+                codeInput.value = '';
+                codeInput.disabled = false;
+                document.getElementById('escapeGenBtn').style.display = 'inline-block';
+                document.getElementById('escapeEditType').value = 'solo';
+                document.getElementById('escapeEditMaxUsers').value = 1;
+                document.getElementById('escapeEditValidity').value = 'unlimited';
+                document.getElementById('escapeEditDate').value = '';
+                document.getElementById('escapeUsersBox').style.display = 'none';
+            }
+
+            toggleEscapeDate();
+            showView('escapeAdminEditView');
+        }
+
+        function saveEscapeCode() {
+            const existing = document.getElementById('escapeEditExisting').value;
+            const code = (existing || document.getElementById('escapeEditCode').value).trim().toUpperCase();
+            const maxUsers = parseInt(document.getElementById('escapeEditMaxUsers').value, 10);
+            const validityType = document.getElementById('escapeEditValidity').value;
+            const validUntil = document.getElementById('escapeEditDate').value;
+
+            if (!/^[A-Z0-9-]{4,24}$/.test(code)) {
+                alert('Koda mora imeti 4-24 znakov (črke A-Z, števke, vezaj).');
+                return;
+            }
+            if (!maxUsers || maxUsers < 1) {
+                alert('Število uporabnikov mora biti vsaj 1.');
+                return;
+            }
+            if (validityType === 'limited' && !validUntil) {
+                alert('Izberi datum, do katerega koda velja.');
+                return;
+            }
+            if (!existing && escapeCodesData[code]) {
+                alert('Ta koda že obstaja.');
+                return;
+            }
+
+            const data = {
+                type: document.getElementById('escapeEditType').value,
+                maxUsers: maxUsers,
+                validityType: validityType,
+                validUntil: validityType === 'limited' ? validUntil : ''
+            };
+            if (!existing) data.createdAt = Date.now();
+
+            db.ref('escapeCodes/' + code).update(data).then(() => {
+                alert('Koda shranjena!');
+                loadEscapeAdmin();
+            });
+        }
+
+        function deleteEscapeCode(code) {
+            if (confirm('Ste prepričani, da želite izbrisati kodo ' + code + '?')) {
+                db.ref('escapeCodes/' + code).remove();
+            }
+        }
+
+        function resetEscapeUsers() {
+            const code = document.getElementById('escapeEditExisting').value;
+            if (code && confirm('Izbrišem vse uporabnike te kode? Uporabniki bodo morali kodo vnesti znova.')) {
+                db.ref('escapeCodes/' + code + '/users').remove().then(() => {
+                    document.getElementById('escapeUsersInfo').innerText = 'Uporabnikov: 0 | Odprtih primerov: 0';
                 });
             }
         }
