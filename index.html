@@ -393,6 +393,86 @@
             break-inside: avoid;
         }
 
+        /* EKSKLUZIVNA PONUDBA - THE LAST HOUR */
+        .promo-banner {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 35px 20px;
+            border-radius: 12px;
+            background: radial-gradient(circle at 50% 0%, #2a3d31 0%, #121a15 70%);
+            border: 1px solid #c9a14a;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+            color: #fff;
+            text-decoration: none;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .promo-banner:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(201,161,74,0.35);
+        }
+        .promo-banner::before {
+            content: "";
+            position: absolute;
+            top: 0; left: -60%;
+            width: 40%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            transform: skewX(-20deg);
+            animation: promoShine 5s infinite;
+        }
+        @keyframes promoShine {
+            0%, 60% { left: -60%; }
+            100% { left: 130%; }
+        }
+        .promo-badge {
+            background: #c9a14a;
+            color: #1b1b1b;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .promo-kicker {
+            color: #c9a14a;
+            font-size: 1rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .promo-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: 6px;
+            line-height: 1.1;
+            text-shadow: 0 0 18px rgba(201,161,74,0.55);
+        }
+        .promo-text {
+            max-width: 520px;
+            color: #d6e4da;
+            font-style: italic;
+            font-size: 1.05rem;
+        }
+        .promo-cta {
+            margin-top: 8px;
+            background: var(--primary);
+            border: 1px solid #c9a14a;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .promo-banner:hover .promo-cta { background: var(--secondary); }
+        @media (max-width: 500px) {
+            .promo-title { font-size: 2rem; letter-spacing: 3px; }
+        }
+
         .view-section { display: none; }
         .view-section.active { display: block; }
     </style>
@@ -411,9 +491,14 @@
     <main>
         <!-- POGLED 1: Začetna stran -->
         <div id="homeView" class="view-section active">
-            <div class="notice-banner">
-                Spletna stran je še v nastajanju...
-            </div>
+            <!-- EKSKLUZIVNA PONUDBA: THE LAST HOUR -->
+            <a class="promo-banner" href="https://j-p-09.github.io/jasa-petrinjak.si/escape-room-home.html">
+                <span class="promo-badge"><i class="fa-solid fa-star"></i> EKSKLUZIVNA PONUDBA</span>
+                <span class="promo-kicker">PRVA digitalna soba pobega</span>
+                <span class="promo-title">THE LAST HOUR</span>
+                <span class="promo-text">Detektiv se lahko reši le z uspešno rešenim primerom...</span>
+                <span class="promo-cta">Odkrij več <i class="fa-solid fa-arrow-right-long"></i></span>
+            </a>
             
             <div id="featuredLibraryContainer">
                 <!-- Vsebina se generira avtomatsko ali prikaže "Nalagam" -->
