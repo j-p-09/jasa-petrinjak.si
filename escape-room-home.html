@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE LAST HOUR | Digitalna soba pobega</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #2b5c3f;
+            --secondary: #4a7c59;
+            --light: #e8f5e9;
+            --dark: #1b3b28;
+            --text-main: #333;
+            --bg-main: #f9fbf9;
+            --white: #ffffff;
+            --gold: #c9a14a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: var(--white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        .logo-container img {
+            height: 50px;
+            cursor: pointer;
+            display: block;
+        }
+
+        .info-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .info-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        main {
+            margin-top: 70px;
+        }
+
+        /* HERO */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            color: #fff;
+            padding: 80px 20px 90px;
+            background: radial-gradient(circle at 50% 0%, #2a3d31 0%, #121a15 75%);
+        }
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 120%, rgba(201,161,74,0.18), transparent 60%);
+            pointer-events: none;
+        }
+        .hero > * { position: relative; z-index: 1; }
+        .badge {
+            display: inline-block;
+            background: var(--gold);
+            color: #1b1b1b;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        .kicker {
+            color: var(--gold);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .hero h1 {
+            font-size: 4rem;
+            letter-spacing: 8px;
+            line-height: 1.1;
+            text-shadow: 0 0 25px rgba(201,161,74,0.55);
+            animation: flicker 6s infinite;
+        }
+        @keyframes flicker {
+            0%, 92%, 100% { opacity: 1; }
+            93% { opacity: 0.75; }
+            94% { opacity: 1; }
+            96% { opacity: 0.8; }
+        }
+        .tagline {
+            max-width: 560px;
+            margin: 22px auto 0;
+            color: #d6e4da;
+            font-style: italic;
+            font-size: 1.15rem;
+            line-height: 1.5;
+        }
+
+        .section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 50px 20px 10px;
+        }
+        .section-title {
+            color: var(--dark);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-left: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        /* DATUM OBJAVE */
+        .release-box {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--gold);
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .release-box i {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        .release-label {
+            color: var(--secondary);
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        .release-date {
+            color: var(--dark);
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        /* PLANI */
+        .plans {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 800px) { .plans { grid-template-columns: 1fr; } }
+
+        .plan {
+            position: relative;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 30px 22px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+        .plan:hover { transform: translateY(-5px); }
+        .plan.featured { border: 2px solid var(--gold); }
+        .plan-icon {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 14px;
+        }
+        .plan h3 {
+            color: var(--dark);
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .plan-desc {
+            color: #666;
+            font-size: 0.92rem;
+            min-height: 40px;
+            margin-bottom: 18px;
+        }
+        .old-price {
+            color: #999;
+            text-decoration: line-through;
+            font-size: 1.1rem;
+        }
+        .new-price {
+            color: var(--primary);
+            font-size: 2.6rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 4px 0;
+        }
+        .promo-until {
+            background: var(--light);
+            color: var(--dark);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        .plan-ribbon {
+            position: absolute;
+            top: -12px;
+            background: var(--gold);
+            color: #1b1b1b;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .note {
+            text-align: center;
+            color: #777;
+            font-size: 0.9rem;
+            margin: 25px 0 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 500px) {
+            .hero h1 { font-size: 2.4rem; letter-spacing: 4px; }
+            .release-date { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a class="logo-container" href="https://j-p-09.github.io/jasa-petrinjak.si/">
+            <img src="logo.png" alt="Jaša Petrinjak Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'">
+        </a>
+        <a class="info-btn" href="https://j-p-09.github.io/jasa-petrinjak.si/" aria-label="Nazaj na domačo stran">
+            <i class="fa-solid fa-house"></i>
+        </a>
+    </header>
+
+    <main>
+        <section class="hero">
+            <span class="badge"><i class="fa-solid fa-star"></i> EKSKLUZIVNA PONUDBA</span>
+            <p class="kicker">PRVA digitalna soba pobega</p>
+            <h1>THE LAST HOUR</h1>
+            <p class="tagline">Detektiv se lahko reši le z uspešno rešenim primerom...</p>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Predviden datum objave</h2>
+            <div class="release-box">
+                <i class="fa-solid fa-calendar-days"></i>
+                <div class="release-label">Objava med</div>
+                <div class="release-date">pon, 26. 10. 2026 &ndash; sre, 28. 10. 2026</div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Izberi svoj plan</h2>
+            <div class="plans">
+
+                <div class="plan">
+                    <i class="fa-solid fa-user-secret plan-icon"></i>
+                    <h3>SOLO DETEKTIV</h3>
+                    <p class="plan-desc">Sam proti uri. Rešiš primer?</p>
+                    <div class="old-price">5,90 €</div>
+                    <div class="new-price">3,90 €</div>
+                    <span class="promo-until">Akcija do 31. 10. 2026</span>
+                </div>
+
+                <div class="plan featured">
+                    <span class="plan-ribbon">PRILJUBLJENO</span>
+                    <i class="fa-solid fa-people-group plan-icon"></i>
+                    <h3>DETEKTIVSKA EKIPA</h3>
+                    <p class="plan-desc">2&ndash;4 igralci skupaj</p>
+                    <div class="old-price">9,90 €</div>
+                    <div class="new-price">4,90 €</div>
+                    <span class="promo-until">Akcija do 31. 10. 2026</span>
+                </div>
+
+                <div class="plan">
+                    <i class="fa-solid fa-folder-open plan-icon"></i>
+                    <h3>PONOVNO ODPRTJE PRIMERA</h3>
+                    <p class="plan-desc">Primer je že rešen? Začni znova.</p>
+                    <div class="old-price">3,90 €</div>
+                    <div class="new-price">0,49 €</div>
+                    <span class="promo-until">Akcija do 31. 10. 2026</span>
+                </div>
+
+            </div>
+            <p class="note">Plani in cene še niso dokončno določeni in se lahko spremenijo.</p>
+        </section>
+
+        <footer>&copy; Jaša Petrinjak</footer>
+    </main>
+
+</body>
+</html>
