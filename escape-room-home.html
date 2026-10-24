@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THE LAST HOUR | Digitalna soba pobega</title>
     <link rel="icon" type="image/png" href="logo.png">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -26,15 +29,11 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-        }
+        body { background-color: var(--bg-main); color: var(--text-main); }
 
         header {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             width: 100%;
             height: 70px;
             background-color: var(--white);
@@ -45,13 +44,7 @@
             padding: 0 20px;
             z-index: 1000;
         }
-
-        .logo-container img {
-            height: 50px;
-            cursor: pointer;
-            display: block;
-        }
-
+        .logo-container img { height: 50px; cursor: pointer; display: block; }
         .info-btn {
             display: flex;
             align-items: center;
@@ -59,20 +52,14 @@
             border: 2px solid var(--primary);
             color: var(--primary);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             font-size: 1.2rem;
             text-decoration: none;
             transition: all 0.3s;
         }
-        .info-btn:hover {
-            background: var(--primary);
-            color: var(--white);
-        }
+        .info-btn:hover { background: var(--primary); color: var(--white); }
 
-        main {
-            margin-top: 70px;
-        }
+        main { margin-top: 70px; }
 
         /* HERO */
         .hero {
@@ -131,15 +118,16 @@
             line-height: 1.5;
         }
 
-        .section {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 50px 20px 10px;
+        .section { max-width: 1100px; margin: 0 auto; padding: 50px 20px 10px; }
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
         .section-title {
             color: var(--dark);
             font-size: 1.8rem;
-            margin-bottom: 20px;
             padding-left: 8px;
             border-left: 4px solid var(--primary);
         }
@@ -153,11 +141,7 @@
             padding: 30px 20px;
             text-align: center;
         }
-        .release-box i {
-            font-size: 2.2rem;
-            color: var(--primary);
-            margin-bottom: 12px;
-        }
+        .release-box i { font-size: 2.2rem; color: var(--primary); margin-bottom: 12px; }
         .release-label {
             color: var(--secondary);
             font-weight: 600;
@@ -165,101 +149,135 @@
             text-transform: uppercase;
             font-size: 0.9rem;
         }
-        .release-date {
-            color: var(--dark);
-            font-size: 1.7rem;
-            font-weight: 700;
-            margin-top: 6px;
-        }
+        .release-date { color: var(--dark); font-size: 1.7rem; font-weight: 700; margin-top: 6px; }
 
-        /* PLANI */
-        .plans {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+        /* GUMBI */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+            margin: 5px;
         }
-        @media (max-width: 800px) { .plans { grid-template-columns: 1fr; } }
+        .btn:hover { background-color: var(--secondary); }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--light); }
 
-        .plan {
-            position: relative;
+        .add-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            transition: background 0.3s, transform 0.3s;
+        }
+        .add-btn:hover { background: var(--secondary); transform: scale(1.08); }
+
+        /* VNOS KODE */
+        .entry-box {
             background: var(--white);
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            padding: 30px 22px;
+            border-top: 4px solid var(--gold);
+            padding: 35px 20px;
+            text-align: center;
+        }
+        .entry-box > i { font-size: 2.2rem; color: var(--primary); margin-bottom: 12px; }
+        .entry-box p { color: #555; margin-bottom: 18px; }
+        .code-input {
+            width: 100%;
+            max-width: 320px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* KARTICE KOD */
+        .code-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px; }
+        .code-card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 26px 22px;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: transform 0.3s;
+            gap: 8px;
+            position: relative;
         }
-        .plan:hover { transform: translateY(-5px); }
-        .plan.featured { border: 2px solid var(--gold); }
-        .plan-icon {
-            font-size: 2.2rem;
-            color: var(--primary);
-            margin-bottom: 14px;
-        }
-        .plan h3 {
-            color: var(--dark);
-            font-size: 1.2rem;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-        }
-        .plan-desc {
-            color: #666;
-            font-size: 0.92rem;
-            min-height: 40px;
-            margin-bottom: 18px;
-        }
-        .old-price {
-            color: #999;
-            text-decoration: line-through;
-            font-size: 1.1rem;
-        }
-        .new-price {
-            color: var(--primary);
-            font-size: 2.6rem;
-            font-weight: 800;
-            line-height: 1.1;
-            margin: 4px 0;
-        }
-        .promo-until {
+        .code-card.ready { border-top: 4px solid var(--gold); }
+        .code-card.dead { opacity: 0.8; border-top: 4px solid #bbb; }
+        .code-icon { font-size: 2.2rem; color: var(--primary); }
+        .code-card.dead .code-icon { color: #999; }
+        .code-type { color: var(--dark); font-size: 1.15rem; font-weight: 700; letter-spacing: 1px; }
+        .code-value {
             background: var(--light);
             color: var(--dark);
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 6px 12px;
-            border-radius: 20px;
-        }
-        .plan-ribbon {
-            position: absolute;
-            top: -12px;
-            background: var(--gold);
-            color: #1b1b1b;
-            font-size: 0.75rem;
+            font-family: Consolas, monospace;
+            letter-spacing: 3px;
             font-weight: 700;
-            letter-spacing: 1px;
-            padding: 4px 12px;
-            border-radius: 12px;
+            padding: 5px 14px;
+            border-radius: 6px;
         }
-
-        .note {
-            text-align: center;
+        .code-info { color: #666; font-size: 0.92rem; }
+        .code-info i { color: var(--secondary); margin-right: 5px; }
+        .code-status {
+            margin-top: 8px;
+            font-weight: 600;
             color: #777;
-            font-size: 0.9rem;
-            margin: 25px 0 0;
+            font-size: 0.95rem;
+        }
+        .remove-link {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: underline;
         }
 
-        footer {
-            text-align: center;
-            padding: 40px 20px;
-            color: #888;
-            font-size: 0.9rem;
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
         }
+        .modal {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .modal h3 { color: var(--dark); margin-bottom: 12px; }
+        .modal p { margin-bottom: 20px; line-height: 1.5; }
+
+        footer { text-align: center; padding: 40px 20px; color: #888; font-size: 0.9rem; }
 
         @media (max-width: 500px) {
             .hero h1 { font-size: 2.4rem; letter-spacing: 4px; }
             .release-date { font-size: 1.3rem; }
+            .section-title { font-size: 1.4rem; }
         }
     </style>
 </head>
@@ -283,7 +301,7 @@
         </section>
 
         <section class="section">
-            <h2 class="section-title">Predviden datum objave</h2>
+            <h2 class="section-title" style="margin-bottom:20px;">Predviden datum objave</h2>
             <div class="release-box">
                 <i class="fa-solid fa-calendar-days"></i>
                 <div class="release-label">Objava med</div>
@@ -292,43 +310,264 @@
         </section>
 
         <section class="section">
-            <h2 class="section-title">Izberi svoj plan</h2>
-            <div class="plans">
-
-                <div class="plan">
-                    <i class="fa-solid fa-user-secret plan-icon"></i>
-                    <h3>SOLO DETEKTIV</h3>
-                    <p class="plan-desc">Sam proti uri. Rešiš primer?</p>
-                    <div class="old-price">0,99 €</div>
-                    <div class="new-price">0,49 €</div>
-                    <span class="promo-until">Akcija -50% do 31. 10. 2026</span>
-                </div>
-
-                <div class="plan featured">
-                    <span class="plan-ribbon">PRILJUBLJENO</span>
-                    <i class="fa-solid fa-people-group plan-icon"></i>
-                    <h3>DETEKTIVSKA EKIPA</h3>
-                    <p class="plan-desc">2&ndash;4 igralci skupaj</p>
-                    <div class="old-price">3,90 €</div>
-                    <div class="new-price">1,95 €</div>
-                    <span class="promo-until">Akcija -50% do 31. 10. 2026</span>
-                </div>
-
-                <div class="plan">
-                    <i class="fa-solid fa-folder-open plan-icon"></i>
-                    <h3>PONOVNO ODPRTJE PRIMERA</h3>
-                    <p class="plan-desc">Primer je že rešen? Začni znova.</p>
-                    <div class="old-price">0,25 €</div>
-                    <div class="new-price">0,12 €</div>
-                    <span class="promo-until">Akcija -50% do 31. 10. 2026</span>
-                </div>
-
+            <div class="section-head">
+                <h2 class="section-title">Moje kode</h2>
+                <button class="add-btn" id="addBtn" onclick="openModal('addModal')" aria-label="Dodaj kodo"><i class="fa-solid fa-plus"></i></button>
             </div>
-            <p class="note">Plani in cene še niso dokončno določeni in se lahko spremenijo.</p>
+
+            <!-- Prikaže se, ko na napravi še ni nobene kode -->
+            <div class="entry-box" id="entryBox">
+                <i class="fa-solid fa-key"></i>
+                <p>Vnesi kodo za sobo pobega in odkleni svoj primer.</p>
+                <input type="text" class="code-input" id="entryInput" placeholder="KODA" maxlength="24" autocomplete="off"><br><br>
+                <button class="btn" onclick="activateCode('entryInput')">Aktiviraj kodo</button>
+            </div>
+
+            <div class="code-list" id="codeList"></div>
         </section>
 
         <footer>&copy; Jaša Petrinjak</footer>
     </main>
 
+    <!-- Dodaj kodo -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <h3>Dodaj kodo</h3>
+            <p>Vnesi kodo za sobo pobega.</p>
+            <input type="text" class="code-input" id="addInput" placeholder="KODA" maxlength="24" autocomplete="off"><br><br>
+            <button class="btn" onclick="activateCode('addInput')">Aktiviraj</button>
+            <button class="btn btn-outline" onclick="closeModal('addModal')">Prekliči</button>
+        </div>
+    </div>
+
+    <!-- Potrditev odprtja primera -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <h3>Odpri primer?</h3>
+            <p>Ali res želiš odpreti primer? Ko vstopiš, se koda zaklene in je ne bo več mogoče uporabiti za ponovni vstop.</p>
+            <button class="btn" id="confirmYes">Da, odpri primer</button>
+            <button class="btn btn-outline" onclick="closeModal('confirmModal')">Ne</button>
+        </div>
+    </div>
+
+    <script>
+        const CASE_URL = 'https://j-p-09.github.io/thelast-hour.si/';
+
+        firebase.initializeApp({
+            databaseURL: "https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app/"
+        });
+        const db = firebase.database();
+
+        const TYPES = {
+            solo:   { name: 'Solo detektiv',            icon: 'fa-user-secret' },
+            team:   { name: 'Detektivska ekipa',        icon: 'fa-people-group' },
+            reopen: { name: 'Ponovno odprtje primera',  icon: 'fa-folder-open' }
+        };
+
+        // ---- Lokalni podatki (naprava) ----
+        function deviceId() {
+            let id = localStorage.getItem('erDeviceId');
+            if (!id) {
+                id = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+                localStorage.setItem('erDeviceId', id);
+            }
+            return id;
+        }
+        const DEV = deviceId();
+
+        function getLocalCodes() { try { return JSON.parse(localStorage.getItem('erCodes') || '[]'); } catch (e) { return []; } }
+        function setLocalCodes(arr) { localStorage.setItem('erCodes', JSON.stringify(arr)); }
+
+        // ---- Spremljanje kod v bazi (v živo) ----
+        const cache = {};      // koda -> podatki | null (ne obstaja več)
+        const watching = {};
+
+        function watch(code) {
+            if (watching[code]) return;
+            watching[code] = true;
+            db.ref('escapeCodes/' + code).on('value', snap => {
+                cache[code] = snap.val();
+                render();
+            });
+        }
+        function unwatch(code) {
+            if (!watching[code]) return;
+            db.ref('escapeCodes/' + code).off();
+            delete watching[code];
+            delete cache[code];
+        }
+
+        // ---- Pomožne funkcije ----
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+            document.getElementById(id).querySelectorAll('input').forEach(i => i.value = '');
+        }
+        function isExpired(d) {
+            return d.validityType === 'limited' && d.validUntil &&
+                   Date.now() > new Date(d.validUntil + 'T23:59:59').getTime();
+        }
+        function fmtDate(iso) {
+            const p = iso.split('-');
+            return parseInt(p[2], 10) + '. ' + parseInt(p[1], 10) + '. ' + p[0];
+        }
+
+        // ---- Izris ----
+        function render() {
+            const codes = getLocalCodes();
+            const list = document.getElementById('codeList');
+            const entry = document.getElementById('entryBox');
+            const addBtn = document.getElementById('addBtn');
+
+            if (codes.length === 0) {
+                entry.style.display = 'block';
+                addBtn.style.display = 'none';
+                list.innerHTML = '';
+                return;
+            }
+            entry.style.display = 'none';
+            addBtn.style.display = 'flex';
+            list.innerHTML = codes.map(cardHtml).join('');
+        }
+
+        function cardHtml(code) {
+            const d = cache[code];
+
+            if (d === undefined) {
+                return `<div class="code-card dead"><i class="fa-solid fa-spinner fa-spin code-icon"></i><div class="code-info">Nalagam kodo...</div></div>`;
+            }
+
+            const user = d && d.users ? d.users[DEV] : null;
+
+            if (!d || !user) {
+                return `
+                <div class="code-card dead">
+                    <i class="fa-solid fa-ban code-icon"></i>
+                    <div class="code-value">${code}</div>
+                    <div class="code-status">Koda ni več veljavna</div>
+                    <button class="remove-link" onclick="removeLocal('${code}')">Odstrani s seznama</button>
+                </div>`;
+            }
+
+            const type = TYPES[d.type] || TYPES.solo;
+            const expired = isExpired(d);
+            const opened = !!user.opened;
+            const usersCount = d.users ? Object.keys(d.users).length : 0;
+            const validity = d.validityType === 'limited' && d.validUntil
+                ? `Velja do ${fmtDate(d.validUntil)}`
+                : 'Velja do preklica';
+
+            let action;
+            if (opened) {
+                action = `<div class="code-status"><i class="fa-solid fa-lock"></i> Primer je že bil odprt</div>`;
+            } else if (expired) {
+                action = `<div class="code-status"><i class="fa-solid fa-clock"></i> Koda je potekla</div>`;
+            } else {
+                action = `<button class="btn" onclick="askOpen('${code}')"><i class="fa-solid fa-door-open"></i> Odpri primer</button>`;
+            }
+
+            const ready = !opened && !expired;
+            return `
+            <div class="code-card ${ready ? 'ready' : 'dead'}">
+                <i class="fa-solid ${type.icon} code-icon"></i>
+                <div class="code-type">${type.name}</div>
+                <div class="code-value">${code}</div>
+                <div class="code-info"><i class="fa-regular fa-clock"></i>${validity}</div>
+                <div class="code-info"><i class="fa-solid fa-users"></i>Igralci: ${usersCount} / ${d.maxUsers || 1}</div>
+                ${action}
+                ${(opened || expired) ? `<button class="remove-link" onclick="removeLocal('${code}')">Odstrani s seznama</button>` : ''}
+            </div>`;
+        }
+
+        // ---- Aktivacija kode ----
+        function activateCode(inputId) {
+            const input = document.getElementById(inputId);
+            const code = input.value.trim().toUpperCase();
+
+            if (!/^[A-Z0-9-]{4,24}$/.test(code)) {
+                alert('Vnesena koda ni veljavna.');
+                return;
+            }
+
+            const path = 'escapeCodes/' + code;
+            db.ref(path).once('value').then(snap => {
+                const d = snap.val();
+                if (!d) { alert('Ta koda ne obstaja.'); return; }
+                if (isExpired(d)) { alert('Ta koda je potekla.'); return; }
+
+                const mine = d.users && d.users[DEV];
+                if (mine && getLocalCodes().includes(code)) { alert('Ta koda je že na tvojem seznamu.'); return; }
+
+                let reason = '';
+                db.ref(path).transaction(cur => {
+                    if (!cur) { reason = 'missing'; return; }
+                    if (isExpired(cur)) { reason = 'expired'; return; }
+                    cur.users = cur.users || {};
+                    if (cur.users[DEV]) return cur;
+                    if (Object.keys(cur.users).length >= (cur.maxUsers || 1)) { reason = 'full'; return; }
+                    cur.users[DEV] = { joined: Date.now() };
+                    return cur;
+                }).then(res => {
+                    if (!res.committed) {
+                        if (reason === 'full') alert('Ta koda je dosegla največje število uporabnikov.');
+                        else if (reason === 'expired') alert('Ta koda je potekla.');
+                        else alert('Kode ni bilo mogoče aktivirati. Poskusi znova.');
+                        return;
+                    }
+                    const codes = getLocalCodes();
+                    if (!codes.includes(code)) { codes.push(code); setLocalCodes(codes); }
+                    watch(code);
+                    closeModal('addModal');
+                    input.value = '';
+                    render();
+                });
+            }).catch(() => alert('Napaka pri povezavi. Poskusi znova.'));
+        }
+
+        function removeLocal(code) {
+            setLocalCodes(getLocalCodes().filter(c => c !== code));
+            unwatch(code);
+            render();
+        }
+
+        // ---- Odpri primer ----
+        function askOpen(code) {
+            document.getElementById('confirmYes').onclick = () => openCase(code);
+            openModal('confirmModal');
+        }
+
+        function openCase(code) {
+            const btn = document.getElementById('confirmYes');
+            btn.disabled = true;
+            let reason = '';
+            db.ref('escapeCodes/' + code).transaction(cur => {
+                if (!cur || !cur.users || !cur.users[DEV]) { reason = 'invalid'; return; }
+                if (cur.users[DEV].opened) { reason = 'opened'; return; }
+                if (isExpired(cur)) { reason = 'expired'; return; }
+                cur.users[DEV].opened = Date.now();
+                return cur;
+            }).then(res => {
+                btn.disabled = false;
+                closeModal('confirmModal');
+                if (res.committed) {
+                    window.location.href = CASE_URL;
+                } else {
+                    if (reason === 'opened') alert('Primer je že bil odprt.');
+                    else if (reason === 'expired') alert('Koda je potekla.');
+                    else alert('Koda ni več veljavna.');
+                    render();
+                }
+            }).catch(() => {
+                btn.disabled = false;
+                alert('Napaka pri povezavi. Poskusi znova.');
+            });
+        }
+
+        window.onload = () => {
+            const codes = getLocalCodes();
+            codes.forEach(watch);
+            render();
+        };
+    </script>
 </body>
 </html>
