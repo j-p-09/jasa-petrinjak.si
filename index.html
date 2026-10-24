@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE LAST HOUR | Digitalna soba pobega</title>
+    <title>Jaša Petrinjak</title>
     <link rel="icon" type="image/png" href="logo.png">
-
+    
+    <!-- Firebase SDK (Version 8 za enostavno integracijo v eno datoteko) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- FontAwesome za ikone (ključavnica, info) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    
     <style>
         :root {
+            /* Barvna paleta v odtenkih zelene */
             --primary: #2b5c3f;
             --secondary: #4a7c59;
             --light: #e8f5e9;
@@ -19,7 +23,6 @@
             --text-main: #333;
             --bg-main: #f9fbf9;
             --white: #ffffff;
-            --gold: #c9a14a;
         }
 
         * {
@@ -29,11 +32,16 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        body { background-color: var(--bg-main); color: var(--text-main); }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
 
+        /* Navigacija in fiksni elementi */
         header {
             position: fixed;
-            top: 0; left: 0;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 70px;
             background-color: var(--white);
@@ -44,114 +52,52 @@
             padding: 0 20px;
             z-index: 1000;
         }
-        .logo-container img { height: 50px; cursor: pointer; display: block; }
+
         .info-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: none;
             border: 2px solid var(--primary);
             color: var(--primary);
             border-radius: 50%;
-            width: 40px; height: 40px;
+            width: 40px;
+            height: 40px;
             font-size: 1.2rem;
-            text-decoration: none;
+            cursor: pointer;
             transition: all 0.3s;
         }
-        .info-btn:hover { background: var(--primary); color: var(--white); }
 
-        main { margin-top: 70px; }
-
-        /* HERO */
-        .hero {
-            position: relative;
-            overflow: hidden;
-            text-align: center;
-            color: #fff;
-            padding: 80px 20px 90px;
-            background: radial-gradient(circle at 50% 0%, #2a3d31 0%, #121a15 75%);
-        }
-        .hero::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 50% 120%, rgba(201,161,74,0.18), transparent 60%);
-            pointer-events: none;
-        }
-        .hero > * { position: relative; z-index: 1; }
-        .badge {
-            display: inline-block;
-            background: var(--gold);
-            color: #1b1b1b;
-            font-weight: 700;
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            padding: 6px 16px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-        }
-        .kicker {
-            color: var(--gold);
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        .hero h1 {
-            font-size: 4rem;
-            letter-spacing: 8px;
-            line-height: 1.1;
-            text-shadow: 0 0 25px rgba(201,161,74,0.55);
-            animation: flicker 6s infinite;
-        }
-        @keyframes flicker {
-            0%, 92%, 100% { opacity: 1; }
-            93% { opacity: 0.75; }
-            94% { opacity: 1; }
-            96% { opacity: 0.8; }
-        }
-        .tagline {
-            max-width: 560px;
-            margin: 22px auto 0;
-            color: #d6e4da;
-            font-style: italic;
-            font-size: 1.15rem;
-            line-height: 1.5;
+        .info-btn:hover {
+            background: var(--primary);
+            color: var(--white);
         }
 
-        .section { max-width: 1100px; margin: 0 auto; padding: 50px 20px 10px; }
-        .section-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+        .logo-container img {
+            height: 50px;
+            cursor: pointer;
         }
-        .section-title {
-            color: var(--dark);
-            font-size: 1.8rem;
-            padding-left: 8px;
+
+        /* Glavni kontejner */
+        main {
+            margin-top: 90px;
+            padding: 20px;
+            min-height: calc(100vh - 90px);
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Obvestilo */
+        .notice-banner {
+            background-color: var(--light);
             border-left: 4px solid var(--primary);
-        }
-
-        /* DATUM OBJAVE */
-        .release-box {
-            background: var(--white);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-top: 4px solid var(--gold);
-            padding: 30px 20px;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            color: var(--dark);
             text-align: center;
+            font-weight: 500;
         }
-        .release-box i { font-size: 2.2rem; color: var(--primary); margin-bottom: 12px; }
-        .release-label {
-            color: var(--secondary);
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-        .release-date { color: var(--dark); font-size: 1.7rem; font-weight: 700; margin-top: 6px; }
 
-        /* GUMBI */
+        /* Gumbi */
         .btn {
             background-color: var(--primary);
             color: white;
@@ -166,92 +112,10 @@
         .btn:hover { background-color: var(--secondary); }
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
         .btn-outline:hover { background: var(--light); }
+        .btn-danger { background-color: #d32f2f; }
+        .btn-danger:hover { background-color: #b71c1c; }
 
-        .add-btn {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            border: none;
-            background: var(--primary);
-            color: #fff;
-            font-size: 1.3rem;
-            cursor: pointer;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            transition: background 0.3s, transform 0.3s;
-        }
-        .add-btn:hover { background: var(--secondary); transform: scale(1.08); }
-
-        /* VNOS KODE */
-        .entry-box {
-            background: var(--white);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-top: 4px solid var(--gold);
-            padding: 35px 20px;
-            text-align: center;
-        }
-        .entry-box > i { font-size: 2.2rem; color: var(--primary); margin-bottom: 12px; }
-        .entry-box p { color: #555; margin-bottom: 18px; }
-        .code-input {
-            width: 100%;
-            max-width: 320px;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 1.1rem;
-            text-align: center;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }
-
-        /* KARTICE KOD */
-        .code-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px; }
-        .code-card {
-            background: var(--white);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            padding: 26px 22px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-        }
-        .code-card.ready { border-top: 4px solid var(--gold); }
-        .code-card.dead { opacity: 0.8; border-top: 4px solid #bbb; }
-        .code-icon { font-size: 2.2rem; color: var(--primary); }
-        .code-card.dead .code-icon { color: #999; }
-        .code-type { color: var(--dark); font-size: 1.15rem; font-weight: 700; letter-spacing: 1px; }
-        .code-value {
-            background: var(--light);
-            color: var(--dark);
-            font-family: Consolas, monospace;
-            letter-spacing: 3px;
-            font-weight: 700;
-            padding: 5px 14px;
-            border-radius: 6px;
-        }
-        .code-info { color: #666; font-size: 0.92rem; }
-        .code-info i { color: var(--secondary); margin-right: 5px; }
-        .code-status {
-            margin-top: 8px;
-            font-weight: 600;
-            color: #777;
-            font-size: 0.95rem;
-        }
-        .remove-link {
-            background: none;
-            border: none;
-            color: #999;
-            font-size: 0.8rem;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        /* MODAL */
+        /* Modals (Pojavna okna) */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -269,304 +133,1273 @@
             max-width: 400px;
             text-align: center;
         }
-        .modal h3 { color: var(--dark); margin-bottom: 12px; }
         .modal p { margin-bottom: 20px; line-height: 1.5; }
-
-        footer { text-align: center; padding: 40px 20px; color: #888; font-size: 0.9rem; }
-
-        @media (max-width: 500px) {
-            .hero h1 { font-size: 2.4rem; letter-spacing: 4px; }
-            .release-date { font-size: 1.3rem; }
-            .section-title { font-size: 1.4rem; }
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
+
+        /* PREDSTAVLJENA KNJIŽNICA (Začetna stran) */
+        .portfolio-title {
+            color: var(--dark);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            padding-left: 5px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .featured-container {
+            display: flex;
+            align-items: center;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 30px;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            min-height: 320px;
+            transition: transform 0.3s;
+        }
+        .featured-container:hover {
+            transform: translateY(-5px);
+        }
+        .featured-left {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            padding-right: 20px;
+            z-index: 10;
+        }
+        .animated-arrow {
+            font-size: 2.5rem;
+            color: var(--primary);
+            animation: bounceRight 1.5s infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes bounceRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(12px); }
+        }
+        .featured-title {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        .featured-subtitle {
+            color: var(--secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .featured-right {
+            flex: 1;
+            position: relative;
+            min-height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .featured-images {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .featured-images img {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        
+        /* Do 8 plavajočih slik */
+        .f-img-1 { top: 0%; left: 0%; z-index: 8; animation: float1 4s infinite ease-in-out; }
+        .f-img-2 { top: 35%; right: 0%; z-index: 7; animation: float2 5s infinite ease-in-out; }
+        .f-img-3 { bottom: -10%; left: 40%; z-index: 6; animation: float3 6s infinite ease-in-out; }
+        .f-img-4 { top: 10%; right: 40%; z-index: 5; animation: float2 4.5s infinite ease-in-out; width: 90px !important; height: 90px !important; }
+        .f-img-5 { bottom: 15%; right: 10%; z-index: 4; animation: float1 5.5s infinite ease-in-out; }
+        .f-img-6 { top: 50%; left: 10%; z-index: 3; animation: float3 4.2s infinite ease-in-out; width: 100px !important; height: 100px !important; }
+        .f-img-7 { bottom: 5%; left: 10%; z-index: 2; animation: float2 5.8s infinite ease-in-out; }
+        .f-img-8 { top: 25%; left: 25%; z-index: 1; animation: float1 6.5s infinite ease-in-out; }
+
+        @keyframes float1 { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(-1deg); } }
+        @keyframes float2 { 0%, 100% { transform: translateY(0) rotate(5deg); } 50% { transform: translateY(-8px) rotate(8deg); } }
+        @keyframes float3 { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(10px) rotate(3deg); } }
+
+        @media (max-width: 768px) {
+            .featured-container { flex-direction: column; text-align: center; }
+            .featured-left { align-items: center; padding-right: 0; margin-bottom: 30px; }
+            .animated-arrow { animation: bounceDown 1.5s infinite; }
+            @keyframes bounceDown { 0%, 100% { transform: translateY(0) rotate(90deg); } 50% { transform: translateY(12px) rotate(90deg); } }
+            .featured-right { width: 100%; min-height: 250px; }
+            .featured-images img { width: 90px; height: 90px; }
+        }
+
+        /* Galerija / Knjižnice - MASONRY LAYOUT */
+        .gallery-grid {
+            column-count: 3;
+            column-gap: 15px;
+            margin-top: 20px;
+        }
+        @media (max-width: 900px) { .gallery-grid { column-count: 2; } }
+        @media (max-width: 500px) { .gallery-grid { column-count: 1; } }
+
+        .gallery-item {
+            break-inside: avoid;
+            margin-bottom: 15px;
+            position: relative;
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .gallery-item img {
+            width: 100%;
+            display: block;
+            transition: transform 0.3s;
+        }
+        .gallery-item:hover img { transform: scale(1.03); }
+
+        /* Tutorial Animacija */
+        .tutorial-banner {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .tut-anim-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+        .tut-square {
+            width: 100%;
+            height: 100%;
+            background: var(--light);
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            animation: pulseSquare 2s infinite;
+        }
+        .tut-hand {
+            position: absolute;
+            bottom: -15px;
+            right: -15px;
+            font-size: 1.5rem;
+            color: var(--dark);
+            animation: clickHand 2s infinite;
+            z-index: 2;
+        }
+        .tutorial-text {
+            color: var(--secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        @keyframes clickHand {
+            0% { transform: translate(15px, 15px); }
+            40% { transform: translate(0, 0); }
+            50% { transform: scale(0.8); }
+            60% { transform: scale(1); }
+            100% { transform: translate(15px, 15px); }
+        }
+        @keyframes pulseSquare {
+            0%, 100% { transform: scale(1); background: var(--light); }
+            45% { transform: scale(1); background: var(--light); }
+            50% { transform: scale(0.95); background: var(--secondary); }
+            60% { transform: scale(1.05); background: var(--light); }
+            70% { transform: scale(1); }
+        }
+
+        /* Lightbox (Povečana slika) */
+        #lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 3000;
+        }
+        .watermark-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #lightbox img {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 4px;
+            position: relative;
+        }
+        .close-lightbox {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 3010;
+        }
+        
+        /* Watermark spremembe */
+        .watermark-icon {
+            position: absolute;
+            top: 48%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: rgba(255, 255, 255, 0.45);
+            pointer-events: none;
+            text-shadow: 0 0 15px rgba(0,0,0,0.3);
+        }
+        .watermark-text {
+            color: white;
+            margin-top: 20px;
+            font-size: 1rem;
+            opacity: 0.9;
+            text-align: center;
+        }
+
+        /* Administracija tabele */
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .admin-table th, .admin-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .admin-table th { background-color: var(--light); color: var(--dark); }
+        
+        /* Edit view slika - override za masonry izkušnjo */
+        #editLibImages .gallery-item {
+            width: auto;
+            display: inline-block;
+            break-inside: avoid;
+        }
+
+        /* EKSKLUZIVNA PONUDBA - THE LAST HOUR */
+        .promo-banner {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 35px 20px;
+            border-radius: 12px;
+            background: radial-gradient(circle at 50% 0%, #2a3d31 0%, #121a15 70%);
+            border: 1px solid #c9a14a;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+            color: #fff;
+            text-decoration: none;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .promo-banner:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(201,161,74,0.35);
+        }
+        .promo-banner::before {
+            content: "";
+            position: absolute;
+            top: 0; left: -60%;
+            width: 40%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            transform: skewX(-20deg);
+            animation: promoShine 5s infinite;
+        }
+        @keyframes promoShine {
+            0%, 60% { left: -60%; }
+            100% { left: 130%; }
+        }
+        .promo-badge {
+            background: #c9a14a;
+            color: #1b1b1b;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .promo-kicker {
+            color: #c9a14a;
+            font-size: 1rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .promo-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: 6px;
+            line-height: 1.1;
+            text-shadow: 0 0 18px rgba(201,161,74,0.55);
+        }
+        .promo-text {
+            max-width: 520px;
+            color: #d6e4da;
+            font-style: italic;
+            font-size: 1.05rem;
+        }
+        .promo-cta {
+            margin-top: 8px;
+            background: var(--primary);
+            border: 1px solid #c9a14a;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .promo-banner:hover .promo-cta { background: var(--secondary); }
+        @media (max-width: 500px) {
+            .promo-title { font-size: 2rem; letter-spacing: 3px; }
+        }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
     </style>
 </head>
 <body>
 
+    <!-- Header z navigacijo -->
     <header>
-        <a class="logo-container" href="https://j-p-09.github.io/jasa-petrinjak.si/">
+        <div class="logo-container" onclick="showView('homeView')">
+            <!-- LOGOTIP -->
             <img src="logo.png" alt="Jaša Petrinjak Logo" onerror="this.src='https://via.placeholder.com/150x50?text=LOGO'">
-        </a>
-        <a class="info-btn" href="https://j-p-09.github.io/jasa-petrinjak.si/" aria-label="Nazaj na domačo stran">
-            <i class="fa-solid fa-house"></i>
-        </a>
+        </div>
+        <button class="info-btn" onclick="openModal('infoModal')"><i class="fa-regular fa-circle-question"></i></button>
     </header>
 
     <main>
-        <section class="hero">
-            <span class="badge"><i class="fa-solid fa-star"></i> EKSKLUZIVNA PONUDBA</span>
-            <p class="kicker">PRVA digitalna soba pobega</p>
-            <h1>THE LAST HOUR</h1>
-            <p class="tagline">Detektiv se lahko reši le z uspešno rešenim primerom...</p>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title" style="margin-bottom:20px;">Predviden datum objave</h2>
-            <div class="release-box">
-                <i class="fa-solid fa-calendar-days"></i>
-                <div class="release-label">Objava med</div>
-                <div class="release-date">pon, 26. 10. 2026 &ndash; sre, 28. 10. 2026</div>
+        <!-- POGLED 1: Začetna stran -->
+        <div id="homeView" class="view-section active">
+            <!-- EKSKLUZIVNA PONUDBA: THE LAST HOUR -->
+            <a class="promo-banner" href="https://j-p-09.github.io/jasa-petrinjak.si/escape-room-home.html">
+                <span class="promo-badge"><i class="fa-solid fa-star"></i> EKSKLUZIVNA PONUDBA</span>
+                <span class="promo-kicker">PRVA digitalna soba pobega</span>
+                <span class="promo-title">THE LAST HOUR</span>
+                <span class="promo-text">Detektiv se lahko reši le z uspešno rešenim primerom...</span>
+                <span class="promo-cta">Odkrij več <i class="fa-solid fa-arrow-right-long"></i></span>
+            </a>
+            
+            <div id="featuredLibraryContainer">
+                <!-- Vsebina se generira avtomatsko ali prikaže "Nalagam" -->
             </div>
-        </section>
+        </div>
 
-        <section class="section">
-            <div class="section-head">
-                <h2 class="section-title">Moje kode</h2>
-                <button class="add-btn" id="addBtn" onclick="openModal('addModal')" aria-label="Dodaj kodo"><i class="fa-solid fa-plus"></i></button>
+        <!-- POGLED 2: Posamezna knjižnica -->
+        <div id="libraryView" class="view-section">
+            <button class="btn btn-outline" onclick="showView('homeView')"><i class="fa-solid fa-arrow-left"></i> Nazaj</button>
+            <h2 id="libTitle" style="margin: 20px 0; color: var(--primary);"></h2>
+            
+            <!-- TUTORIAL ANIMACIJA -->
+            <div class="tutorial-banner">
+                <div class="tut-anim-container">
+                    <div class="tut-square"></div>
+                    <i class="fa-solid fa-hand-pointer tut-hand"></i>
+                </div>
+                <div class="tutorial-text">Klikni na sliko za povečavo</div>
             </div>
 
-            <!-- Prikaže se, ko na napravi še ni nobene kode -->
-            <div class="entry-box" id="entryBox">
-                <i class="fa-solid fa-key"></i>
-                <p>Vnesi kodo za sobo pobega in odkleni svoj primer.</p>
-                <input type="text" class="code-input" id="entryInput" placeholder="KODA" maxlength="24" autocomplete="off"><br><br>
-                <button class="btn" onclick="activateCode('entryInput')">Aktiviraj kodo</button>
+            <div id="libGrid" class="gallery-grid"></div>
+        </div>
+
+        <!-- POGLED 3: Administracija Meni -->
+        <div id="adminMenuView" class="view-section">
+            <h2 style="color: var(--primary); margin-bottom: 20px;">Administracija</h2>
+            <button class="btn" onclick="loadAdminLibraries()">VSE KNJIŽNICE</button><br>
+            <button class="btn" onclick="openLibraryEditor()">DODAJ NOVO KNJIŽNICO</button><br>
+            <button class="btn" onclick="loadEscapeAdmin()">KODE ZA SOBO POBEGA</button><br>
+            <button class="btn" onclick="openModal('changePinModal')">SPREMENI ŠIFRO ZA DOSTOP DO ADMINISTRACIJE</button><br>
+            <button class="btn btn-outline" onclick="logoutAdmin()">ODJAVA</button>
+        </div>
+
+        <!-- POGLED 4: Vse knjižnice (Admin) -->
+        <div id="adminListView" class="view-section">
+            <button class="btn btn-outline" onclick="showView('adminMenuView')"><i class="fa-solid fa-arrow-left"></i> Nazaj na meni</button>
+            <h2 style="margin: 20px 0;">Seznam vseh knjižnic</h2>
+            <div id="adminLibTable"></div>
+        </div>
+
+        <!-- POGLED 5: Urejanje/Dodajanje knjižnice -->
+        <div id="adminEditView" class="view-section">
+            <button class="btn btn-outline" onclick="showView('adminListView')"><i class="fa-solid fa-arrow-left"></i> Nazaj</button>
+            <h2 style="margin: 20px 0;" id="editViewTitle">Urejanje knjižnice</h2>
+            
+            <input type="hidden" id="editLibId">
+            <table class="admin-table">
+                <tr>
+                    <td>Naslov knjižnice / zbirke</td>
+                    <td><input type="text" id="editTitle" placeholder="Vpiši naslov..."></td>
+                </tr>
+                <tr>
+                    <td>Stopnja varovanja</td>
+                    <td>
+                        <select id="editLevel" onchange="toggleCodeInput()">
+                            <option value="0">0 (Javno, brez kode in ključavnice)</option>
+                            <option value="1">1 (Watermark, s kodo popoln dostop)</option>
+                            <option value="2">2 (Popolnoma zaklenjeno brez kode)</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Datum izdaje</td>
+                    <td>
+                        <select id="editDateType" onchange="toggleDateInput()">
+                            <option value="immediate">Takojšnja</option>
+                            <option value="scheduled">Načrtovana</option>
+                        </select>
+                        <input type="date" id="editDateValue" style="display:none; margin-top:10px;">
+                    </td>
+                </tr>
+                <tr id="codeRow">
+                    <td>Koda za dostop</td>
+                    <td><input type="text" id="editCode" placeholder="npr. 1925"></td>
+                </tr>
+                <tr>
+                    <td>Prenos fotografij</td>
+                    <td>
+                        <select id="editDownload">
+                            <option value="true">DA</option>
+                            <option value="false">NE</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Prikaži na začetni strani (Featured)</td>
+                    <td>
+                        <select id="editFeatured">
+                            <option value="false">NE</option>
+                            <option value="true">DA</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Število plavajočih slik na prvi strani (0-8)</td>
+                    <td><input type="number" id="editFloatingCount" min="0" max="8" value="3"></td>
+                </tr>
+            </table>
+
+            <button class="btn" onclick="saveLibrary()">Shrani podatke</button>
+
+            <div style="margin-top: 30px;">
+                <h3>Fotografije</h3>
+                <input type="file" id="imageUpload" multiple accept="image/png, image/jpeg" style="margin: 10px 0;">
+                <button class="btn btn-outline" onclick="uploadImages()">Naloži izbrane slike</button>
+                <div id="editLibImages" class="gallery-grid" style="margin-top: 20px;"></div>
             </div>
+        </div>
 
-            <div class="code-list" id="codeList"></div>
-        </section>
+        <!-- POGLED 6: Kode za sobo pobega (Admin) -->
+        <div id="escapeAdminListView" class="view-section">
+            <button class="btn btn-outline" onclick="showView('adminMenuView')"><i class="fa-solid fa-arrow-left"></i> Nazaj na meni</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:20px 0;">
+                <h2>Kode za sobo pobega</h2>
+                <button class="btn" style="margin:0;" onclick="openEscapeEditor()"><i class="fa-solid fa-plus"></i> Nova koda</button>
+            </div>
+            <div style="overflow-x:auto;" id="escapeAdminTable"></div>
+        </div>
 
-        <footer>&copy; Jaša Petrinjak</footer>
+        <!-- POGLED 7: Urejanje/Dodajanje kode za sobo pobega (Admin) -->
+        <div id="escapeAdminEditView" class="view-section">
+            <button class="btn btn-outline" onclick="loadEscapeAdmin()"><i class="fa-solid fa-arrow-left"></i> Nazaj</button>
+            <h2 style="margin: 20px 0;" id="escapeEditTitle">Nova koda</h2>
+
+            <input type="hidden" id="escapeEditExisting">
+            <table class="admin-table">
+                <tr>
+                    <td>Koda</td>
+                    <td>
+                        <input type="text" id="escapeEditCode" placeholder="npr. DETEKTIV-2026" maxlength="24" style="text-transform:uppercase;">
+                        <button class="btn btn-outline" id="escapeGenBtn" style="padding:5px 10px;" onclick="generateEscapeCode()">Generiraj</button>
+                        <div style="font-size:0.8rem; color:#666; margin-top:5px;">Dovoljene so črke A-Z, števke in vezaj (4-24 znakov).</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Vrsta kode</td>
+                    <td>
+                        <select id="escapeEditType">
+                            <option value="solo">Solo detektiv</option>
+                            <option value="team">Detektivska ekipa</option>
+                            <option value="reopen">Ponovno odprtje primera</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Največ uporabnikov</td>
+                    <td><input type="number" id="escapeEditMaxUsers" min="1" max="1000" value="1"></td>
+                </tr>
+                <tr>
+                    <td>Veljavnost</td>
+                    <td>
+                        <select id="escapeEditValidity" onchange="toggleEscapeDate()">
+                            <option value="unlimited">Do preklica</option>
+                            <option value="limited">Omejena</option>
+                        </select>
+                        <input type="date" id="escapeEditDate" style="display:none; margin-top:10px;">
+                    </td>
+                </tr>
+            </table>
+
+            <button class="btn" onclick="saveEscapeCode()">Shrani kodo</button>
+
+            <div id="escapeUsersBox" style="margin-top:30px; display:none;">
+                <h3>Uporaba kode</h3>
+                <p id="escapeUsersInfo" style="margin:10px 0;"></p>
+                <button class="btn btn-danger" onclick="resetEscapeUsers()">Ponastavi uporabnike</button>
+            </div>
+        </div>
     </main>
 
-    <!-- Dodaj kodo -->
-    <div class="modal-overlay" id="addModal">
+    <!-- POJAVNA OKNA (Modals) -->
+
+    <!-- Info okno -->
+    <div class="modal-overlay" id="infoModal">
         <div class="modal">
-            <h3>Dodaj kodo</h3>
-            <p>Vnesi kodo za sobo pobega.</p>
-            <input type="text" class="code-input" id="addInput" placeholder="KODA" maxlength="24" autocomplete="off"><br><br>
-            <button class="btn" onclick="activateCode('addInput')">Aktiviraj</button>
-            <button class="btn btn-outline" onclick="closeModal('addModal')">Prekliči</button>
+            <p>Stran je še v nastajanju. Vsa vsebina je avtorska, zato je uporaba vsebine brez seznanitve in dovoljena prepovedana.</p>
+            <button class="btn" onclick="closeModal('infoModal'); openModal('codeModal')">Koda za dostop</button>
+            <button class="btn" onclick="closeModal('infoModal'); openModal('adminPinModal')">Administracija</button>
+            <br><br>
+            <button class="btn-outline" style="border:none; padding:5px; cursor:pointer;" onclick="closeModal('infoModal')">Zapri</button>
         </div>
     </div>
 
-    <!-- Potrditev odprtja primera -->
-    <div class="modal-overlay" id="confirmModal">
+    <!-- Vnos kode za dostop -->
+    <div class="modal-overlay" id="codeModal">
         <div class="modal">
-            <h3>Odpri primer?</h3>
-            <p>Ali res želiš odpreti primer? Ko vstopiš, se koda zaklene in je ne bo več mogoče uporabiti za ponovni vstop.</p>
-            <button class="btn" id="confirmYes">Da, odpri primer</button>
-            <button class="btn btn-outline" onclick="closeModal('confirmModal')">Ne</button>
+            <h3>Vnesite kodo za dostop</h3>
+            <p style="font-size: 0.8rem; margin-top:5px;">Aktivirana koda se bo shranila na tej napravi.</p>
+            <input type="text" id="userCodeInput" placeholder="Vnesi kodo">
+            <button class="btn" onclick="activateCode()">Aktiviraj</button>
+            <button class="btn btn-outline" onclick="closeModal('codeModal')">Prekliči</button>
         </div>
     </div>
+
+    <!-- Vnos Admin PIN -->
+    <div class="modal-overlay" id="adminPinModal">
+        <div class="modal">
+            <h3>Administracija</h3>
+            <input type="password" id="adminPinInput" placeholder="Vnesi 4-mestno šifro">
+            <button class="btn" onclick="checkAdminPin()">Vstopi</button>
+            <button class="btn btn-outline" onclick="closeModal('adminPinModal')">Prekliči</button>
+        </div>
+    </div>
+
+    <!-- Sprememba Admin PIN -->
+    <div class="modal-overlay" id="changePinModal">
+        <div class="modal">
+            <h3>Spremeni šifro administracije</h3>
+            <input type="password" id="newPinInput" placeholder="Nova 4-mestna šifra">
+            <button class="btn" onclick="changeAdminPin()">Shrani</button>
+            <button class="btn btn-outline" onclick="closeModal('changePinModal')">Prekliči</button>
+        </div>
+    </div>
+
+    <!-- Koda za dostop - Prikaz (Admin) -->
+    <div class="modal-overlay" id="showCodeModal">
+        <div class="modal">
+            <h3>Koda za knjižnico:</h3>
+            <h1 id="displayAdminCode" style="color: var(--primary); margin: 20px 0;"></h1>
+            <button class="btn" onclick="closeModal('showCodeModal')">Zapri</button>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div id="lightbox">
+        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+        <div class="watermark-container" id="lightboxImageContainer">
+            <img id="lightboxImg" src="" alt="Fotografija">
+            <i class="fa-solid fa-lock watermark-icon" id="watermarkIcon"></i>
+        </div>
+        <!-- WATERMARK TEKST -->
+        <div class="watermark-text" id="watermarkText">Ni aktivne kode za neomejen dostop.<br>Slika prikazuje predogled.</div>
+        <a id="downloadBtn" style="display:none; color:white; text-decoration:none; margin-top:15px; border:1px solid white; padding:8px 15px; border-radius:5px;" download="fotografija.jpg">Prenesi fotografijo</a>
+    </div>
+
 
     <script>
-        const CASE_URL = 'https://j-p-09.github.io/thelast-hour.si/';
-
-        firebase.initializeApp({
+        // ==========================================
+        // 1. FIREBASE INICIALIZACIJA
+        // ==========================================
+        const firebaseConfig = {
             databaseURL: "https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app/"
-        });
+        };
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const TYPES = {
-            solo:   { name: 'Solo detektiv',            icon: 'fa-user-secret' },
-            team:   { name: 'Detektivska ekipa',        icon: 'fa-people-group' },
-            reopen: { name: 'Ponovno odprtje primera',  icon: 'fa-folder-open' }
-        };
-
-        // ---- Lokalni podatki (naprava) ----
-        function deviceId() {
-            let id = localStorage.getItem('erDeviceId');
-            if (!id) {
-                id = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-                localStorage.setItem('erDeviceId', id);
-            }
-            return id;
+        // ==========================================
+        // 2. GLOBALNE SPREMENLJIVKE IN LOKALNI PODATKI
+        // ==========================================
+        let librariesData = {};
+        let isDataLoaded = false;
+        
+        // Pridobi aktivne kode iz lokalne shrambe
+        function getActiveCodes() {
+            return JSON.parse(localStorage.getItem('activeCodes') || '[]');
         }
-        const DEV = deviceId();
 
-        function getLocalCodes() { try { return JSON.parse(localStorage.getItem('erCodes') || '[]'); } catch (e) { return []; } }
-        function setLocalCodes(arr) { localStorage.setItem('erCodes', JSON.stringify(arr)); }
+        function saveActiveCode(code) {
+            let codes = getActiveCodes();
+            if (!codes.includes(code)) {
+                codes.push(code);
+                localStorage.setItem('activeCodes', JSON.stringify(codes));
+            }
+        }
 
-        // ---- Spremljanje kod v bazi (v živo) ----
-        const cache = {};      // koda -> podatki | null (ne obstaja več)
-        const watching = {};
+        // ==========================================
+        // 3. POSLUŠANJE SPREMEMB V BAZI (REALTIME)
+        // ==========================================
+        db.ref('libraries').on('value', (snapshot) => {
+            librariesData = snapshot.val() || {};
+            isDataLoaded = true;
+            
+            // Osveži trenuten pogled, če se podatki spremenijo
+            if (document.getElementById('homeView').classList.contains('active')) {
+                renderHome();
+            } else if (document.getElementById('adminListView').classList.contains('active')) {
+                loadAdminLibraries();
+            }
+        });
 
-        function watch(code) {
-            if (watching[code]) return;
-            watching[code] = true;
-            db.ref('escapeCodes/' + code).on('value', snap => {
-                cache[code] = snap.val();
-                render();
+        // Preveri če admin šifra obstaja, če ne nastavi 0000
+        db.ref('admin/pin').once('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                db.ref('admin/pin').set('0000');
+            }
+        });
+
+        // ==========================================
+        // 4. UPRAVLJANJE POGLEDOV IN MODALOV
+        // ==========================================
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            if (viewId === 'homeView') renderHome();
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { 
+            document.getElementById(id).style.display = 'none'; 
+            // Počisti inpute
+            const inputs = document.getElementById(id).querySelectorAll('input');
+            inputs.forEach(i => i.value = '');
+        }
+
+        // ==========================================
+        // 5. JAVNI DEL SPLETNE STRANI
+        // ==========================================
+
+        function renderHome() {
+            const container = document.getElementById('featuredLibraryContainer');
+            
+            if (!isDataLoaded) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 50px;">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size:3rem; color:var(--primary); margin-bottom:15px;"></i>
+                        <h3 style="color:var(--dark);">NALAGAM DATABASE...</h3>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            // Najdi featured knjižnico
+            let featuredLibId = null;
+            let featuredLib = null;
+
+            for (let key in librariesData) {
+                if (librariesData[key].featured === 'true') {
+                    featuredLibId = key;
+                    featuredLib = librariesData[key];
+                    break;
+                }
+            }
+
+            if (!featuredLib) {
+                container.innerHTML = '<p style="text-align:center; color:#666;">Trenutno ni izpostavljene knjižnice.</p>';
+                return;
+            }
+
+            // Preveri varnostno stopnjo 2
+            const codes = getActiveCodes();
+            let hasAccess = true;
+            if (featuredLib.level === '2' && !codes.includes(featuredLib.code)) {
+                hasAccess = false;
+            }
+
+            let html = `
+                <h1 class="portfolio-title">Galerije slik</h1>
+                <div class="featured-container" onclick="openLibrary('${featuredLibId}')">
+            `;
+
+            if (!hasAccess) {
+                html += `<div style="width:100%; padding: 40px; text-align:center; background:#f0f0f0; border-radius:8px;">
+                            <i class="fa-solid fa-lock" style="font-size:3rem; color:#ccc; margin-bottom:10px;"></i>
+                            <p>Ta knjižnica je zaklenjena (Stopnja 2). Za ogled vnesite kodo v info meniju.</p>
+                         </div>`;
+            } else {
+                
+                // Določi število plavajočih slik (0-8, privzeto 3 če ni nastavljeno)
+                let floatCount = featuredLib.floatingCount !== undefined ? parseInt(featuredLib.floatingCount) : 3;
+                if (floatCount > 8) floatCount = 8;
+                
+                let imgsHtml = '';
+                let imgKeys = Object.keys(featuredLib.images || {});
+                
+                if (imgKeys.length > 0 && floatCount > 0) {
+                    imgsHtml = '<div class="featured-images">';
+                    for (let i = 0; i < Math.min(floatCount, imgKeys.length); i++) {
+                        imgsHtml += `<img src="${featuredLib.images[imgKeys[i]]}" class="f-img-${i+1}" alt="Slika predogleda">`;
+                    }
+                    imgsHtml += '</div>';
+                }
+
+                html += `
+                    <div class="featured-left">
+                        <i class="fa-solid fa-arrow-right-long animated-arrow"></i>
+                        <h2 class="featured-title">${featuredLib.title}</h2>
+                        <p class="featured-subtitle">Pritisni za ogled celotne zbirke</p>
+                    </div>
+                    <div class="featured-right">
+                        ${imgsHtml}
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function openLibrary(libId) {
+            const lib = librariesData[libId];
+            if (!lib) return;
+
+            const codes = getActiveCodes();
+            if (lib.level === '2' && !codes.includes(lib.code)) {
+                alert("Nimate aktivne kode za ogled te knjižnice!");
+                return;
+            }
+
+            // Povečaj števec ogledov (Views) s pomočjo transakcije za zanesljivost
+            db.ref('libraries/' + libId + '/views').transaction(function(currentViews) {
+                return (currentViews || 0) + 1;
+            });
+
+            document.getElementById('libTitle').innerText = lib.title;
+            const grid = document.getElementById('libGrid');
+            grid.innerHTML = '';
+
+            for (let imgId in lib.images) {
+                const imgData = lib.images[imgId];
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                item.innerHTML = `<img src="${imgData}" alt="Slika">`;
+                item.onclick = () => openLightbox(imgData, lib);
+                grid.appendChild(item);
+            }
+
+            showView('libraryView');
+        }
+
+        // ==========================================
+        // 6. LOGIKA KODE IN LIGHTBOXA (WATERMARK)
+        // ==========================================
+
+        function activateCode() {
+            const code = document.getElementById('userCodeInput').value;
+            if (code) {
+                saveActiveCode(code);
+                alert("Koda shranjena na napravi!");
+                closeModal('codeModal');
+                
+                // Osveži pogled če smo v knjižnici
+                if (document.getElementById('libraryView').classList.contains('active')) {
+                    showView('homeView'); 
+                } else {
+                    renderHome();
+                }
+            }
+        }
+
+        function openLightbox(imgData, lib) {
+            const codes = getActiveCodes();
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImg');
+            const icon = document.getElementById('watermarkIcon');
+            const text = document.getElementById('watermarkText');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            img.src = imgData;
+            
+            let hasValidCode = codes.includes(lib.code);
+            
+            // Logika prikaza glede na stopnje
+            if (lib.level === '0' || hasValidCode) {
+                icon.style.display = 'none';
+                text.style.display = 'none';
+                if (lib.download === 'true') {
+                    downloadBtn.style.display = 'inline-block';
+                    downloadBtn.href = imgData;
+                } else {
+                    downloadBtn.style.display = 'none';
+                }
+            } else {
+                icon.style.display = 'block';
+                text.style.display = 'block';
+                downloadBtn.style.display = 'none';
+            }
+
+            lightbox.style.display = 'flex';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+
+        // ==========================================
+        // 7. ADMINISTRACIJA
+        // ==========================================
+
+        function checkAdminPin() {
+            const pin = document.getElementById('adminPinInput').value;
+            db.ref('admin/pin').once('value', snapshot => {
+                if (snapshot.val() === pin) {
+                    closeModal('adminPinModal');
+                    showView('adminMenuView');
+                } else {
+                    alert("Napačna šifra!");
+                }
             });
         }
-        function unwatch(code) {
-            if (!watching[code]) return;
-            db.ref('escapeCodes/' + code).off();
-            delete watching[code];
-            delete cache[code];
+
+        function changeAdminPin() {
+            const newPin = document.getElementById('newPinInput').value;
+            if (newPin.length >= 4) {
+                db.ref('admin/pin').set(newPin).then(() => {
+                    alert("Šifra uspešno spremenjena!");
+                    closeModal('changePinModal');
+                });
+            } else {
+                alert("Šifra mora vsebovati vsaj 4 znake.");
+            }
         }
 
-        // ---- Pomožne funkcije ----
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-            document.getElementById(id).querySelectorAll('input').forEach(i => i.value = '');
+        function logoutAdmin() {
+            showView('homeView');
         }
-        function isExpired(d) {
-            return d.validityType === 'limited' && d.validUntil &&
-                   Date.now() > new Date(d.validUntil + 'T23:59:59').getTime();
+
+        function loadAdminLibraries() {
+            const tableContainer = document.getElementById('adminLibTable');
+            let html = `
+                <table class="admin-table">
+                    <tr>
+                        <th>Naslov</th>
+                        <th>Stopnja</th>
+                        <th>Ogledi</th>
+                        <th>Akcije</th>
+                    </tr>
+            `;
+
+            for (let id in librariesData) {
+                const lib = librariesData[id];
+                html += `
+                    <tr>
+                        <td>${lib.title} ${lib.featured === 'true' ? '<b>(Izpostavljeno)</b>' : ''}</td>
+                        <td>${lib.level}</td>
+                        <td><b>${lib.views || 0}</b></td>
+                        <td>
+                            <button class="btn" style="padding:5px 10px;" onclick="openLibraryEditor('${id}')">Uredi</button>
+                            <button class="btn btn-outline" style="padding:5px 10px;" onclick="showAccessCode('${id}')">Koda</button>
+                            <button class="btn btn-danger" style="padding:5px 10px;" onclick="deleteLibrary('${id}')">Izbriši</button>
+                        </td>
+                    </tr>
+                `;
+            }
+            html += `</table>`;
+            tableContainer.innerHTML = html;
+            showView('adminListView');
         }
-        function fmtDate(iso) {
+
+        function showAccessCode(id) {
+            const lib = librariesData[id];
+            if (lib.level === '0') {
+                alert("Stopnja varovanja 0 nima kode za dostop.");
+            } else {
+                document.getElementById('displayAdminCode').innerText = lib.code || 'Ni nastavljeno';
+                openModal('showCodeModal');
+            }
+        }
+
+        function deleteLibrary(id) {
+            if (confirm("Ste prepričani, da želite izbrisati to knjižnico in vse njene slike?")) {
+                db.ref('libraries/' + id).remove();
+            }
+        }
+
+        // ==========================================
+        // 8. UREJANJE / DODAJANJE KNJIŽNICE
+        // ==========================================
+        
+        function toggleCodeInput() {
+            const level = document.getElementById('editLevel').value;
+            document.getElementById('codeRow').style.display = level === '0' ? 'none' : 'table-row';
+        }
+
+        function toggleDateInput() {
+            const type = document.getElementById('editDateType').value;
+            document.getElementById('editDateValue').style.display = type === 'scheduled' ? 'block' : 'none';
+        }
+
+        function openLibraryEditor(id = null) {
+            document.getElementById('editLibId').value = id || '';
+            document.getElementById('editViewTitle').innerText = id ? 'Urejanje knjižnice' : 'Dodaj novo knjižnico';
+            document.getElementById('editLibImages').innerHTML = '';
+            document.getElementById('imageUpload').value = '';
+
+            if (id && librariesData[id]) {
+                const lib = librariesData[id];
+                document.getElementById('editTitle').value = lib.title || '';
+                document.getElementById('editLevel').value = lib.level || '1';
+                document.getElementById('editDateType').value = lib.dateType || 'immediate';
+                document.getElementById('editDateValue').value = lib.dateValue || '';
+                document.getElementById('editCode').value = lib.code || '';
+                document.getElementById('editDownload').value = lib.download || 'false';
+                document.getElementById('editFeatured').value = lib.featured || 'false';
+                document.getElementById('editFloatingCount').value = lib.floatingCount !== undefined ? lib.floatingCount : '3';
+                
+                // Prikaži obstoječe slike za brisanje
+                const imgContainer = document.getElementById('editLibImages');
+                if (lib.images) {
+                    for (let imgId in lib.images) {
+                        const div = document.createElement('div');
+                        div.className = 'gallery-item';
+                        div.innerHTML = `
+                            <img src="${lib.images[imgId]}">
+                            <button class="btn btn-danger" style="position:absolute; top:5px; right:5px; padding:2px 8px; z-index:5;" onclick="deleteImage('${id}', '${imgId}')">X</button>
+                        `;
+                        imgContainer.appendChild(div);
+                    }
+                }
+            } else {
+                // Reset form
+                document.getElementById('editTitle').value = '';
+                document.getElementById('editLevel').value = '1';
+                document.getElementById('editDateType').value = 'immediate';
+                document.getElementById('editCode').value = '';
+                document.getElementById('editDownload').value = 'false';
+                document.getElementById('editFeatured').value = 'false';
+                document.getElementById('editFloatingCount').value = '3';
+            }
+
+            toggleCodeInput();
+            toggleDateInput();
+            showView('adminEditView');
+        }
+
+        function saveLibrary() {
+            let id = document.getElementById('editLibId').value;
+            const isNew = !id;
+            if (isNew) id = db.ref().child('libraries').push().key;
+
+            const libData = {
+                title: document.getElementById('editTitle').value,
+                level: document.getElementById('editLevel').value,
+                dateType: document.getElementById('editDateType').value,
+                dateValue: document.getElementById('editDateValue').value,
+                code: document.getElementById('editCode').value,
+                download: document.getElementById('editDownload').value,
+                featured: document.getElementById('editFeatured').value,
+                floatingCount: document.getElementById('editFloatingCount').value
+            };
+
+            // Če označimo novo kot featured, moramo ostalim odstraniti featured status
+            if (libData.featured === 'true') {
+                for (let key in librariesData) {
+                    if (key !== id) {
+                        db.ref('libraries/' + key + '/featured').set('false');
+                    }
+                }
+            }
+
+            // Shrani view števec, če še ne obstaja
+            if (isNew) libData.views = 0;
+
+            db.ref('libraries/' + id).update(libData).then(() => {
+                alert("Podatki knjižnice shranjeni!");
+                document.getElementById('editLibId').value = id; 
+            });
+        }
+
+        // --- NALAGANJE SLIK (Kompresija in pretvorba v Base64) ---
+        function uploadImages() {
+            const id = document.getElementById('editLibId').value;
+            if (!id) {
+                alert("Prosim najprej shranite podatke knjižnice, preden dodajate slike.");
+                return;
+            }
+
+            const fileInput = document.getElementById('imageUpload');
+            const files = fileInput.files;
+            
+            if (files.length === 0) return;
+
+            let uploadedCount = 0;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Zmanjšanje slike (maksimalno 1000px širina ali višina)
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 1000;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Pretvori v base64 format (kvaliteta 0.8)
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        // Shrani v bazo
+                        db.ref('libraries/' + id + '/images').push(dataUrl).then(() => {
+                            uploadedCount++;
+                            if (uploadedCount === files.length) {
+                                alert("Slike uspešno naložene!");
+                                fileInput.value = '';
+                                openLibraryEditor(id); // Osveži pogled
+                            }
+                        });
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function deleteImage(libId, imgId) {
+            if (confirm("Izbrišem to sliko?")) {
+                db.ref('libraries/' + libId + '/images/' + imgId).remove().then(() => {
+                    openLibraryEditor(libId); 
+                });
+            }
+        }
+
+        // ==========================================
+        // 9. KODE ZA SOBO POBEGA (ADMIN)
+        // ==========================================
+        let escapeCodesData = {};
+        const ESCAPE_TYPES = { solo: 'Solo detektiv', team: 'Detektivska ekipa', reopen: 'Ponovno odprtje primera' };
+
+        db.ref('escapeCodes').on('value', (snapshot) => {
+            escapeCodesData = snapshot.val() || {};
+            if (document.getElementById('escapeAdminListView').classList.contains('active')) {
+                renderEscapeAdminList();
+            }
+        });
+
+        function escapeIsExpired(c) {
+            return c.validityType === 'limited' && c.validUntil &&
+                   Date.now() > new Date(c.validUntil + 'T23:59:59').getTime();
+        }
+
+        function escapeFmtDate(iso) {
             const p = iso.split('-');
             return parseInt(p[2], 10) + '. ' + parseInt(p[1], 10) + '. ' + p[0];
         }
 
-        // ---- Izris ----
-        function render() {
-            const codes = getLocalCodes();
-            const list = document.getElementById('codeList');
-            const entry = document.getElementById('entryBox');
-            const addBtn = document.getElementById('addBtn');
+        function loadEscapeAdmin() {
+            renderEscapeAdminList();
+            showView('escapeAdminListView');
+        }
 
-            if (codes.length === 0) {
-                entry.style.display = 'block';
-                addBtn.style.display = 'none';
-                list.innerHTML = '';
+        function renderEscapeAdminList() {
+            const container = document.getElementById('escapeAdminTable');
+            const keys = Object.keys(escapeCodesData);
+
+            if (keys.length === 0) {
+                container.innerHTML = '<p style="color:#666;">Ni še nobene kode. Dodaj jo z gumbom "Nova koda".</p>';
                 return;
             }
-            entry.style.display = 'none';
-            addBtn.style.display = 'flex';
-            list.innerHTML = codes.map(cardHtml).join('');
+
+            let html = `
+                <table class="admin-table">
+                    <tr>
+                        <th>Koda</th>
+                        <th>Vrsta</th>
+                        <th>Uporabniki</th>
+                        <th>Odprti primeri</th>
+                        <th>Veljavnost</th>
+                        <th>Status</th>
+                        <th>Akcije</th>
+                    </tr>
+            `;
+
+            keys.forEach(code => {
+                const c = escapeCodesData[code];
+                const users = c.users ? Object.keys(c.users) : [];
+                const openedCount = users.filter(u => c.users[u].opened).length;
+                const expired = escapeIsExpired(c);
+                const validity = c.validityType === 'limited' && c.validUntil
+                    ? 'Do ' + escapeFmtDate(c.validUntil)
+                    : 'Do preklica';
+                html += `
+                    <tr>
+                        <td><b>${code}</b></td>
+                        <td>${ESCAPE_TYPES[c.type] || c.type}</td>
+                        <td>${users.length} / ${c.maxUsers || 1}</td>
+                        <td>${openedCount}</td>
+                        <td>${validity}</td>
+                        <td>${expired ? '<span style="color:#d32f2f;">Potekla</span>' : '<span style="color:var(--primary);">Aktivna</span>'}</td>
+                        <td style="white-space:nowrap;">
+                            <button class="btn" style="padding:5px 10px;" onclick="openEscapeEditor('${code}')">Uredi</button>
+                            <button class="btn btn-danger" style="padding:5px 10px;" onclick="deleteEscapeCode('${code}')">Izbriši</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            html += '</table>';
+            container.innerHTML = html;
         }
 
-        function cardHtml(code) {
-            const d = cache[code];
+        function toggleEscapeDate() {
+            const v = document.getElementById('escapeEditValidity').value;
+            document.getElementById('escapeEditDate').style.display = v === 'limited' ? 'block' : 'none';
+        }
 
-            if (d === undefined) {
-                return `<div class="code-card dead"><i class="fa-solid fa-spinner fa-spin code-icon"></i><div class="code-info">Nalagam kodo...</div></div>`;
-            }
+        function generateEscapeCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let out = '';
+            for (let i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
+            document.getElementById('escapeEditCode').value = out.slice(0, 4) + '-' + out.slice(4);
+        }
 
-            const user = d && d.users ? d.users[DEV] : null;
+        function openEscapeEditor(code = null) {
+            const codeInput = document.getElementById('escapeEditCode');
+            document.getElementById('escapeEditExisting').value = code || '';
+            document.getElementById('escapeEditTitle').innerText = code ? 'Urejanje kode' : 'Nova koda';
 
-            if (!d || !user) {
-                return `
-                <div class="code-card dead">
-                    <i class="fa-solid fa-ban code-icon"></i>
-                    <div class="code-value">${code}</div>
-                    <div class="code-status">Koda ni več veljavna</div>
-                    <button class="remove-link" onclick="removeLocal('${code}')">Odstrani s seznama</button>
-                </div>`;
-            }
+            if (code && escapeCodesData[code]) {
+                const c = escapeCodesData[code];
+                codeInput.value = code;
+                codeInput.disabled = true;
+                document.getElementById('escapeGenBtn').style.display = 'none';
+                document.getElementById('escapeEditType').value = c.type || 'solo';
+                document.getElementById('escapeEditMaxUsers').value = c.maxUsers || 1;
+                document.getElementById('escapeEditValidity').value = c.validityType || 'unlimited';
+                document.getElementById('escapeEditDate').value = c.validUntil || '';
 
-            const type = TYPES[d.type] || TYPES.solo;
-            const expired = isExpired(d);
-            const opened = !!user.opened;
-            const usersCount = d.users ? Object.keys(d.users).length : 0;
-            const validity = d.validityType === 'limited' && d.validUntil
-                ? `Velja do ${fmtDate(d.validUntil)}`
-                : 'Velja do preklica';
-
-            let action;
-            if (opened) {
-                action = `<div class="code-status"><i class="fa-solid fa-lock"></i> Primer je že bil odprt</div>`;
-            } else if (expired) {
-                action = `<div class="code-status"><i class="fa-solid fa-clock"></i> Koda je potekla</div>`;
+                const users = c.users ? Object.keys(c.users) : [];
+                const openedCount = users.filter(u => c.users[u].opened).length;
+                document.getElementById('escapeUsersInfo').innerText =
+                    'Uporabnikov: ' + users.length + ' / ' + (c.maxUsers || 1) + ' | Odprtih primerov: ' + openedCount;
+                document.getElementById('escapeUsersBox').style.display = 'block';
             } else {
-                action = `<button class="btn" onclick="askOpen('${code}')"><i class="fa-solid fa-door-open"></i> Odpri primer</button>`;
+                codeInput.value = '';
+                codeInput.disabled = false;
+                document.getElementById('escapeGenBtn').style.display = 'inline-block';
+                document.getElementById('escapeEditType').value = 'solo';
+                document.getElementById('escapeEditMaxUsers').value = 1;
+                document.getElementById('escapeEditValidity').value = 'unlimited';
+                document.getElementById('escapeEditDate').value = '';
+                document.getElementById('escapeUsersBox').style.display = 'none';
             }
 
-            const ready = !opened && !expired;
-            return `
-            <div class="code-card ${ready ? 'ready' : 'dead'}">
-                <i class="fa-solid ${type.icon} code-icon"></i>
-                <div class="code-type">${type.name}</div>
-                <div class="code-value">${code}</div>
-                <div class="code-info"><i class="fa-regular fa-clock"></i>${validity}</div>
-                <div class="code-info"><i class="fa-solid fa-users"></i>Igralci: ${usersCount} / ${d.maxUsers || 1}</div>
-                ${action}
-                ${(opened || expired) ? `<button class="remove-link" onclick="removeLocal('${code}')">Odstrani s seznama</button>` : ''}
-            </div>`;
+            toggleEscapeDate();
+            showView('escapeAdminEditView');
         }
 
-        // ---- Aktivacija kode ----
-        function activateCode(inputId) {
-            const input = document.getElementById(inputId);
-            const code = input.value.trim().toUpperCase();
+        function saveEscapeCode() {
+            const existing = document.getElementById('escapeEditExisting').value;
+            const code = (existing || document.getElementById('escapeEditCode').value).trim().toUpperCase();
+            const maxUsers = parseInt(document.getElementById('escapeEditMaxUsers').value, 10);
+            const validityType = document.getElementById('escapeEditValidity').value;
+            const validUntil = document.getElementById('escapeEditDate').value;
 
             if (!/^[A-Z0-9-]{4,24}$/.test(code)) {
-                alert('Vnesena koda ni veljavna.');
+                alert('Koda mora imeti 4-24 znakov (črke A-Z, števke, vezaj).');
+                return;
+            }
+            if (!maxUsers || maxUsers < 1) {
+                alert('Število uporabnikov mora biti vsaj 1.');
+                return;
+            }
+            if (validityType === 'limited' && !validUntil) {
+                alert('Izberi datum, do katerega koda velja.');
+                return;
+            }
+            if (!existing && escapeCodesData[code]) {
+                alert('Ta koda že obstaja.');
                 return;
             }
 
-            const path = 'escapeCodes/' + code;
-            db.ref(path).once('value').then(snap => {
-                const d = snap.val();
-                if (!d) { alert('Ta koda ne obstaja.'); return; }
-                if (isExpired(d)) { alert('Ta koda je potekla.'); return; }
+            const data = {
+                type: document.getElementById('escapeEditType').value,
+                maxUsers: maxUsers,
+                validityType: validityType,
+                validUntil: validityType === 'limited' ? validUntil : ''
+            };
+            if (!existing) data.createdAt = Date.now();
 
-                const mine = d.users && d.users[DEV];
-                if (mine && getLocalCodes().includes(code)) { alert('Ta koda je že na tvojem seznamu.'); return; }
-
-                let reason = '';
-                db.ref(path).transaction(cur => {
-                    if (!cur) { reason = 'missing'; return; }
-                    if (isExpired(cur)) { reason = 'expired'; return; }
-                    cur.users = cur.users || {};
-                    if (cur.users[DEV]) return cur;
-                    if (Object.keys(cur.users).length >= (cur.maxUsers || 1)) { reason = 'full'; return; }
-                    cur.users[DEV] = { joined: Date.now() };
-                    return cur;
-                }).then(res => {
-                    if (!res.committed) {
-                        if (reason === 'full') alert('Ta koda je dosegla največje število uporabnikov.');
-                        else if (reason === 'expired') alert('Ta koda je potekla.');
-                        else alert('Kode ni bilo mogoče aktivirati. Poskusi znova.');
-                        return;
-                    }
-                    const codes = getLocalCodes();
-                    if (!codes.includes(code)) { codes.push(code); setLocalCodes(codes); }
-                    watch(code);
-                    closeModal('addModal');
-                    input.value = '';
-                    render();
-                });
-            }).catch(() => alert('Napaka pri povezavi. Poskusi znova.'));
-        }
-
-        function removeLocal(code) {
-            setLocalCodes(getLocalCodes().filter(c => c !== code));
-            unwatch(code);
-            render();
-        }
-
-        // ---- Odpri primer ----
-        function askOpen(code) {
-            document.getElementById('confirmYes').onclick = () => openCase(code);
-            openModal('confirmModal');
-        }
-
-        function openCase(code) {
-            const btn = document.getElementById('confirmYes');
-            btn.disabled = true;
-            let reason = '';
-            db.ref('escapeCodes/' + code).transaction(cur => {
-                if (!cur || !cur.users || !cur.users[DEV]) { reason = 'invalid'; return; }
-                if (cur.users[DEV].opened) { reason = 'opened'; return; }
-                if (isExpired(cur)) { reason = 'expired'; return; }
-                cur.users[DEV].opened = Date.now();
-                return cur;
-            }).then(res => {
-                btn.disabled = false;
-                closeModal('confirmModal');
-                if (res.committed) {
-                    window.location.href = CASE_URL;
-                } else {
-                    if (reason === 'opened') alert('Primer je že bil odprt.');
-                    else if (reason === 'expired') alert('Koda je potekla.');
-                    else alert('Koda ni več veljavna.');
-                    render();
-                }
-            }).catch(() => {
-                btn.disabled = false;
-                alert('Napaka pri povezavi. Poskusi znova.');
+            db.ref('escapeCodes/' + code).update(data).then(() => {
+                alert('Koda shranjena!');
+                loadEscapeAdmin();
             });
         }
 
+        function deleteEscapeCode(code) {
+            if (confirm('Ste prepričani, da želite izbrisati kodo ' + code + '?')) {
+                db.ref('escapeCodes/' + code).remove();
+            }
+        }
+
+        function resetEscapeUsers() {
+            const code = document.getElementById('escapeEditExisting').value;
+            if (code && confirm('Izbrišem vse uporabnike te kode? Uporabniki bodo morali kodo vnesti znova.')) {
+                db.ref('escapeCodes/' + code + '/users').remove().then(() => {
+                    document.getElementById('escapeUsersInfo').innerText = 'Uporabnikov: 0 | Odprtih primerov: 0';
+                });
+            }
+        }
+
+        // Inicializacija ob nalaganju strani (prikaže "NALAGAM DATABASE")
         window.onload = () => {
-            const codes = getLocalCodes();
-            codes.forEach(watch);
-            render();
+            renderHome();
         };
     </script>
 </body>
