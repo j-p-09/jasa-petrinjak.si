@@ -500,7 +500,7 @@
 
                 let reason = '';
                 db.ref(path).transaction(cur => {
-                    if (!cur) { reason = 'missing'; return; }
+                    if (cur === null) return cur; // lokalni predpomnilnik je prazen: Firebase ponovi z dejanskimi podatki
                     if (isExpired(cur)) { reason = 'expired'; return; }
                     cur.users = cur.users || {};
                     if (cur.users[DEV]) return cur;
@@ -508,7 +508,9 @@
                     cur.users[DEV] = { joined: Date.now() };
                     return cur;
                 }).then(res => {
-                    if (!res.committed) {
+                    const val = res.snapshot ? res.snapshot.val() : null;
+                    const ok = res.committed && val && val.users && val.users[DEV];
+                    if (!ok) {
                         if (reason === 'full') alert('Ta koda je dosegla največje število uporabnikov.');
                         else if (reason === 'expired') alert('Ta koda je potekla.');
                         else alert('Kode ni bilo mogoče aktivirati. Poskusi znova.');
@@ -541,7 +543,8 @@
             btn.disabled = true;
             let reason = '';
             db.ref('escapeCodes/' + code).transaction(cur => {
-                if (!cur || !cur.users || !cur.users[DEV]) { reason = 'invalid'; return; }
+                if (cur === null) return cur; // predpomnilnik prazen: Firebase ponovi z dejanskimi podatki
+                if (!cur.users || !cur.users[DEV]) { reason = 'invalid'; return; }
                 if (cur.users[DEV].opened) { reason = 'opened'; return; }
                 if (isExpired(cur)) { reason = 'expired'; return; }
                 cur.users[DEV].opened = Date.now();
@@ -549,7 +552,8 @@
             }).then(res => {
                 btn.disabled = false;
                 closeModal('confirmModal');
-                if (res.committed) {
+                const val = res.snapshot ? res.snapshot.val() : null;
+                if (res.committed && val && val.users && val.users[DEV] && val.users[DEV].opened) {
                     window.location.href = CASE_URL;
                 } else {
                     if (reason === 'opened') alert('Primer je že bil odprt.');
