@@ -1,8 +1,18 @@
 
-const V = 'evidelo-v2';
+const V = 'evidelo-v3';
+
+const F = [
+  '/jasa-petrinjak.si/sluzba.html',
+  '/jasa-petrinjak.si/manifest.webmanifest',
+  '/jasa-petrinjak.si/icon-180.png',
+  '/jasa-petrinjak.si/icon-192.png',
+  '/jasa-petrinjak.si/icon-512.png'
+];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(V));
+  event.waitUntil(
+    caches.open(V).then(cache => cache.addAll(F))
+  );
   self.skipWaiting();
 });
 
@@ -10,9 +20,7 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys
-          .filter(key => key !== V)
-          .map(key => caches.delete(key))
+        keys.filter(key => key !== V).map(key => caches.delete(key))
       )
     )
   );
@@ -37,8 +45,7 @@ self.addEventListener('fetch', event => {
       }
       return response;
     }).catch(async () => {
-      const cached = await caches.match(event.request);
-      return cached || Response.error();
+      return await caches.match(event.request) || Response.error();
     })
   );
 });
