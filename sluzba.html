@@ -3,9 +3,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>EviDelo</title>
 <meta name="theme-color" content="#1d4e5f">
-<link rel="manifest" href="/jasa-petrinjak.si/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/jasa-petrinjak.si/icon-180.png">
-<link rel="icon" href="/jasa-petrinjak.si/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EviDelo">
@@ -77,9 +77,7 @@ const NL={home:'Domov',cal:'Koledar',entry:'Vpis dela',stats:'Statistika',prof:'
 let U,D,page='home',vm=new Date(),vwk=mon(new Date()),stt={p:'m',ref:new Date()},pw,PD={},ed=false,edate=dk(new Date()),es,pt,rem=true,inst;
 vm=new Date(vm.getFullYear(),vm.getMonth(),1);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();inst=e;if(D)render()});
-if('serviceWorker'in navigator)navigator.serviceWorker.register('/app/sw.js', {
-  scope: '/app/'
-}).catch(console.error);.catch(()=>{});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 /* ---------- podatki ---------- */
 const cache=()=>{try{localStorage.setItem('evc',JSON.stringify({U,D}))}catch{}};
