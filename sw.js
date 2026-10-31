@@ -1,5 +1,44 @@
-const V='evidelo-v1',F=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(F)));self.skipWaiting()});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))));self.clients.claim()});
-self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(u.origin!==location.origin||e.request.method!=='GET')return;
-e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(V).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});
+
+const V = 'evidelo-v2';
+
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(V));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== V)
+          .map(key => caches.delete(key))
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  if (
+    url.origin !== location.origin ||
+    event.request.method !== 'GET'
+  ) return;
+
+  event.respondWith(
+    fetch(event.request).then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(V).then(cache =>
+          cache.put(event.request, copy)
+        );
+      }
+      return response;
+    }).catch(async () => {
+      const cached = await caches.match(event.request);
+      return cached || Response.error();
+    })
+  );
+});
