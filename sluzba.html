@@ -3,9 +3,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>EviDelo</title>
 <meta name="theme-color" content="#1d4e5f">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="sluzba.webmanifest">
+<link rel="apple-touch-icon" href="evidelo-icon-180.png">
+<link rel="icon" href="evidelo-icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EviDelo">
@@ -19,7 +19,7 @@ button,input,textarea{font:inherit;color:inherit}button{cursor:pointer;border:0;
 .login{max-width:380px;margin:0 auto;padding:48px 24px;text-align:center}
 .login h1{font-size:34px;margin:12px 0 28px;letter-spacing:-.5px}
 .f{display:block;text-align:left;margin:0 0 12px}.f span{font-size:13px;color:var(--mu)}
-input[type=text],input[type=password],input[type=time],input[type=date],input[type=number],textarea{width:100%;padding:12px;border:1px solid var(--ln);border-radius:10px;background:#fff;margin-top:4px}
+input{font-size:16px}input[type=text],input[type=password],input[type=time],input[type=date],input[type=number],textarea{width:100%;padding:12px;border:1px solid var(--ln);border-radius:10px;background:#fff;margin-top:4px}
 .chk{display:flex;gap:10px;align-items:center;text-align:left;margin:14px 0 18px;font-size:14px}.chk input{width:20px;height:20px;accent-color:var(--pr)}
 .b{display:block;width:100%;padding:14px;border-radius:12px;background:var(--pr);color:#fff;font-weight:700;margin:8px 0}
 .b.s{background:#e3e9ee;color:var(--ink)}.b.r{background:#fee2e2;color:#b91c1c}
@@ -35,9 +35,8 @@ main{margin-left:230px;max-width:none;padding:24px 32px;width:calc(100% - 230px)
 .card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:14px}
 .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}.top h2{margin:0;font-size:22px}.top div:last-child{text-align:right;color:var(--mu);font-size:14px}.top b{display:block;color:var(--ink);font-size:20px}
 h3{margin:0 0 10px}.mu{color:var(--mu);font-size:14px}
-.rb{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;background:#0f1f2b;color:#fff;border-radius:22px;padding:20px}
+.rb{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;background:#fff;color:var(--ink);border-radius:22px;padding:20px}
 .rb svg{width:220px;height:220px;flex:none}.rb .bt{flex:1;min-width:170px}
-.bt .b.s{background:rgba(255,255,255,.12);color:#fff}
 .wh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.wh button{font-size:26px;width:40px;height:36px;color:var(--pr)}
 .wg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
 .wd{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 0;border-radius:10px}.wd small{color:var(--mu)}.wd em{font-size:10px;color:var(--mu);font-style:normal;min-height:24px}
@@ -77,7 +76,7 @@ const NL={home:'Domov',cal:'Koledar',entry:'Vpis dela',stats:'Statistika',prof:'
 let U,D,page='home',vm=new Date(),vwk=mon(new Date()),stt={p:'m',ref:new Date()},pw,PD={},ed=false,edate=dk(new Date()),es,pt,rem=true,inst;
 vm=new Date(vm.getFullYear(),vm.getMonth(),1);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();inst=e;if(D)render()});
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker'in navigator)navigator.serviceWorker.register("sluzba-sw.js",{scope:"./sluzba.html"}).catch(()=>{});
 
 /* ---------- podatki ---------- */
 const cache=()=>{try{localStorage.setItem('evc',JSON.stringify({U,D}))}catch{}};
@@ -89,10 +88,10 @@ function stat(k){const s=D.shifts?.[k];if(!s)return null;if(s.st==='cancel'||s.s
 
 /* ---------- prijava ---------- */
 function loginView(msg){$('#app').innerHTML=`<div class="login">${LOGO(96)}<h1>EviDelo</h1>
-<label class="f"><span>Uporabniško ime</span><input id="lu" type="text" autocapitalize="none" autocomplete="username"></label>
-<label class="f"><span>Geslo</span><input id="lp" type="password" autocomplete="current-password"></label>
+<label class="f"><span>Uporabniško ime</span><input id="lu" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label>
+<label class="f"><span>Geslo</span><div style="position:relative"><input id="lp" type="password" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" style="padding-right:64px"><button type="button" onclick="const i=$('#lp');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'Pokaži':'Skrij'" style="position:absolute;right:6px;top:8px;padding:8px;font-size:13px;color:var(--pr);font-weight:700">Pokaži</button></div></label>
 <label class="chk"><input type="checkbox" id="lr" checked> OSTANI PRIJAVLJEN DO ODJAVE</label>
-<div class="err" id="le">${msg||''}</div><button class="b" onclick="login()">Prijava</button></div>`;$('#lp').onkeydown=e=>e.key==='Enter'&&login()}
+<div class="err" id="le">${msg||''}</div><button class="b" onclick="login()">Prijava</button></div>`;$('#lp').onkeydown=e=>e.key==='Enter'&&login();setTimeout(()=>$('#lu').focus(),50)}
 async function login(){const u=$('#lu').value.trim().toLowerCase(),p=$('#lp').value,e=$('#le');rem=$('#lr').checked;if(!u||!p)return e.textContent='Vpiši uporabniško ime in geslo.';
 const h=await sha(p);let r;try{r=await(await fetch(DB+u+'.json')).json()}catch{return e.textContent='Ni povezave s strežnikom.'}
 if(!r&&SEED[u]&&SEED[u].pw===p){r={ime:SEED[u].ime,priimek:SEED[u].priimek,hash:h,rate:0};await fetch(DB+u+'.json',{method:'PUT',body:JSON.stringify(r)})}
@@ -126,7 +125,7 @@ const wk=n=>{vwk=add(vwk,7*n);render()};
 function homeP(){const t=dk(new Date()),p=D.plan?.[t],s=D.shifts?.[t],a=D.active;let b='';
 if(a)b='<button class="b" onclick="depart()">Odhod iz dela</button>';
 else if(!s)b=`<button class="b" onclick="arrive()">Prihod na delo</button>${p?`<button class="b s" onclick="cd('${t}')">Odpovej izmeno</button>`:''}`;
-else b=`<p class="mu" style="color:#9fb3bf;text-align:center">${s.st==='cancel'?'Izmena odpovedana: '+esc(s.reason||''):s.st==='off'?'Prost dan':'Izmena zaključena: '+s.in+' – '+s.out}</p>`;
+else b=`<p class="mu" style="color:var(--mu);text-align:center">${s.st==='cancel'?'Izmena odpovedana: '+esc(s.reason||''):s.st==='off'?'Prost dan':'Izmena zaključena: '+s.in+' – '+s.out}</p>`;
 return `<div class="top"><div><h2>Pozdravljen/-a ${esc(D.ime)}</h2></div><div><b id="clk"></b><span id="cdt"></span></div></div>
 <div class="rb"><svg id="ring" viewBox="0 0 200 200"></svg><div class="bt">${b}</div></div><div style="height:14px"></div>${week(vwk)}`}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -134,7 +133,7 @@ function tick(){const n=new Date(),c=$('#clk');if(!c)return;c.textContent=hhmm(n
 setInterval(()=>page==='home'&&D&&tick(),1000);
 function ringH(now){const t=dk(now),p=D.plan?.[t],s=D.shifts?.[t],a=D.active,R=80,Cc=2*Math.PI*R,nm=now.getHours()*60+now.getMinutes();
 const arc=(f0,f1,col)=>f1>f0?`<circle r="${R}" fill="none" stroke="${col}" stroke-width="14" stroke-dasharray="${Math.min(1,f1-f0)*Cc} ${Cc}" stroke-dashoffset="${-f0*Cc}" transform="rotate(-90)"/>`:'';
-let g=arc(0,1,'rgba(255,255,255,.1)'),big='',sm='';
+let g=arc(0,1,'#e8edf1'),big='',sm='';
 if(s){const st=stat(t);g+=arc(0,1,C[st]);big=st==='cancel'?'Odpovedano':st==='off'?'Prost dan':hm(dur(s.in,s.out));sm=st==='cancel'||st==='off'?'':'opravljeno'}
 else if(a){const el=(Date.now()-a.t)/6e4;big=hm(el);sm=p?'od '+hhmm(new Date(a.t)):'izven plana';
 if(p){const D_=dur(p.s,p.e),st=tm(p.s),am=new Date(a.t).getHours()*60+new Date(a.t).getMinutes(),late=Math.max(0,am-st)/D_,cur=Math.max(0,nm-st)/D_,ov=Math.max(0,cur-1),cl=Math.min(cur,1);
@@ -142,7 +141,7 @@ g+=arc(0,late,'#f59e0b')+arc(late,cl,'#22c55e')+arc(0,Math.min(ov,late),'#22c55e
 else g+=arc(0,1,'#22c55e')}
 else if(p){const D_=dur(p.s,p.e),st=tm(p.s);big=p.s+'–'+p.e;sm='predviden plan';if(nm>st)g+=arc(0,(nm-st)/D_,'#f59e0b')}
 else{big='Prost dan';sm='ni plana'}
-return `<g transform="translate(100 100)">${g}</g><g stroke="#fff" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(88 52)"><rect x="0" y="5" width="24" height="16" rx="3"/><path d="M8 5V3h8v2M0 12h24"/></g><text x="100" y="108" text-anchor="middle" fill="#fff" font-size="${big.length>8?20:28}" font-weight="800">${big}</text><text x="100" y="130" text-anchor="middle" fill="#9fb3bf" font-size="13">${sm}</text>`}
+return `<g transform="translate(100 100)">${g}</g><g stroke="#14232b" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(88 52)"><rect x="0" y="5" width="24" height="16" rx="3"/><path d="M8 5V3h8v2M0 12h24"/></g><text x="100" y="108" text-anchor="middle" fill="#14232b" font-size="${big.length>8?20:28}" font-weight="800">${big}</text><text x="100" y="130" text-anchor="middle" fill="#6b7c86" font-size="13">${sm}</text>`}
 function arrive(){set('active',{date:dk(new Date()),t:Date.now()})}
 function depart(){const a=D.active,i=new Date(a.t);set('shifts/'+a.date,{st:'done',in:hhmm(i),out:hhmm(new Date()),note:''},1);set('active',null);toast('Odhod zabeležen')}
 function cd(k){modal(`<h3>Odpoved izmene</h3><p class="mu">Vpiši razlog (obvezno).</p><textarea id="er" rows="3"></textarea><button class="b r" onclick="cancelS('${k}')">Odpovej izmeno</button><button class="b s" onclick="cm()">Nazaj</button>`)}
