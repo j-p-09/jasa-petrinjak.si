@@ -1,216 +1,26 @@
-<!DOCTYPE html>
-<html lang="sl"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>EviDelo</title>
-<meta name="theme-color" content="#1d4e5f">
-<link rel="manifest" href="sluzba.webmanifest">
-<link rel="apple-touch-icon" href="evidelo-icon-180.png">
-<link rel="icon" href="evidelo-icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="EviDelo">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<style>
-:root{--bg:#edf0f4;--card:#fff;--ink:#14232b;--mu:#6b7c86;--pr:#1d4e5f;--ok:#22c55e;--ov:#3b82f6;--mi:#f59e0b;--ca:#ef4444;--pl:#fed7aa;--ln:#dde3e8;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%}body{background:var(--bg);color:var(--ink);padding-top:env(safe-area-inset-top)}
-button,input,textarea{font:inherit;color:inherit}button{cursor:pointer;border:0;background:none}
-#app{min-height:100%}
-.login{max-width:380px;margin:0 auto;padding:48px 24px;text-align:center}
-.login h1{font-size:34px;margin:12px 0 28px;letter-spacing:-.5px}
-.f{display:block;text-align:left;margin:0 0 12px}.f span{font-size:13px;color:var(--mu)}
-input{font-size:16px}input[type=text],input[type=password],input[type=time],input[type=date],input[type=number],textarea{width:100%;padding:12px;border:1px solid var(--ln);border-radius:10px;background:#fff;margin-top:4px}
-.chk{display:flex;gap:10px;align-items:center;text-align:left;margin:14px 0 18px;font-size:14px}.chk input{width:20px;height:20px;accent-color:var(--pr)}
-.b{display:block;width:100%;padding:14px;border-radius:12px;background:var(--pr);color:#fff;font-weight:700;margin:8px 0}
-.b.s{background:#e3e9ee;color:var(--ink)}.b.r{background:#fee2e2;color:#b91c1c}
-.err{color:#b91c1c;font-size:14px;min-height:20px}
-main{padding:16px 16px calc(92px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid var(--ln);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px;color:var(--mu);border-radius:12px}
-nav button.on{color:var(--pr)}nav svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-nav span{display:none;font-size:15px;font-weight:600}nav .lg{display:none}
-@media(min-width:900px){nav{top:0;right:auto;width:230px;flex-direction:column;border-top:0;border-right:1px solid var(--ln);padding:20px 12px;gap:4px}
-nav button{flex-direction:row;gap:14px;padding:12px 14px}nav span{display:block}nav .lg{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;padding:0 6px 18px}
-main{margin-left:230px;max-width:none;padding:24px 32px;width:calc(100% - 230px)}main>div{max-width:720px;margin:0 auto}}
-.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:14px}
-.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}.top h2{margin:0;font-size:22px}.top div:last-child{text-align:right;color:var(--mu);font-size:14px}.top b{display:block;color:var(--ink);font-size:20px}
-h3{margin:0 0 10px}.mu{color:var(--mu);font-size:14px}
-.rb{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;background:#fff;color:var(--ink);border-radius:22px;padding:20px}
-.rb svg{width:220px;height:220px;flex:none}.rb .bt{flex:1;min-width:170px}
-.wh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.wh button{font-size:26px;width:40px;height:36px;color:var(--pr)}
-.wg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.wd{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 0;border-radius:10px}.wd small{color:var(--mu)}.wd em{font-size:10px;color:var(--mu);font-style:normal;min-height:24px}
-.ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;font-weight:800;background:#f1f4f6}
-.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}.cg small{color:var(--mu)}
-.cg button{aspect-ratio:1;border-radius:50%;font-weight:600;display:grid;place-items:center;max-width:46px;width:100%;margin:auto}.cg button.td{outline:2px solid var(--pr);outline-offset:2px}
-.mo{position:fixed;inset:0;background:rgba(10,20,26,.5);display:flex;align-items:flex-end;justify-content:center;z-index:20}
-.sh{background:#fff;width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-height:90%;overflow:auto}
-@media(min-width:900px){.mo{align-items:center}.sh{border-radius:22px}}
-.tabs{display:flex;background:#dfe6eb;border-radius:12px;padding:3px;margin-bottom:12px}.tabs button{flex:1;padding:9px;border-radius:10px;font-weight:600}.tabs .on{background:#fff}
-.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kv div{background:#f4f7f9;border-radius:14px;padding:12px}.kv b{font-size:22px;display:block}
-.pr{display:grid;grid-template-columns:54px 1fr 1fr;gap:10px;align-items:center;margin-bottom:14px}.pr .d{font-weight:700}.pr .d small{display:block;font-weight:400;font-size:12px}
-.pr.x{grid-template-columns:50px 46px 1fr 1fr}.pr input[type=time]{margin:0}
-.tg{appearance:none;width:44px;height:26px;border-radius:13px;background:#d1d5db;position:relative;margin:0}.tg:checked{background:var(--pr)}
-.tg:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s}.tg:checked:after{left:21px}
-.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#14232b;color:#fff;padding:10px 18px;border-radius:20px;z-index:30;font-size:14px}
-.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--ln)}
-</style></head><body><div id="app"></div>
-<script>
-const DB='https://jasa-petrinjak-default-rtdb.europe-west1.firebasedatabase.app/evidelo/users/';
-const SEED={uporabnik:{ime:'Uporabnik',priimek:'1',pw:'uporabnik'},jasa:{ime:'Jaša',priimek:'Petrinjak',pw:'j'}};
-const $=s=>document.querySelector(s),pad=n=>String(n).padStart(2,'0');
-const dk=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-const pd=s=>{const[a,b,c]=s.split('-');return new Date(a,b-1,c)};
-const tm=s=>{const[h,m]=s.split(':');return h*60+ +m};
-const dur=(a,b)=>{let x=tm(b)-tm(a);if(x<0)x+=1440;return x};
-const hm=m=>Math.floor(m/60)+'h '+pad(Math.round(m%60))+'m';
-const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
-const mon=d=>{d=new Date(d.getFullYear(),d.getMonth(),d.getDate());return add(d,-((d.getDay()+6)%7))};
-const hhmm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
-const sha=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,'0')).join('');
-const DN=['Pon','Tor','Sre','Čet','Pet','Sob','Ned'],MN=['Januar','Februar','Marec','April','Maj','Junij','Julij','Avgust','September','Oktober','November','December'];
-const C={ok:'#22c55e',over:'#3b82f6',minus:'#f59e0b',cancel:'#ef4444',off:'#94a3b8'},IC={ok:'✓',over:'✓',minus:'−',cancel:'✕',off:'–'};
-const LOGO=n=>`<svg width="${n}" height="${n}" viewBox="0 0 100 100"><rect width="100" height="100" rx="24" fill="#153e4c"/><circle cx="50" cy="50" r="34" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="7"/><circle cx="50" cy="50" r="34" fill="none" stroke="#4ade80" stroke-width="7" stroke-linecap="round" stroke-dasharray="160 214" transform="rotate(-90 50 50)"/><polygon points="54,26 36,54 48,54 44,74 64,44 52,44" fill="#fbbf24"/></svg>`;
-const NI={home:'<path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',entry:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',stats:'<path d="M5 21V10M12 21V4M19 21v-7"/>',prof:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'};
-const NL={home:'Domov',cal:'Koledar',entry:'Vpis dela',stats:'Statistika',prof:'Profil'};
-let U,D,page='home',vm=new Date(),vwk=mon(new Date()),stt={p:'m',ref:new Date()},pw,PD={},ed=false,edate=dk(new Date()),es,pt,rem=true,inst;
-vm=new Date(vm.getFullYear(),vm.getMonth(),1);
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();inst=e;if(D)render()});
-if('serviceWorker'in navigator)navigator.serviceWorker.register("sluzba-sw.js",{scope:"./sluzba.html"}).catch(()=>{});
-
-/* ---------- podatki ---------- */
-const cache=()=>{try{localStorage.setItem('evc',JSON.stringify({U,D}))}catch{}};
-function set(path,v,nr){const P=path.split('/');let o=D;for(let i=0;i<P.length-1;i++)o=o[P[i]]??(o[P[i]]={});v===null?delete o[P.at(-1)]:o[P.at(-1)]=v;cache();
-fetch(DB+U+'/'+path+'.json',{method:v===null?'DELETE':'PUT',body:JSON.stringify(v)}).catch(()=>toast('Ni povezave – sprememba ni shranjena v oblak'));if(!nr)render()}
-function sync(){if(es)es.close();es=new EventSource(DB+U+'.json');es.addEventListener('put',pull);es.addEventListener('patch',pull)}
-function pull(){clearTimeout(pt);pt=setTimeout(async()=>{try{const r=await(await fetch(DB+U+'.json')).json();if(!r)return;D=r;cache();const a=document.activeElement;if(!a||!/INPUT|TEXTAREA/.test(a.tagName))render()}catch{}},300)}
-function stat(k){const s=D.shifts?.[k];if(!s)return null;if(s.st==='cancel'||s.st==='off')return s.st;const p=D.plan?.[k],w=dur(s.in,s.out);if(!p)return'ok';const d=w-dur(p.s,p.e);return Math.abs(d)<=5?'ok':d>0?'over':'minus'}
-
-/* ---------- prijava ---------- */
-function loginView(msg){$('#app').innerHTML=`<div class="login">${LOGO(96)}<h1>EviDelo</h1>
-<label class="f"><span>Uporabniško ime</span><input id="lu" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label>
-<label class="f"><span>Geslo</span><div style="position:relative"><input id="lp" type="password" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" style="padding-right:64px"><button type="button" onclick="const i=$('#lp');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'Pokaži':'Skrij'" style="position:absolute;right:6px;top:8px;padding:8px;font-size:13px;color:var(--pr);font-weight:700">Pokaži</button></div></label>
-<label class="chk"><input type="checkbox" id="lr" checked> OSTANI PRIJAVLJEN DO ODJAVE</label>
-<div class="err" id="le">${msg||''}</div><button class="b" onclick="login()">Prijava</button></div>`;$('#lp').onkeydown=e=>e.key==='Enter'&&login();setTimeout(()=>$('#lu').focus(),50)}
-async function login(){const u=$('#lu').value.trim().toLowerCase(),p=$('#lp').value,e=$('#le');rem=$('#lr').checked;if(!u||!p)return e.textContent='Vpiši uporabniško ime in geslo.';
-const h=await sha(p);let r;try{r=await(await fetch(DB+u+'.json')).json()}catch{return e.textContent='Ni povezave s strežnikom.'}
-if(!r&&SEED[u]&&SEED[u].pw===p){r={ime:SEED[u].ime,priimek:SEED[u].priimek,hash:h,rate:0};await fetch(DB+u+'.json',{method:'PUT',body:JSON.stringify(r)})}
-if(!r||r.hash!==h)return e.textContent='Napačno uporabniško ime ali geslo.';
-(rem?localStorage:sessionStorage).setItem('ev',JSON.stringify({u,h}));start(u,r)}
-function start(u,r){U=u;D=r;cache();sync();render()}
-function logout(){localStorage.removeItem('ev');sessionStorage.removeItem('ev');es&&es.close();D=null;loginView()}
-(async()=>{const s=JSON.parse(localStorage.getItem('ev')||sessionStorage.getItem('ev')||'null');if(!s)return loginView();
-try{const r=await(await fetch(DB+s.u+'.json')).json();if(r&&r.hash===s.h)start(s.u,r);else loginView()}
-catch{const c=JSON.parse(localStorage.getItem('evc')||'null');c&&c.U===s.u?start(c.U,c.D):loginView()}})();
-
-/* ---------- ogrodje ---------- */
-function render(){if(!D)return;let h;
-({home:()=>h=homeP(),cal:()=>h=calP(),entry:()=>h=entryP(),stats:()=>h=statsP(),prof:()=>h=profP(),plan:()=>h=planP()})[page]();
-const act=page==='plan'?'prof':page;
-$('#app').innerHTML=`<nav><div class="lg">${LOGO(34)} EviDelo</div>${Object.keys(NL).map(k=>`<button class="${k===act?'on':''}" onclick="go('${k}')"><svg viewBox="0 0 24 24">${NI[k]}</svg><span>${NL[k]}</span></button>`).join('')}</nav><main><div>${h}</div></main>`;
-if(page==='home')tick()}
-function go(p){page=p;if(p==='entry'){ed=false}render();scrollTo(0,0)}
-function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2200)}
-function modal(h){let m=$('#mo');if(!m){m=document.createElement('div');m.id='mo';m.className='mo';m.onclick=e=>e.target===m&&cm();document.body.append(m)}m.innerHTML=`<div class="sh">${h}</div>`}
-const cm=()=>{const m=$('#mo');m&&m.remove()};
-
-/* ---------- teden ---------- */
-function week(ws){const we=add(ws,6);let h=`<div class="card"><div class="wh"><button onclick="wk(-1)">‹</button><b>${ws.getDate()}. ${ws.getMonth()+1}. – ${we.getDate()}. ${we.getMonth()+1}.</b><button onclick="wk(1)">›</button></div><div class="wg">`;
-for(let i=0;i<7;i++){const d=add(ws,i),k=dk(d),s=stat(k),p=D.plan?.[k];
-h+=`<div class="wd" onclick="openDay('${k}')" style="${k===dk(new Date())?'background:#eef3f6':''}"><small>${DN[i]}</small><b>${d.getDate()}.</b><i class="ic" style="${s?'background:'+C[s]:''}">${s?IC[s]:''}</i><em>${p?p.s+'<br>'+p.e:''}</em></div>`}
-return h+'</div></div>'}
-const wk=n=>{vwk=add(vwk,7*n);render()};
-
-/* ---------- domov ---------- */
-function homeP(){const t=dk(new Date()),p=D.plan?.[t],s=D.shifts?.[t],a=D.active;let b='';
-if(a)b='<button class="b" onclick="depart()">Odhod iz dela</button>';
-else if(!s)b=`<button class="b" onclick="arrive()">Prihod na delo</button>${p?`<button class="b s" onclick="cd('${t}')">Odpovej izmeno</button>`:''}`;
-else b=`<p class="mu" style="color:var(--mu);text-align:center">${s.st==='cancel'?'Izmena odpovedana: '+esc(s.reason||''):s.st==='off'?'Prost dan':'Izmena zaključena: '+s.in+' – '+s.out}</p>`;
-return `<div class="top"><div><h2>Pozdravljen/-a ${esc(D.ime)}</h2></div><div><b id="clk"></b><span id="cdt"></span></div></div>
-<div class="rb"><svg id="ring" viewBox="0 0 200 200"></svg><div class="bt">${b}</div></div><div style="height:14px"></div>${week(vwk)}`}
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function tick(){const n=new Date(),c=$('#clk');if(!c)return;c.textContent=hhmm(n)+':'+pad(n.getSeconds());$("#cdt").textContent=' '+n.getDate()+'. '+(n.getMonth()+1)+'. '+n.getFullYear();$('#ring').innerHTML=ringH(n)}
-setInterval(()=>page==='home'&&D&&tick(),1000);
-function ringH(now){const t=dk(now),p=D.plan?.[t],s=D.shifts?.[t],a=D.active,R=80,Cc=2*Math.PI*R,nm=now.getHours()*60+now.getMinutes();
-const arc=(f0,f1,col)=>f1>f0?`<circle r="${R}" fill="none" stroke="${col}" stroke-width="14" stroke-dasharray="${Math.min(1,f1-f0)*Cc} ${Cc}" stroke-dashoffset="${-f0*Cc}" transform="rotate(-90)"/>`:'';
-let g=arc(0,1,'#e8edf1'),big='',sm='';
-if(s){const st=stat(t);g+=arc(0,1,C[st]);big=st==='cancel'?'Odpovedano':st==='off'?'Prost dan':hm(dur(s.in,s.out));sm=st==='cancel'||st==='off'?'':'opravljeno'}
-else if(a){const el=(Date.now()-a.t)/6e4;big=hm(el);sm=p?'od '+hhmm(new Date(a.t)):'izven plana';
-if(p){const D_=dur(p.s,p.e),st=tm(p.s),am=new Date(a.t).getHours()*60+new Date(a.t).getMinutes(),late=Math.max(0,am-st)/D_,cur=Math.max(0,nm-st)/D_,ov=Math.max(0,cur-1),cl=Math.min(cur,1);
-g+=arc(0,late,'#f59e0b')+arc(late,cl,'#22c55e')+arc(0,Math.min(ov,late),'#22c55e')+(ov>late?arc(late,ov,'#3b82f6'):'')}
-else g+=arc(0,1,'#22c55e')}
-else if(p){const D_=dur(p.s,p.e),st=tm(p.s);big=p.s+'–'+p.e;sm='predviden plan';if(nm>st)g+=arc(0,(nm-st)/D_,'#f59e0b')}
-else{big='Prost dan';sm='ni plana'}
-return `<g transform="translate(100 100)">${g}</g><g stroke="#14232b" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(88 52)"><rect x="0" y="5" width="24" height="16" rx="3"/><path d="M8 5V3h8v2M0 12h24"/></g><text x="100" y="108" text-anchor="middle" fill="#14232b" font-size="${big.length>8?20:28}" font-weight="800">${big}</text><text x="100" y="130" text-anchor="middle" fill="#6b7c86" font-size="13">${sm}</text>`}
-function arrive(){set('active',{date:dk(new Date()),t:Date.now()})}
-function depart(){const a=D.active,i=new Date(a.t);set('shifts/'+a.date,{st:'done',in:hhmm(i),out:hhmm(new Date()),note:''},1);set('active',null);toast('Odhod zabeležen')}
-function cd(k){modal(`<h3>Odpoved izmene</h3><p class="mu">Vpiši razlog (obvezno).</p><textarea id="er" rows="3"></textarea><button class="b r" onclick="cancelS('${k}')">Odpovej izmeno</button><button class="b s" onclick="cm()">Nazaj</button>`)}
-function cancelS(k){const r=$('#er').value.trim();if(!r)return toast('Razlog je obvezen');set('shifts/'+k,{st:'cancel',reason:r});cm();toast('Izmena odpovedana')}
-
-/* ---------- urejevalnik izmene ---------- */
-function edH(k){const s=D.shifts?.[k],p=D.plan?.[k];let h=`<p class="mu">${p?'Plan: '+p.s+' – '+p.e:'Brez plana'}</p>`;
-if(k>dk(new Date()))return h+'<p>V prihodnost ni mogoče vpisovati izmen.</p>';
-if(s&&!ed){const st=s.st;h+=st==='done'?`<div class="row"><span>Prihod</span><b>${s.in}</b></div><div class="row"><span>Odhod</span><b>${s.out}</b></div><div class="row"><span>Skupaj</span><b>${hm(dur(s.in,s.out))}</b></div>${s.note?`<p>${esc(s.note)}</p>`:''}`:st==='cancel'?`<p>Izmena odpovedana.<br><span class="mu">Razlog: ${esc(s.reason||'')}</span></p>`:'<p>Označen kot prost dan.</p>';
-return h+`<button class="b" onclick="ed=true;edR()">Uredi</button><button class="b r" onclick="delS('${k}')">Izbriši vnos</button>`}
-return h+`<label class="f"><span>Prihod</span><input id="ei" type="time" value="${s?.in||p?.s||''}"></label><label class="f"><span>Odhod</span><input id="eo" type="time" value="${s?.out||p?.e||''}"></label><label class="f"><span>Opombe</span><textarea id="en" rows="2">${esc(s?.note||'')}</textarea></label>
-<button class="b" onclick="saveS('${k}')">Shrani</button><button class="b s" onclick="cd('${k}')">Odpovej izmeno</button><button class="b s" onclick="offS('${k}')">Prost dan</button>${s?'<button class="b s" onclick="ed=false;edR()">Prekliči urejanje</button>':''}`}
-function edR(){const m=$('#mo');m?dayM(edate):render()}
-function saveS(k){const i=$('#ei').value,o=$('#eo').value;if(!i||!o)return toast('Vpiši uro prihoda in odhoda');set('shifts/'+k,{st:'done',in:i,out:o,note:$('#en').value.trim()});ed=false;cm();toast('Shranjeno')}
-function offS(k){set('shifts/'+k,{st:'off'});ed=false;cm();toast('Označeno kot prost dan')}
-function delS(k){set('shifts/'+k,null);ed=false;cm()}
-function openDay(k){edate=k;ed=false;dayM(k)}
-function dayM(k){const d=pd(k);modal(`<h3>${DN[(d.getDay()+6)%7]}, ${d.getDate()}. ${MN[d.getMonth()]} ${d.getFullYear()}</h3>${edH(k)}<button class="b s" onclick="cm()">Zapri</button>`)}
-
-/* ---------- koledar ---------- */
-function calP(){const y=vm.getFullYear(),m=vm.getMonth(),first=(vm.getDay()+6)%7,n=new Date(y,m+1,0).getDate(),t=dk(new Date());
-let h=`<div class="card"><div class="wh"><button onclick="mv(-1)">‹</button><b>${MN[m]} ${y}</b><button onclick="mv(1)">›</button></div><div class="cg">${DN.map(x=>`<small>${x}</small>`).join('')}${'<span></span>'.repeat(first)}`;
-for(let d=1;d<=n;d++){const k=y+'-'+pad(m+1)+'-'+pad(d),s=stat(k),p=D.plan?.[k];
-const bg=s?C[s]:p?'var(--pl)':'transparent',col=s?'#fff':'inherit';h+=`<button class="${k===t?'td':''}" style="background:${bg};color:${col}" onclick="openDay('${k}')">${d}</button>`}
-return h+'</div></div>'+week(vwk)}
-const mv=n=>{vm=new Date(vm.getFullYear(),vm.getMonth()+n,1);render()};
-
-/* ---------- vpis dela ---------- */
-function entryP(){const t=dk(new Date());return `<div class="card"><h3>Vpis dela</h3><label class="f"><span>Datum</span><input type="date" value="${edate}" max="${t}" onchange="edate=this.value||edate;ed=false;render()"></label>${edH(edate)}</div>`}
-
-/* ---------- statistika ---------- */
-function rng(){const r=stt.ref;if(stt.p==='w'){const a=mon(r);return[a,add(a,6)]}if(stt.p==='m')return[new Date(r.getFullYear(),r.getMonth(),1),new Date(r.getFullYear(),r.getMonth()+1,0)];return[new Date(r.getFullYear(),0,1),new Date(r.getFullYear(),11,31)]}
-function sn(n){const r=stt.ref,p=stt.p;stt.ref=p==='w'?add(r,7*n):p==='m'?new Date(r.getFullYear(),r.getMonth()+n,1):new Date(r.getFullYear()+n,0,1);render()}
-function statsP(){const[a,b]=rng(),t=dk(new Date());let W=0,P=0,O=0,M=0,F=0;const G={};
-for(let d=new Date(a);d<=b;d=add(d,1)){const k=dk(d),s=D.shifts?.[k],p=D.plan?.[k],dn=s&&s.st==='done',pm=p&&!(s&&(s.st==='cancel'||s.st==='off'))?dur(p.s,p.e):0,w=dn?dur(s.in,s.out):0;
-P+=pm;W+=w;if(dn){const df=w-pm;df>0?O+=df:M-=df}else if(k>t)F+=pm;
-const g=stt.p==='y'?d.getMonth():d.getDate();(G[g]??={pl:0,wk:0});G[g].pl+=pm;G[g].wk+=w}
-const ks=Object.keys(G),mx=Math.max(60,...ks.map(k=>Math.max(G[k].pl,G[k].wk))),bw=340/ks.length;
-const bars=ks.map((k,i)=>{const x=i*bw,h1=G[k].pl/mx*110,h2=G[k].wk/mx*110,lb=stt.p==='y'?MN[k].slice(0,3):+k+1===0?'':(stt.p==='w'?DN[i]:(i%5===0?+k:''));
-return `<rect x="${x+bw*.1}" y="${120-h1}" width="${bw*.8}" height="${h1}" fill="#d5dde3" rx="2"/><rect x="${x+bw*.25}" y="${120-h2}" width="${bw*.5}" height="${h2}" fill="#22c55e" rx="2"/><text x="${x+bw/2}" y="136" font-size="9" text-anchor="middle" fill="#6b7c86">${lb}</text>`}).join('');
-const lab=stt.p==='w'?`${a.getDate()}. ${a.getMonth()+1}. – ${b.getDate()}. ${b.getMonth()+1}. ${b.getFullYear()}`:stt.p==='m'?MN[a.getMonth()]+' '+a.getFullYear():a.getFullYear();
-return `<div class="tabs">${[['w','Teden'],['m','Mesec'],['y','Leto']].map(([k,l])=>`<button class="${stt.p===k?'on':''}" onclick="stt.p='${k}';stt.ref=new Date();render()">${l}</button>`).join('')}</div>
-<div class="card"><div class="wh"><button onclick="sn(-1)">‹</button><b>${lab}</b><button onclick="sn(1)">›</button></div>
-<div class="kv"><div><span class="mu">Opravljene ure</span><b>${hm(W)}</b></div><div><span class="mu">Predvidene ure</span><b>${hm(P)}</b></div><div><span class="mu">Nadure</span><b style="color:var(--ov)">${hm(O)}</b></div><div><span class="mu">Minus ure</span><b style="color:var(--mi)">${hm(M)}</b></div></div></div>
-<div class="card"><svg viewBox="0 0 340 142" width="100%">${bars}</svg><p class="mu" style="margin:6px 0 0">Siva: plan · zelena: opravljeno</p></div>
-<div class="card"><span class="mu">Predvidena plača (${D.rate||0} €/h)</span><b style="font-size:28px;display:block">${((W+F)/60*(D.rate||0)).toFixed(2)} €</b><span class="mu">Do zdaj: ${(W/60*(D.rate||0)).toFixed(2)} €</span></div>`}
-
-/* ---------- profil ---------- */
-function profP(){const sa=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
-return `<div class="card"><h3>${esc(D.ime)} ${esc(D.priimek)}</h3><div class="row"><span>Uporabniško ime</span><b>${esc(U)}</b></div>
-<label class="f" style="margin-top:12px"><span>Urna postavka (€/h)</span><input type="number" step="0.01" min="0" value="${D.rate||''}" onchange="set('rate',+this.value);toast('Shranjeno')"></label>
-<button class="b" onclick="page='plan';pw=mon(new Date());initPD();render()">Uredi tedenski plan</button></div>
-<div class="card"><h3>Račun</h3><label class="f"><span>Novo uporabniško ime</span><input id="nu" type="text" autocapitalize="none"></label><button class="b s" onclick="chUser()">Spremeni uporabniško ime</button>
-<label class="f"><span>Novo geslo</span><input id="np" type="password"></label><button class="b s" onclick="chPass()">Spremeni geslo</button></div>
-<div class="card"><h3>Aplikacija</h3><p>${sa?'✓ Aplikacija je nameščena na napravi.':'Aplikacija ni nameščena.'}</p>${!sa?(inst?'<button class="b" onclick="inst.prompt()">Namesti aplikacijo</button>':'<p class="mu">iPhone/iPad: Safari → Deli → Dodaj na začetni zaslon.<br>Android: Chrome → ⋮ → Namesti aplikacijo.</p>'):''}</div>
-<button class="b r" onclick="logout()">Odjava</button>`}
-async function chPass(){const p=$('#np').value;if(p.length<1)return toast('Vpiši geslo');const h=await sha(p);set('hash',h);D.hash=h;const k=localStorage.getItem('ev')?localStorage:sessionStorage;k.setItem('ev',JSON.stringify({u:U,h}));toast('Geslo spremenjeno')}
-async function chUser(){const n=$('#nu').value.trim().toLowerCase().replace(/[.#$\[\]\/]/g,'');if(!n)return toast('Vpiši novo ime');
-const ex=await(await fetch(DB+n+'.json')).json();if(ex)return toast('Uporabniško ime je zasedeno');
-await fetch(DB+n+'.json',{method:'PUT',body:JSON.stringify(D)});await fetch(DB+U+'.json',{method:'DELETE'});U=n;const k=localStorage.getItem('ev')?localStorage:sessionStorage;k.setItem('ev',JSON.stringify({u:n,h:D.hash}));cache();sync();render();toast('Uporabniško ime spremenjeno')}
-
-/* ---------- urejanje plana ---------- */
-function initPD(){PD={};for(let i=0;i<7;i++){const k=dk(add(pw,i));PD[k]=D.plan?.[k]?{...D.plan[k]}:null}}
-function planP(){const we=add(pw,6);let h=`<div class="top"><h2 style="cursor:pointer" onclick="page='prof';render()">← Uredi plan</h2></div><div class="card"><div class="wh"><button onclick="pwk(-1)">‹</button><b>${pw.getDate()}. ${pw.getMonth()+1}. – ${we.getDate()}. ${we.getMonth()+1}. ${we.getFullYear()}</b><button onclick="pwk(1)">›</button></div></div><div class="card">`;
-for(let i=0;i<7;i++){const d=add(pw,i),k=dk(d),p=PD[k];
-h+=`<div class="pr x"><div class="d">${DN[i].toLowerCase()}.<small>${d.getDate()}.${d.getMonth()+1}.</small></div><input type="checkbox" class="tg" ${p?'checked':''} onchange="tgP('${k}',this.checked)"><input type="time" ${p?'':'disabled'} value="${p?.s||''}" onchange="PD['${k}'].s=this.value"><input type="time" ${p?'':'disabled'} value="${p?.e||''}" onchange="PD['${k}'].e=this.value"></div>`}
-return h+`</div><button class="b" onclick="saveP()">Shrani plan</button>`}
-const pwk=n=>{pw=add(pw,7*n);initPD();render()};
-const tgP=(k,on)=>{PD[k]=on?{s:'08:00',e:'16:00'}:null;render()};
-function saveP(){for(const k in PD){const p=PD[k];if(p&&(!p.s||!p.e))return toast('Izpolni obe uri');}
-for(const k in PD)set('plan/'+k,PD[k],1);toast('Plan shranjen');page='prof';render()}
-</script></body></html>
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8">
+  <title>EviDelo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4e5b">
+  <meta name="description" content="EviDelo – evidenca dela: prihodi, odhodi, plan, nadure in plača na enem mestu.">
+  <link rel="manifest" href="sluzba/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="sluzba/icons/logo.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="sluzba/icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="sluzba/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="EviDelo">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="stylesheet" href="sluzba/css/app.css">
+</head>
+<body>
+  <div id="app"></div>
+  <div id="boot" class="boot"><img src="sluzba/icons/logo.svg" alt="" width="84" height="84"></div>
+  <noscript>EviDelo potrebuje JavaScript.</noscript>
+  <script type="module" src="sluzba/js/app.js"></script>
+</body>
+</html>
