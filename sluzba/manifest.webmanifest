@@ -33,5 +33,55 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Domov – prihod/odhod",
+      "short_name": "Domov",
+      "url": "../sluzba.html#/domov",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Vpis dela",
+      "short_name": "Vpis",
+      "url": "../sluzba.html#/vpis",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Koledar",
+      "short_name": "Koledar",
+      "url": "../sluzba.html#/koledar",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Statistika",
+      "short_name": "Statistika",
+      "url": "../sluzba.html#/statistika",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

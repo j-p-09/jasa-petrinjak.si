@@ -1,6 +1,6 @@
 // EviDelo – service worker: aplikacija se odpre tudi brez povezave.
 // Strategija: najprej predpomnilnik, v ozadju osvežitev (stale-while-revalidate).
-const CACHE = 'evidelo-v2.1-e';
+const CACHE = 'evidelo-v2.1-f';
 const FIREBASE_SDK = [
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',
