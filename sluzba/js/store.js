@@ -252,10 +252,11 @@ export async function init() {
 }
 
 async function ensureSeed(f) {
-  // Začetni uporabniki se ustvarijo samo enkrat – da izbrisan uporabnik ne "vstane od mrtvih".
+  // Začetni uporabniki se ustvarijo samo enkrat (izbrisan uporabnik ne "vstane od mrtvih").
+  // Admin se vedno ustvari znova, če manjka – izbrisati ga ni mogoče.
   const flag = await T(f.get(f.R('meta/seeded')));
-  if (flag.exists()) return;
-  for (const s of SEED_USERS) {
+  const list = flag.exists() ? SEED_USERS.filter((x) => x.role === 'admin') : SEED_USERS;
+  for (const s of list) {
     const ex = await T(f.get(f.R(`users/${s.id}`)));
     if (!ex.exists()) {
       const u = { ime: s.ime, priimek: s.priimek, username: s.username, salt: s.salt, hash: s.hash, rate: 0, createdAt: Date.now() };
@@ -263,7 +264,7 @@ async function ensureSeed(f) {
       await T(f.update(f.R(), { [`users/${s.id}`]: u, [`usernames/${s.username.toLowerCase()}`]: s.id }));
     }
   }
-  await T(f.set(f.R('meta/seeded'), true));
+  if (!flag.exists()) await T(f.set(f.R('meta/seeded'), true));
 }
 
 const BAD = 'Napačno uporabniško ime ali geslo.';
@@ -318,6 +319,7 @@ export const api = {
   setShift: (date, v) => enqueue(`shifts/${date}`, v == null ? null : clean(v)),
   setPlan: (date, v) => enqueue(`plans/${date}`, v == null ? null : clean(v)),
   setRate: (rate) => enqueue('user/rate', Number(rate) || 0),
+  setRound: (on) => enqueue('user/round', !!on),
 
   async changeUsername(newName) {
     if (!fb || !st.online) throw new Error('Za to dejanje je potrebna internetna povezava.');

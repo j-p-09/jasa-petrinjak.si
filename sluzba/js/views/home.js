@@ -3,8 +3,8 @@ import { icon } from '../icons.js';
 import { st, api } from '../store.js';
 import { STALE_RUNNING_MS } from '../config.js';
 import {
-  DAY_NAMES, MIN, MONTHS, clockOf, dayInfo, durMin, esc, fmtDur, fmtDurSigned, keyOf, ringModel, shortTime,
-  startOfWeek, todayKey, tsOf, pad,
+  DAY_NAMES, MIN, MONTHS, clockOf, dayInfo, durMin, effIn, effOut, esc, fmtDur, fmtDurSigned, keyOf, ringModel, roundArrival,
+  roundDeparture, shortTime, startOfWeek, todayKey, tsOf, pad,
 } from '../util.js';
 import { askReason, askTime, confirmDialog, h, toast } from '../ui.js';
 import { mountWeek } from '../weekstrip.js';
@@ -22,6 +22,13 @@ const ringSVG = (segs) => `
         .join('')}
     </g>
   </svg>`;
+
+// odhod + zaokroževanje (če je vklopljeno v profilu)
+function closing(sh, outAt, k) {
+  if (!st.user?.round) return { outAt };
+  const rIn = sh.rIn ?? roundArrival(sh.inAt, sh.ps ? tsOf(k, sh.ps) : null);
+  return { outAt, rIn, rOut: Math.max(roundDeparture(outAt), rIn) };
+}
 
 function findRunning() {
   for (const k of Object.keys(st.shifts)) if (st.shifts[k]?.st === 'running') return { k, ...st.shifts[k] };
@@ -92,24 +99,32 @@ export function homeView({ navigate }) {
     } else if (vm.mode === 'running' || vm.mode === 'stale') {
       const sh = vm.shift;
       const P = durMin(sh.ps, sh.pe);
-      const m = ringModel({ planStartTs: tsOf(vm.k, sh.ps), P, inTs: sh.inAt, endTs: now });
+      const m = ringModel({ planStartTs: tsOf(vm.k, sh.ps), P, inTs: effIn(sh), endTs: now });
       segs = m.segs;
       big = fmtDur(m.worked);
-      small = `od ${shortTime(clockOf(sh.inAt))}`;
+      small = `od ${shortTime(clockOf(effIn(sh)))}`;
       tiny = `plan ${shortTime(sh.ps)} – ${shortTime(sh.pe)}`;
       const over = m.worked - P;
+      const untilEnd = Math.round((tsOf(vm.k, sh.ps) + P * MIN - now) / MIN); // do predvidene ure odhoda
+      if (sh.rIn != null && clockOf(sh.rIn) !== clockOf(sh.inAt))
+        info += `<div class="note-line">${icon('clock', 16)} Prihod ${clockOf(sh.inAt)} · zaokroženo ${clockOf(sh.rIn)}</div>`;
       if (m.lateMin > 0) info += `<div class="note-line orange">${icon('clock', 16)} Zamuda ob prihodu: ${m.lateMin} min</div>`;
       if (over > 0) info += `<div class="note-line blue">${icon('plus', 16)} Nadure: ${fmtDur(over)}</div>`;
-      else if (P) info += `<div class="note-line">${icon('clock', 16)} Do konca plana še ${fmtDur(Math.max(0, P - m.worked))}</div>`;
+      if (P) {
+        info += untilEnd > 0
+          ? `<div class="note-line">${icon('clock', 16)} Do konca plana (${shortTime(sh.pe)}) še ${fmtDur(untilEnd)}</div>`
+          : `<div class="note-line">${icon('clock', 16)} Plan se je končal ob ${shortTime(sh.pe)}</div>`;
+      }
       actions = `<button class="btn danger big" data-act="out">${icon('logout', 20)} Odhod iz dela</button>`;
     } else if (vm.mode === 'done') {
       const { shift, info: di } = vm;
       const P = di.P;
-      const m = ringModel({ planStartTs: tsOf(vm.k, shift.ps || '00:00'), P, inTs: shift.inAt, endTs: shift.outAt });
+      const m = ringModel({ planStartTs: tsOf(vm.k, shift.ps || '00:00'), P, inTs: effIn(shift), endTs: effOut(shift) });
       segs = m.segs;
       centerIcon = 'circleCheck';
       big = fmtDur(di.W);
-      small = `${clockOf(shift.inAt)} – ${clockOf(shift.outAt)}`;
+      small = `${clockOf(effIn(shift))} – ${clockOf(effOut(shift))}`;
+      if (shift.rIn != null || shift.rOut != null) tiny = `dejansko ${clockOf(shift.inAt)} – ${clockOf(shift.outAt)}`;
       tone = di.status;
       const diff = di.W - di.P;
       const label = di.status === 'ok' ? 'V skladu s planom' : di.status === 'over' ? `Nadure ${fmtDurSigned(diff)}` : `Minus ure ${fmtDurSigned(diff)}`;
@@ -174,7 +189,7 @@ export function homeView({ navigate }) {
     out = Math.min(out, Date.now());
     const orig = st.shifts[vm.k];
     if (!orig) return;
-    api.setShift(vm.k, { ...orig, st: 'done', outAt: out, manual: true });
+    api.setShift(vm.k, { ...orig, st: 'done', ...closing(orig, out, vm.k), manual: true });
     toast('Odhod shranjen', 'ok');
   }
 
@@ -192,14 +207,15 @@ export function homeView({ navigate }) {
     const now = Date.now();
     const vm = viewModel(now);
     if (b.dataset.act === 'in' && vm.mode === 'planned') {
-      api.setShift(vm.k, { st: 'running', inAt: now, ps: vm.plan.s, pe: vm.plan.e });
-      toast(`Prihod zabeležen ob ${clockOf(now)}`, 'ok');
+      const rIn = st.user?.round ? roundArrival(now, tsOf(vm.k, vm.plan.s)) : undefined;
+      api.setShift(vm.k, { st: 'running', inAt: now, ps: vm.plan.s, pe: vm.plan.e, rIn });
+      toast(rIn != null && clockOf(rIn) !== clockOf(now) ? `Prihod ${clockOf(now)} · zaokroženo ${clockOf(rIn)}` : `Prihod zabeležen ob ${clockOf(now)}`, 'ok');
     } else if (b.dataset.act === 'out' && (vm.mode === 'running' || vm.mode === 'stale')) {
       const ok = await confirmDialog({ title: 'Odhod iz dela', text: `Zabeležim odhod ob ${clockOf(Date.now())}?`, okText: 'Odhod' });
       if (!ok) return;
       const sh = st.shifts[vm.k];
       if (!sh || sh.st !== 'running') return;
-      api.setShift(vm.k, { ...sh, st: 'done', outAt: Date.now() });
+      api.setShift(vm.k, { ...sh, st: 'done', ...closing(sh, Date.now(), vm.k) });
       toast('Odhod zabeležen. Dober počitek!', 'ok');
     } else if (b.dataset.act === 'cancel' && vm.mode === 'planned') {
       const reason = await askReason({ text: 'Današnja izmena bo označena kot odpovedana.' });

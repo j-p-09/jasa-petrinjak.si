@@ -94,8 +94,7 @@ export function statsView({ navigate }) {
     const r = periodRange(mode, anchor);
     const s = periodStats(st, r.from, r.to);
     const rate = Number(st.user?.rate) || 0;
-    const earned = (s.worked / 60) * rate;
-    const projected = ((s.worked + s.pendingMin) / 60) * rate;
+    const earned = (s.worked / 60) * rate; // plača se računa po OPRAVLJENIH (zaokroženih) urah
     const buckets = chartBuckets(st, mode, r.from, r.to);
 
     el.innerHTML = `
@@ -130,10 +129,10 @@ export function statsView({ navigate }) {
         <div class="money-ic">${icon('euro', 22)}</div>
         <div class="money-body">
           <span class="tl">Predvidena plača</span>
-          <b>${fmtMoney(projected)}</b>
+          <b>${fmtMoney(earned)}</b>
           ${
             rate > 0
-              ? `<span class="ts">Zasluženo doslej ${fmtMoney(earned)} · urna postavka ${fmtMoney(rate)}/h</span>`
+              ? `<span class="ts">${hoursDec(s.worked)} h opravljenih ur × ${fmtMoney(rate)}/h</span>`
               : `<a class="ts link" href="#/profil">Nastavi urno postavko v profilu</a>`
           }
         </div>

@@ -37,6 +37,18 @@ export function profileView({ navigate }) {
     </section>
 
     <section class="card stack">
+      <h2>Zaokroževanje ur</h2>
+      <label class="toggle-row"><span>Zaokroževanje prihodov in odhodov</span>
+        <span class="switch"><input type="checkbox" data-round><i></i></span></label>
+      <div class="round-rules muted-text">
+        <p><b>Prihod</b> se zaokroži navzgor na 15 min (13:50 → 14:00, 13:31–13:45 → 13:45).
+        Če prideš pred začetkom izmene: do :35 na :30, od :36 naprej na naslednjo polno uro (17:39 → 18:00).</p>
+        <p><b>Odhod</b> se vedno zaokroži navzdol na 15 min (13:33 → 13:30).</p>
+        <p>V statistiki štejejo zaokrožene ure. Dejanske ure ostanejo shranjene, vse ure lahko urejaš tudi ročno.</p>
+      </div>
+    </section>
+
+    <section class="card stack">
       <h2>Tedenski plan dela</h2>
       <p class="muted-text">Določi, katere dni in v katerih urah delaš. Plan lahko urejaš za posamezne tedne.</p>
       <button class="btn primary" data-plan>${icon('calendar', 18)} Uredi plan</button>
@@ -113,6 +125,10 @@ export function profileView({ navigate }) {
     busy(f, false);
   });
 
+  $('[data-round]').onchange = (e) => {
+    api.setRound(e.target.checked);
+    toast(e.target.checked ? 'Zaokroževanje vklopljeno' : 'Zaokroževanje izklopljeno', 'ok');
+  };
   $('[data-plan]').onclick = () => navigate('#/plan');
   $('[data-logout]').onclick = async () => {
     if (await confirmDialog({ title: 'Odjava', text: 'Se res želiš odjaviti?', okText: 'Odjava' })) {
@@ -157,6 +173,7 @@ export function profileView({ navigate }) {
     $('[data-username]').textContent = `@${u.username || ''}`;
     if (initial || document.activeElement !== forms.username.v) forms.username.v.value = u.username || '';
     if (initial || document.activeElement !== forms.rate.v) forms.rate.v.value = u.rate ? String(u.rate) : '';
+    $('[data-round]').checked = !!u.round;
     renderSync();
   }
 

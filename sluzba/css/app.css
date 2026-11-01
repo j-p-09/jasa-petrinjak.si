@@ -433,3 +433,22 @@ input:disabled { background: #f7f9fb; border-color: #e8edf2; color: #b3bec9; }
 .tab-out { border: 0; background: none; display: grid; place-items: center; height: 52px; border-radius: 16px; color: #c42b2b; }
 .nav-out { display: flex; align-items: center; gap: 14px; padding: 13px 14px; border-radius: 14px; border: 0; background: none; color: rgba(255, 255, 255, .72); font-weight: 600; font-size: 16px; text-align: left; }
 .nav-out:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+
+/* ---------- zaokroževanje, denarnica ---------- */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-weight: 600; cursor: pointer; }
+.round-rules { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; background: var(--soft); padding: 12px 14px; border-radius: 13px; }
+.rounded-box { background: #eef6f3; border: 1.5px dashed #b7d8cd; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.rb-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--brand); flex-wrap: wrap; }
+.rb-title em { font-style: normal; font-weight: 500; color: var(--muted); }
+.check-line { display: flex; align-items: center; gap: 12px; font-weight: 650; cursor: pointer; user-select: none; }
+.check-line input { position: absolute; opacity: 0; pointer-events: none; }
+.check-line .box { width: 24px; height: 24px; border-radius: 8px; border: 2px solid #b9c5d0; display: grid; place-items: center; color: transparent; transition: all .15s; flex: none; }
+.check-line input:checked + .box { background: var(--brand); border-color: var(--brand); color: #fff; }
+.check-line input:focus-visible + .box { box-shadow: 0 0 0 3px rgba(29, 78, 91, .25); }
+.wallet-box { background: var(--soft); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.wallet-box[hidden] { display: none; }
+.wallet-diff { font-size: 15px; color: var(--muted); }
+.wallet-diff b { color: var(--ink); font-size: 17px; }
+.wallet-diff b.neg { color: #c42b2b; }
+.wallet-diff b.pos { color: #2563eb; }
+.wallet-box .grid2 { align-items: end; }

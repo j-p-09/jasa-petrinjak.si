@@ -115,6 +115,38 @@ export const hashPassword = (salt, pw) => sha256(`${salt}:${pw}`);
 export const randomSalt = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, '0')).join('');
 
+// ---------- zaokroževanje ----------
+// Prihod: če je delavec PRED začetkom plana – do :35 na :30, od :36 naprej na naslednjo polno uro
+// (največ do začetka plana). Sicer navzgor na 15 min. Odhod: vedno navzdol na 15 min.
+export function roundArrival(ts, planStartTs = null) {
+  const t = Math.floor(ts / MIN) * MIN;
+  const m = new Date(t).getMinutes();
+  if (planStartTs != null && t < Math.floor(planStartTs / MIN) * MIN) {
+    const hour = t - m * MIN;
+    const r = m === 0 ? hour : m <= 35 ? hour + 30 * MIN : hour + 60 * MIN;
+    return Math.min(r, Math.floor(planStartTs / MIN) * MIN);
+  }
+  return t + ((15 - (m % 15)) % 15) * MIN;
+}
+export function roundDeparture(ts) {
+  const t = Math.floor(ts / MIN) * MIN;
+  return t - (new Date(t).getMinutes() % 15) * MIN;
+}
+// ura "HH:MM" -> časovni žig, ki je najbližje referenčnemu (rešuje prehod čez polnoč)
+export function nearestTs(time, refTs) {
+  const [h, m] = time.split(':').map(Number);
+  const r = new Date(refTs);
+  let best = null;
+  for (const off of [-1, 0, 1]) {
+    const c = new Date(r.getFullYear(), r.getMonth(), r.getDate() + off, h, m, 0, 0).getTime();
+    if (best === null || Math.abs(c - refTs) < Math.abs(best - refTs)) best = c;
+  }
+  return best;
+}
+// efektivni (zaokroženi, če obstajajo) prihod in odhod izmene
+export const effIn = (sh) => sh.rIn ?? sh.inAt;
+export const effOut = (sh) => sh.rOut ?? sh.outAt;
+
 // ---------- logika izmen ----------
 // status: free | planned | running | ok | over | under | cancelled
 export function dayInfo(k, data, now = Date.now()) {
@@ -125,10 +157,10 @@ export function dayInfo(k, data, now = Date.now()) {
     const P = sh.ps && sh.pe ? durMin(sh.ps, sh.pe) : 0;
     if (sh.st === 'cancelled') return { k, status: 'cancelled', plan, shift: sh, P, W: 0 };
     if (sh.st === 'running') {
-      const W = Math.max(0, minOfTs(now) - minOfTs(sh.inAt));
+      const W = Math.max(0, minOfTs(now) - minOfTs(effIn(sh)));
       return { k, status: 'running', plan, shift: sh, P, W };
     }
-    const W = Math.max(0, minOfTs(sh.outAt) - minOfTs(sh.inAt));
+    const W = Math.max(0, minOfTs(effOut(sh)) - minOfTs(effIn(sh)));
     const status = W < P ? 'under' : W > P ? 'over' : 'ok';
     return { k, status, plan, shift: sh, P, W };
   }

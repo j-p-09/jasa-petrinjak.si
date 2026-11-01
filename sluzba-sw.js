@@ -1,6 +1,6 @@
 // EviDelo – service worker: aplikacija se odpre tudi brez povezave.
 // Strategija: najprej predpomnilnik, v ozadju osvežitev (stale-while-revalidate).
-const CACHE = 'evidelo-v2.1-c';
+const CACHE = 'evidelo-v2.1-e';
 const FIREBASE_SDK = [
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',
@@ -66,24 +66,32 @@ self.addEventListener('fetch', (e) => {
   const isSdk = url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs/');
   if (!sameOrigin && !isSdk) return; // Firebase podatki (websocket/long-poll) gredo mimo
 
+  // Najprej omrežje (največ 3 s), da je vedno najnovejša različica; brez povezave pride iz predpomnilnika.
   e.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);
-      const hit = await cache.match(req, { ignoreSearch: true });
-      const net = fetch(req)
-        .then((res) => {
-          if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone());
-          return res;
-        })
-        .catch(() => null);
-      if (hit) {
-        e.waitUntil(net);
-        return hit;
+      const fromNet = fetch(req, sameOrigin ? { cache: 'no-cache' } : undefined).then((res) => {
+        if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone());
+        return res;
+      });
+      try {
+        return await Promise.race([
+          fromNet,
+          new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 3000)),
+        ]);
+      } catch {
+        const hit = await cache.match(req, { ignoreSearch: true });
+        if (hit) {
+          e.waitUntil(fromNet.catch(() => {}));
+          return hit;
+        }
+        if (req.mode === 'navigate') return (await cache.match('./sluzba.html')) || Response.error();
+        try {
+          return await fromNet;
+        } catch {
+          return Response.error();
+        }
       }
-      const res = await net;
-      if (res) return res;
-      if (req.mode === 'navigate') return (await cache.match('./sluzba.html')) || Response.error();
-      return Response.error();
     })()
   );
 });
