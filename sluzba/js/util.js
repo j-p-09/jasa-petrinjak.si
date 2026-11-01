@@ -140,7 +140,8 @@ export function dayInfo(k, data, now = Date.now()) {
 export function dayParts(info, today = todayKey()) {
   const z = { inPlan: 0, over: 0, under: 0, pending: 0, planned: 0, worked: 0 };
   const { status, P, W } = info;
-  if (status === 'cancelled' || status === 'free') return z;
+  if (status === 'free') return z;
+  if (status === 'cancelled') return { ...z, under: P, planned: P }; // odpovedana izmena šteje kot minus ure
   if (status === 'planned') return { ...z, pending: P, planned: P };
   if (status === 'running') {
     return { ...z, inPlan: Math.min(W, P), over: Math.max(0, W - P), pending: Math.max(0, P - W), planned: P, worked: W };
@@ -173,7 +174,7 @@ export function periodStats(data, from, to, now = Date.now()) {
   for (const d of eachDay(from, to)) {
     const k = keyOf(d);
     const info = dayInfo(k, data, now);
-    if (info.status === 'cancelled') { r.cancelled++; continue; }
+    if (info.status === 'cancelled') r.cancelled++;
     const p = dayParts(info);
     r.worked += p.worked;
     r.planned += p.planned;

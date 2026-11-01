@@ -8,6 +8,7 @@ import { calendarView } from './views/calendar.js';
 import { entryView } from './views/entry.js';
 import { statsView } from './views/stats.js';
 import { profileView } from './views/profile.js';
+import { adminView } from './views/admin.js';
 import { planView } from './views/plan.js';
 import { APP_VERSION } from './config.js';
 import './install.js';
@@ -21,6 +22,10 @@ const routes = {
   profil: profileView,
   plan: planView,
 };
+const ADMIN_ROUTES = { uporabniki: adminView };
+const ADMIN_NAV = [['uporabniki', 'Uporabniki', 'users']];
+const isAdmin = () => st.user?.role === 'admin';
+const navList = () => (shellAdmin ? ADMIN_NAV : NAV);
 const NAV = [
   ['domov', 'Domov', 'home'],
   ['koledar', 'Koledar', 'calendar'],
@@ -31,6 +36,7 @@ const NAV = [
 
 let mode = 'none'; // none | login | loading | app
 let shell = null;
+let shellAdmin = false;
 let current = null;
 let graceOver = false;
 setTimeout(() => {
@@ -86,12 +92,15 @@ function showLoading() {
 function showApp() {
   mode = 'app';
   clearTimeout(loadingTimer);
+  shellAdmin = isAdmin();
+  const nav = navList();
   shell = h(`
     <div class="shell">
       <aside class="side">
         ${logoHTML('side')}
         <nav class="side-nav">
-          ${NAV.map(([k, label, ic]) => `<a href="#/${k}" data-n="${k}">${icon(ic, 22)}<span>${label}</span></a>`).join('')}
+          ${nav.map(([k, label, ic]) => `<a href="#/${k}" data-n="${k}">${icon(ic, 22)}<span>${label}</span></a>`).join('')}
+          ${shellAdmin ? `<button class="nav-out" data-logout>${icon('logout', 22)}<span>Odjava</span></button>` : ''}
         </nav>
         <div class="side-user"><div class="avatar sm" data-avatar></div><div><b data-uname></b><span data-ustatus></span></div></div>
         <div class="side-ver">Različica ${APP_VERSION}</div>
@@ -100,12 +109,15 @@ function showApp() {
         <div class="banner" data-banner hidden></div>
         <main id="view"></main>
       </div>
-      <nav class="tabbar" aria-label="Glavni meni">
-        ${NAV.map(([k, label, ic]) => `<a href="#/${k}" data-n="${k}" aria-label="${label}" title="${label}">${icon(ic, 24)}</a>`).join('')}
+      <nav class="tabbar" aria-label="Glavni meni" style="grid-template-columns: repeat(${nav.length + (shellAdmin ? 1 : 0)}, 1fr)">
+        ${nav.map(([k, label, ic]) => `<a href="#/${k}" data-n="${k}" aria-label="${label}" title="${label}">${icon(ic, 24)}</a>`).join('')}
+        ${shellAdmin ? `<button class="tab-out" data-logout aria-label="Odjava" title="Odjava">${icon('logout', 24)}</button>` : ''}
       </nav>
     </div>`);
+  shell.querySelectorAll('[data-logout]').forEach((b) => (b.onclick = () => logout()));
   root.replaceChildren(shell);
-  if (!routes[parseHash().name]) history.replaceState(null, '', '#/domov');
+  const first = nav[0][0];
+  if (!(shellAdmin ? ADMIN_ROUTES : routes)[parseHash().name]) history.replaceState(null, '', `#/${first}`);
   route();
   updateChrome();
 }
@@ -113,16 +125,17 @@ function showApp() {
 function route() {
   if (mode !== 'app') return;
   const { name, params } = parseHash();
-  const key = routes[name] ? name : 'domov';
+  const table = shellAdmin ? ADMIN_ROUTES : routes;
+  const key = table[name] ? name : shellAdmin ? 'uporabniki' : 'domov';
   current?.destroy?.();
-  current = routes[key]({ navigate, params });
+  current = table[key]({ navigate, params });
   const main = shell.querySelector('#view');
   main.replaceChildren(current.el);
   main.className = `v-${key}`;
   const activeNav = key === 'plan' ? 'profil' : key;
   shell.querySelectorAll('[data-n]').forEach((a) => a.classList.toggle('active', a.dataset.n === activeNav));
   window.scrollTo(0, 0);
-  document.title = `${NAV.find((n) => n[0] === activeNav)?.[1] || 'EviDelo'} · EviDelo`;
+  document.title = `${navList().find((n) => n[0] === activeNav)?.[1] || 'EviDelo'} · EviDelo`;
 }
 
 function updateChrome() {
@@ -167,7 +180,7 @@ function onStore() {
       logout(); // uporabnik v bazi ne obstaja več
       return;
     }
-    if (mode !== 'app') {
+    if (mode !== 'app' || shellAdmin !== isAdmin()) {
       showApp();
       return;
     }
@@ -184,7 +197,15 @@ window.addEventListener('offline', updateChrome);
 (async function boot() {
   subscribe(onStore);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    const hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('./sluzba-sw.js', { scope: './sluzba.html' }).catch((e) => console.warn('SW', e));
+    // ob posodobitvi aplikacije se stran enkrat samodejno osveži
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
   }
   await init();
   document.getElementById('boot')?.remove();

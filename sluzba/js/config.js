@@ -21,6 +21,15 @@ export const SEED_USERS = [
     salt: '7be0d92c15a8f347',
     hash: 'b3839df4a8009fe4307d48226c778859f6cfa944a7348a822e8a8ddae5cf26c6',
   },
+  {
+    id: 'admin',
+    ime: 'Administrator',
+    priimek: '',
+    username: 'ADMIN',
+    salt: 'c3d81f0a9e5b7264',
+    hash: '8b6c77a996ab5a5f3790657e9a9cb26b9bc6b7e3f74e093d7e74abe96cefda67',
+    role: 'admin',
+  },
 ];
 
 // Najdaljša možna izmena pri ročnem vpisu (varovalka pred zatipkanimi urami)

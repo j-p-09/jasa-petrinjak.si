@@ -41,6 +41,7 @@ const P = {
   share: '<path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>',
   alert: '<path d="M12 3 2 20h20Z"/><path d="M12 10v4M12 17h.01"/>',
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0"/><circle cx="17" cy="9" r="2.8"/><path d="M17.5 14.2a5.5 5.5 0 0 1 4.5 5.8"/>',
   note: '<path d="M5 3h10l4 4v14H5Z"/><path d="M8 11h8M8 15h6"/>',
 };
 

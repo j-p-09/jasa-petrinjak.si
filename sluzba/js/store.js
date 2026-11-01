@@ -32,6 +32,7 @@ export const st = {
   fbOk: false,
   error: null,
   pendingCount: 0,
+  allUsers: {},
 };
 
 let fb = null;
@@ -40,6 +41,7 @@ let remote = { user: null, plans: {}, shifts: {} };
 let pending = [];
 let unsubs = [];
 let flushing = false;
+let adminListening = false;
 const listeners = new Set();
 
 export const subscribe = (fn) => {
@@ -158,6 +160,7 @@ function stopListeners() {
     }
   });
   unsubs = [];
+  adminListening = false;
 }
 
 function onErr(e) {
@@ -185,6 +188,19 @@ async function startListeners() {
       (s) => {
         remote.user = s.val();
         st.ready = true;
+        if (remote.user?.role === 'admin' && !adminListening) {
+          adminListening = true;
+          unsubs.push(
+            f.onValue(
+              f.R('users'),
+              (us) => {
+                st.allUsers = us.val() || {};
+                emit();
+              },
+              onErr
+            )
+          );
+        }
         st.error = st.error === 'perm' ? null : st.error;
         cacheSave();
         compute();
@@ -236,17 +252,18 @@ export async function init() {
 }
 
 async function ensureSeed(f) {
+  // Začetni uporabniki se ustvarijo samo enkrat – da izbrisan uporabnik ne "vstane od mrtvih".
+  const flag = await T(f.get(f.R('meta/seeded')));
+  if (flag.exists()) return;
   for (const s of SEED_USERS) {
     const ex = await T(f.get(f.R(`users/${s.id}`)));
     if (!ex.exists()) {
-      await T(
-        f.update(f.R(), {
-          [`users/${s.id}`]: { ime: s.ime, priimek: s.priimek, username: s.username, salt: s.salt, hash: s.hash, rate: 0, createdAt: Date.now() },
-          [`usernames/${s.username.toLowerCase()}`]: s.id,
-        })
-      );
+      const u = { ime: s.ime, priimek: s.priimek, username: s.username, salt: s.salt, hash: s.hash, rate: 0, createdAt: Date.now() };
+      if (s.role) u.role = s.role;
+      await T(f.update(f.R(), { [`users/${s.id}`]: u, [`usernames/${s.username.toLowerCase()}`]: s.id }));
     }
   }
+  await T(f.set(f.R('meta/seeded'), true));
 }
 
 const BAD = 'Napačno uporabniško ime ali geslo.';
@@ -290,6 +307,7 @@ export function logout() {
   st.plans = {};
   st.shifts = {};
   st.ready = false;
+  st.allUsers = {};
   pending = [];
   remote = { user: null, plans: {}, shifts: {} };
   emit();
@@ -324,6 +342,73 @@ export const api = {
     if ((next || '').length < 4) throw new Error('Novo geslo naj ima vsaj 4 znake.');
     const salt = randomSalt();
     await T(fb.update(fb.R(`users/${st.uid}`), { salt, hash: hashPassword(salt, next) }));
+  },
+};
+
+const USERNAME_RE = /^[\p{L}\p{N}._-]{2,32}$/u;
+const needOnline = () => {
+  if (!fb || !st.online) throw new Error('Za to dejanje je potrebna internetna povezava.');
+};
+const requireAdmin = () => {
+  if (remote.user?.role !== 'admin') throw new Error('Samo administrator lahko to naredi.');
+};
+
+export const admin = {
+  async createUser({ ime, priimek, username, password }) {
+    requireAdmin();
+    needOnline();
+    ime = (ime || '').trim();
+    username = (username || '').trim();
+    if (!ime) throw new Error('Vpiši ime.');
+    if (!USERNAME_RE.test(username)) throw new Error('Uporabniško ime: 2–32 znakov (črke, številke, . _ -).');
+    if ((password || '').length < 1) throw new Error('Vpiši geslo.');
+    const lower = username.toLowerCase();
+    if ((await T(fb.get(fb.R(`usernames/${lower}`)))).val()) throw new Error('To uporabniško ime je že zasedeno.');
+    const uid = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const salt = randomSalt();
+    await T(
+      fb.update(fb.R(), {
+        [`users/${uid}`]: { ime, priimek: (priimek || '').trim(), username, salt, hash: hashPassword(salt, password), rate: 0, createdAt: Date.now() },
+        [`usernames/${lower}`]: uid,
+      })
+    );
+    return uid;
+  },
+
+  async updateUser(uid, { ime, priimek, username, password }) {
+    requireAdmin();
+    needOnline();
+    const cur = st.allUsers[uid];
+    if (!cur) throw new Error('Uporabnik ne obstaja več.');
+    ime = (ime || '').trim();
+    username = (username || '').trim();
+    if (!ime) throw new Error('Vpiši ime.');
+    if (!USERNAME_RE.test(username)) throw new Error('Uporabniško ime: 2–32 znakov (črke, številke, . _ -).');
+    const up = { [`users/${uid}/ime`]: ime, [`users/${uid}/priimek`]: (priimek || '').trim(), [`users/${uid}/username`]: username };
+    const lower = username.toLowerCase();
+    const old = (cur.username || '').toLowerCase();
+    if (lower !== old) {
+      const ex = (await T(fb.get(fb.R(`usernames/${lower}`)))).val();
+      if (ex && ex !== uid) throw new Error('To uporabniško ime je že zasedeno.');
+      up[`usernames/${lower}`] = uid;
+      if (old) up[`usernames/${old}`] = null;
+    }
+    if (password) {
+      const salt = randomSalt();
+      up[`users/${uid}/salt`] = salt;
+      up[`users/${uid}/hash`] = hashPassword(salt, password);
+    }
+    await T(fb.update(fb.R(), up));
+  },
+
+  async deleteUser(uid) {
+    requireAdmin();
+    needOnline();
+    if (uid === st.uid) throw new Error('Svojega računa ne moreš izbrisati.');
+    const cur = st.allUsers[uid];
+    const up = { [`users/${uid}`]: null, [`plans/${uid}`]: null, [`shifts/${uid}`]: null };
+    if (cur?.username) up[`usernames/${cur.username.toLowerCase()}`] = null;
+    await T(fb.update(fb.R(), up));
   },
 };
 

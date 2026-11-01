@@ -120,7 +120,8 @@ export function homeView({ navigate }) {
       big = 'Odpovedana';
       small = 'današnja izmena';
       tone = 'cancelled';
-      info = `<div class="note-line red">${icon('ban', 16)} ${esc(vm.shift.reason || '')}</div>`;
+      info = `<div class="note-line red">${icon('ban', 16)} ${esc(vm.shift.reason || '')}</div>
+        <div class="note-line under">Šteje kot minus ure: ${fmtDur(vm.info.P)}</div>`;
     } else {
       centerIcon = 'coffee';
       big = 'Prost dan';
